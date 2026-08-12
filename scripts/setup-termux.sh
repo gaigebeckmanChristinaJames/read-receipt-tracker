@@ -104,7 +104,7 @@ while true; do
     # 保活 Cloudflared
     if ! pgrep -f "cloudflared" >/dev/null 2>&1; then
         rm -f tunnel.log current_url.txt
-        cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000 > tunnel.log 2>&1 < /dev/null &
+        cloudflared tunnel --url http://127.0.0.1:5000 > tunnel.log 2>&1 < /dev/null &
     fi
 
     # 提取公网 URL
