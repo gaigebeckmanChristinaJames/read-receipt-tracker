@@ -83,12 +83,12 @@ def register_routes(app):
         except Exception:
             return jsonify({"error": "Invalid JSON"}), 400
 
-        wx = (data.get("wxId", "") or "").strip()
+        wx = (data.get("wxID", "") or "").strip()
         c = data.get("content", "") or ""
         ct = data.get("createTime", int(time.time() * 1000))
 
         if not wx:
-            return jsonify({"error": "wxId required"}), 400
+            return jsonify({"error": "wxID required"}), 400
         if len(c) > 50000:
             return jsonify({"error": "content too long"}), 400
 
@@ -103,14 +103,14 @@ def register_routes(app):
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-        pu = f"{request.host_url.rstrip('/')}/pixel?wxId={wx}&id={mid}"
-        return jsonify({"success": True, "id": mid, "wxId": wx, "pixel_url": pu})
+        pu = f"{request.host_url.rstrip('/')}/pixel?wxID={wx}&id={mid}"
+        return jsonify({"success": True, "id": mid, "wxID": wx, "pixel_url": pu})
 
     @app.route("/pixel")
     @rate_limit
     def pixel():
         # 返回 1x1 透明 GIF 并记录已读（非阻塞：先返回，失败进队列）
-        wx = request.args.get("wxId", "")
+        wx = request.args.get("wxID", "")
         mid = request.args.get("id", "")
         if not wx or not mid:
             return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
@@ -133,10 +133,10 @@ def register_routes(app):
     @rate_limit
     def count():
         # 查询已读人数，使用只读连接
-        wx = request.args.get("wxId", "")
+        wx = request.args.get("wxID", "")
         mid = request.args.get("id", "")
         if not wx or not mid:
-            return jsonify({"count": 0, "error": "wxId and id required"})
+            return jsonify({"count": 0, "error": "wxID and id required"})
 
         db = get_db(readonly=True)
         r = db.execute(
