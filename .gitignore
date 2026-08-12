@@ -1,0 +1,31 @@
+# 字节码
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 数据库文件
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# 环境
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日志
+*.log
+tunnel.log
+daemon.log
+current_url.txt
+
+# 系统
+.DS_Store
+Thumbs.db

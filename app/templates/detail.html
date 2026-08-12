@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消息详情 · 已读追踪</title>
+<style>
+  :root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --success: #10b981;
+    --bg: #f0f2f5;
+    --card-bg: #ffffff;
+    --text: #1f2937;
+    --text-secondary: #6b7280;
+    --border: #e5e7eb;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--text); line-height: 1.6; }
+  .container { max-width: 960px; margin: 0 auto; padding: 24px; }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .back-link:hover { text-decoration: underline; }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .card h2 { font-size: 20px; margin-bottom: 20px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .grid-item {
+    background: #f9fafb;
+    padding: 16px;
+    border-radius: 8px;
+  }
+  .grid-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .grid-value { word-break: break-all; font-size: 14px; }
+  .mono { font-family: "SF Mono", "Fira Code", monospace; font-size: 12px; color: var(--primary); }
+
+  .content-box {
+    background: #f9fafb;
+    padding: 20px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    font-size: 15px;
+    margin: 12px 0;
+    border-left: 3px solid var(--primary);
+  }
+  .count-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 24px;
+    background: var(--success);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .count-badge.zero { background: #9ca3af; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+  th { background: #f9fafb; color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  tr:hover td { background: #fafbff; }
+
+  .ip-cell { font-family: "SF Mono", monospace; color: var(--primary); font-weight: 600; }
+  .ua-cell { font-size: 12px; color: var(--text-secondary); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .time-cell { color: var(--text-secondary); font-size: 13px; }
+
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-danger:hover { background: var(--danger-hover); }
+
+  .empty-state { padding: 40px; text-align: center; color: var(--text-secondary); }
+
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: 1fr; }
+    th:nth-child(2), td:nth-child(2) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a class="back-link" href="/">← 返回消息列表</a>
+
+  <!-- 消息卡片 -->
+  <div class="card">
+    <h2>📨 消息信息</h2>
+
+    <div class="grid">
+      <div class="grid-item">
+        <div class="grid-label">消息 ID</div>
+        <div class="grid-value mono">{{ message.id }}</div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-label">发送者</div>
+        <div class="grid-value">{{ message.wx_id }}</div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-label">已读数</div>
+        <div class="grid-value">
+          <span class="count-badge {% if message.read_cnt == 0 %}zero{% endif %}">
+            {{ message.read_cnt }} 人
+          </span>
+        </div>
+      </div>
+      <div class="grid-item">
+        <div class="grid-label">注册时间</div>
+        <div class="grid-value time-cell">{{ message.registered_at | int | ts2date }}</div>
+      </div>
+    </div>
+
+    <div class="grid-label">消息内容</div>
+    <div class="content-box">{{ message.content }}</div>
+
+    <button class="btn-danger" onclick="doDelete()">🗑 删除本条消息</button>
+  </div>
+
+  <!-- 已读记录卡片 -->
+  <div class="card">
+    <h2>👁 已读记录 ({{ reads|length }})</h2>
+
+    {% if reads %}
+    <table>
+      <thead>
+        <tr>
+          <th>IP 地址</th>
+          <th>User-Agent</th>
+          <th>读取时间</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reads %}
+        <tr>
+          <td class="ip-cell">{{ r.ip_address }}</td>
+          <td class="ua-cell" title="{{ r.user_agent }}">{{ r.user_agent or '—' }}</td>
+          <td class="time-cell">{{ r.read_at | int | ts2date }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <p>📭 暂无读取记录</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+async function doDelete() {
+  if (!confirm("确定删除这条消息及其所有已读记录？")) return;
+  await fetch("/api/delete/{{ message.id }}", { method: "POST" });
+  location.href = "/";
+}
+</script>
+</body>
+</html>
