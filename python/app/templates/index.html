@@ -5,26 +5,46 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>已读追踪 · 管理后台</title>
 <style>
-:root{--primary:#6366f1;--danger:#ef4444;--success:#10b981;--bg:#f0f2f5;--card:#fff;--text:#1f2937;--t2:#6b7280;--bd:#e5e7eb}
+:root{--primary:#6366f1;--primary-dark:#4f46e5;--danger:#ef4444;--danger-hover:#dc2626;
+--success:#10b981;--warning:#f59e0b;--bg:#f0f2f5;--card:#fff;--text:#1f2937;--t2:#6b7280;
+--bd:#e5e7eb;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,.08);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.1)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);font-family:system-ui;color:var(--text);line-height:1.6}
+body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--text);line-height:1.6}
 .container{max-width:1200px;margin:0 auto;padding:24px}
-.hdr{background:linear-gradient(135deg,var(--primary),#8b5cf6);color:#fff;padding:36px 32px;border-radius:12px;margin-bottom:28px;box-shadow:0 10px 15px -3px rgba(0,0,0,.1)}
+
+/* Header */
+.hdr{background:linear-gradient(135deg,var(--primary),#8b5cf6);color:#fff;padding:36px 32px;border-radius:var(--radius);margin-bottom:28px;box-shadow:var(--shadow-lg);position:relative;overflow:hidden}
+.hdr::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:rgba(255,255,255,.08);border-radius:50%}
 .hdr h1{font-size:28px;font-weight:700}
 .hdr p{opacity:.85;margin-top:6px;font-size:14px}
+.hdr .ver{position:absolute;right:24px;top:24px;background:rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
+
+/* Stats */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:28px}
-.stat-card{background:var(--card);padding:24px 20px;border-radius:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stat-card{background:var(--card);padding:24px 20px;border-radius:var(--radius);text-align:center;box-shadow:var(--shadow);transition:transform .15s}
+.stat-card:hover{transform:translateY(-2px)}
 .stat-card .num{font-size:36px;font-weight:800;color:var(--primary)}
+.stat-card .num.green{color:var(--success)}
+.stat-card .num.orange{color:var(--warning)}
 .stat-card .label{color:var(--t2);font-size:13px;margin-top:4px}
+.stat-card .sub{color:#9ca3af;font-size:11px;margin-top:2px}
+
+/* Toolbar */
 .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px}
 .toolbar h2{font-size:18px}
-.search-input{padding:10px 16px;border:1.5px solid var(--bd);border-radius:8px;width:280px;font-size:14px;outline:none}
+.toolbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.search-input{padding:10px 16px;border:1.5px solid var(--bd);border-radius:8px;width:280px;font-size:14px;outline:none;transition:border-color .2s}
 .search-input:focus{border-color:var(--primary)}
-.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,opacity .15s}
 .btn:hover{opacity:.9}
 .btn-danger{background:var(--danger);color:#fff}
-.btn-info{background:var(--primary);color:#fff;margin-right:6px}
-.table-box{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.btn-danger:hover{background:var(--danger-hover)}
+.btn-info{background:var(--primary);color:#fff}
+.btn-info:hover{background:var(--primary-dark)}
+.btn-ghost{background:#eef2ff;color:var(--primary)}
+
+/* Table */
+.table-box{background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
 table{width:100%;border-collapse:collapse}
 th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--bd);font-size:14px}
 th{background:#f9fafb;color:var(--t2);font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.5px}
@@ -35,53 +55,203 @@ tr:hover td{background:#fafbff}
 .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
 .badge-ok{background:#dcfce7;color:#166534}
 .badge-zero{background:#f3f4f6;color:var(--t2)}
-.action-link{color:var(--primary);text-decoration:none;font-weight:600}
+.geo-tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;background:#e0e7ff;color:#4338ca;margin-left:6px}
+.action-link{color:var(--primary);text-decoration:none;font-weight:600;margin-right:8px}
 .action-link:hover{text-decoration:underline}
+.btn-mini{padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--danger);color:#fff}
+.btn-mini:hover{background:var(--danger-hover)}
 .empty-state{padding:60px;text-align:center;color:var(--t2)}
-@media(max-width:768px){.stats{grid-template-columns:1fr}.search-input{width:100%}th:nth-child(2),td:nth-child(2),th:nth-child(5),td:nth-child(5){display:none}}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+
+/* Batch status modal */
+.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-box{background:#fff;border-radius:16px;padding:32px;max-width:560px;width:90%;box-shadow:var(--shadow-lg)}
+.modal-box h3{margin-bottom:16px;font-size:20px}
+.modal-box textarea{width:100%;min-height:120px;padding:12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:monospace;resize:vertical}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.result-box{margin-top:16px;background:#f9fafb;border-radius:8px;padding:16px;max-height:240px;overflow-y:auto;font-size:13px}
+.result-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--bd)}
+.result-item:last-child{border-bottom:none}
+
+@media(max-width:768px){
+  .stats{grid-template-columns:1fr}
+  .search-input{width:100%}
+  th:nth-child(2),td:nth-child(2),th:nth-child(5),td:nth-child(5){display:none}
+}
 </style>
 </head>
 <body>
 <div class="container">
-<div class="hdr"><h1>📬 已读追踪</h1><p>轻量级消息已读记录管理 · 实时追踪 · 多端部署</p></div>
-<div class="stats">
-<div class="stat-card"><div class="num">{{total_messages}}</div><div class="label">消息总数</div></div>
-<div class="stat-card"><div class="num">{{total_reads}}</div><div class="label">已读人次</div></div>
-<div class="stat-card"><div class="num">{{avg_reads}}</div><div class="label">平均已读</div></div>
+
+  <!-- Header -->
+  <div class="hdr">
+    <span class="ver">v2.1</span>
+    <h1>📬 已读追踪</h1>
+    <p>轻量级消息已读记录管理面板 · WeKit / WuYu 专用后端 · 实时追踪 · 地理位置分析</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="num">{{total_messages}}</div>
+      <div class="label">📨 消息总数</div>
+      <div class="sub">已注册的消息</div>
+    </div>
+    <div class="stat-card">
+      <div class="num green">{{total_reads}}</div>
+      <div class="label">👁 已读人次</div>
+      <div class="sub">独立 IP 去重后</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">{{avg_reads}}</div>
+      <div class="label">📊 平均已读</div>
+      <div class="sub">每条消息平均</div>
+    </div>
+    <div class="stat-card">
+      <div class="num orange">{{geo_reads}}</div>
+      <div class="label">🌍 已定位</div>
+      <div class="sub">含地理信息记录</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <h2>📋 消息列表</h2>
+    <div class="toolbar-actions">
+      <input type="text" class="search-input" id="search-box" placeholder="🔍 搜索内容 / wxId / ID…" oninput="doFilter()">
+      <button class="btn btn-info" onclick="openBatch()">📦 批量查已读</button>
+      <button class="btn btn-ghost" onclick="expCSV()">📥 导出 CSV</button>
+      <button class="btn btn-danger" onclick="deleteAll()">🧹 清空全部</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-box">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>发送者</th>
+          <th>内容</th>
+          <th>已读</th>
+          <th>注册时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="msg-list">
+        {%for m in messages%}
+        <tr data-content="{{m.content}}" data-wx="{{m.wx_id}}" data-id="{{m.id}}">
+          <td class="mono">{{m.id[:12]}}…</td>
+          <td>{{m.wx_id}}</td>
+          <td class="content-cell" title="{{m.content}}">{{m.content}}</td>
+          <td>
+            <span class="badge {%if m.read_cnt==0%}badge-zero{%else%}badge-ok{%endif%}">{{m.read_cnt}} 人</span>
+            {%if m.geo_cnt%}<span class="geo-tag">📍 {{m.geo_cnt}}</span>{%endif%}
+          </td>
+          <td style="color:var(--t2)">{{m.registered_at|int|ts2date}}</td>
+          <td>
+            <a class="action-link" href="/message/{{m.id}}">详情</a>
+            <button class="btn-mini" onclick="deleteMsg('{{m.id}}')">删除</button>
+          </td>
+        </tr>
+        {%endfor%}
+        {%if not messages%}
+        <tr><td colspan="6">
+          <div class="empty-state">
+            <div class="icon">📭</div>
+            <p>暂无消息记录</p>
+            <p style="font-size:12px;margin-top:4px">通过 POST /register 注册第一条消息</p>
+          </div>
+        </td></tr>
+        {%endif%}
+      </tbody>
+    </table>
+  </div>
+
 </div>
-<div class="toolbar">
-<h2>📋 消息列表</h2>
-<div>
-<input class="search-input" id="s" placeholder="🔍 搜索内容或 wxId…" oninput="f()">
-<button class="btn btn-info" onclick="expCSV()">📥 CSV</button>
-<button class="btn btn-danger" onclick="delAll()">🧹 清空</button>
+
+<!-- 批量查询 Modal -->
+<div class="modal" id="batch-modal">
+  <div class="modal-box">
+    <h3>📦 批量查询已读状态</h3>
+    <p style="color:var(--t2);font-size:13px;margin-bottom:12px">每行一个消息 ID，或逗号分隔</p>
+    <textarea id="batch-ids" placeholder="a1b2c3d4...&#10;e5f6a7b8...&#10;c9d0e1f2..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBatch()">取消</button>
+      <button class="btn btn-info" onclick="runBatch()">查询</button>
+    </div>
+    <div class="result-box" id="batch-result" style="display:none"></div>
+  </div>
 </div>
-</div>
-<div class="table-box">
-<table>
-<thead><tr><th>ID</th><th>wxId</th><th>内容</th><th>已读</th><th>时间</th><th>操作</th></tr></thead>
-<tbody id="list">
-{%for m in messages%}
-<tr data-cont="{{m.content}}" data-wx="{{m.wx_id}}">
-<td class="mono">{{m.id[:16]}}…</td><td>{{m.wx_id}}</td>
-<td class="content-cell" title="{{m.content}}">{{m.content}}</td>
-<td><span class="badge {%if m.read_cnt==0%}badge-zero{%else%}badge-ok{%endif%}">{{m.read_cnt}} 人</span></td>
-<td style="color:var(--t2)">{{m.registered_at|int|ts2date}}</td>
-<td>
-<a class="action-link" href="/message/{{m.id}}">详情</a>
-<button class="btn btn-danger" style="padding:6px 12px;font-size:12px" onclick="del('{{m.id}}')">删</button>
-</td>
-</tr>{%endfor%}
-{%if not messages%}<tr><td colspan="6" class="empty-state">📭 暂无消息</td></tr>{%endif%}
-</tbody>
-</table>
-</div>
-</div>
+
 <script>
-function f(){let v=document.getElementById("s").value.toLowerCase();document.querySelectorAll("#list tr[data-cont]").forEach(r=>{r.style.display=(r.dataset.cont.toLowerCase().includes(v)||r.dataset.wx.toLowerCase().includes(v))?"":"none"})}
-async function del(id){if(!confirm("删除这条？"))return;await fetch("/api/delete/"+id,{method:"POST"});location.reload()}
-async function delAll(){if(!confirm("⚠️ 清空全部？"))return;await fetch("/api/delete-all",{method:"POST"});location.reload()}
-function expCSV(){let rows=[["ID","wxId","内容","已读数","时间"]];document.querySelectorAll("#list tr[data-cont]").forEach(r=>{let c=r.querySelectorAll("td");rows.push([(c[0].textContent||"").trim(),c[1].textContent||"",(r.dataset.cont||"").replace(/"/g,'""'),(c[3].textContent||"").trim(),(c[4].textContent||"").trim()])});let csv=rows.map(r=>r.map(v=>'"'+v+'"').join(",")).join("\n");let b=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});let a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="read-receipt-export.csv";a.click()}
+// 搜索过滤（内容 + wxId + ID）
+function doFilter(){
+  const v=document.getElementById("search-box").value.toLowerCase();
+  document.querySelectorAll("#msg-list tr[data-content]").forEach(r=>{
+    const hay=(r.dataset.content+" "+r.dataset.wx+" "+r.dataset.id).toLowerCase();
+    r.style.display=hay.includes(v)?"":"none";
+  });
+}
+
+// 删除单条
+async function deleteMsg(id){
+  if(!confirm("确定删除这条消息及其所有已读记录？"))return;
+  const r=await fetch("/api/delete/"+id,{method:"POST"});
+  if(r.ok)location.reload();else alert("删除失败");
+}
+
+// 清空全部
+async function deleteAll(){
+  if(!confirm("⚠️ 确定清空全部消息和已读记录？此操作不可恢复！"))return;
+  const r=await fetch("/api/delete-all",{method:"POST"});
+  if(r.ok)location.reload();else alert("清空失败");
+}
+
+// 导出 CSV（当前筛选后的数据）
+function expCSV(){
+  const rows=[["ID","发送者","内容","已读数","注册时间"]];
+  document.querySelectorAll("#msg-list tr[data-content]").forEach(r=>{
+    if(r.style.display==="none")return;
+    const td=r.querySelectorAll("td");
+    rows.push([
+      (td[0].textContent||"").trim(),
+      (td[1].textContent||"").trim(),
+      '"'+(r.dataset.content||"").replace(/"/g,'""')+'"',
+      (td[3].textContent||"").trim(),
+      (td[4].textContent||"").trim()
+    ]);
+  });
+  const csv=rows.map(r=>r.join(",")).join("\n");
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="read-receipt-export.csv";
+  a.click();
+}
+
+// 批量查询
+function openBatch(){document.getElementById("batch-modal").classList.add("show")}
+function closeBatch(){
+  document.getElementById("batch-modal").classList.remove("show");
+  document.getElementById("batch-result").style.display="none";
+}
+async function runBatch(){
+  const raw=document.getElementById("batch-ids").value.trim();
+  if(!raw){alert("请输入消息 ID");return}
+  const ids=raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+  if(!ids.length){alert("没有有效的 ID");return}
+  const r=await fetch("/batch-status?ids="+ids.join(","));
+  const d=await r.json();
+  if(!r.ok){alert(d.error||"查询失败");return}
+  const box=document.getElementById("batch-result");
+  box.innerHTML="<h4 style='margin-bottom:8px'>查询结果</h4>"+
+    Object.entries(d.statuses).map(([id,cnt])=>
+      `<div class="result-item"><span class="mono">${id.slice(0,20)}…</span><span class="badge ${cnt?"badge-ok":"badge-zero"}">${cnt} 人已读</span></div>`
+    ).join("");
+  box.style.display="block";
+}
 </script>
 </body>
 </html>
