@@ -118,21 +118,28 @@ def register_routes(app):
         ip = get_client_ip()
         ua = (request.headers.get("User-Agent", "") or "")[:500]
 
+        # IP 定位（中文优先，失败静默降级）
+        geo = lookup_ip_location(ip)
+        country = geo.get("country", "") if geo else ""
+        region = geo.get("region", "") if geo else ""
+        city = geo.get("city", "") if geo else ""
+        isp = geo.get("isp", "") if geo else ""
+
         db = get_db()
         try:
             atomic_write(db,
-                "INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent) "
-                "VALUES(?,?,?,?)",
-                (mid, wx, ip, ua))
+                "INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent,"
+                "country,region,city,isp) VALUES(?,?,?,?,?,?,?,?)",
+                (mid, wx, ip, ua, country, region, city, isp))
         except Exception:
-            _pixel_queue.append((mid, wx, ip, ua))
+            _pixel_queue.append((mid, wx, ip, ua, country, region, city, isp))
 
         return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
 
     @app.route("/count")
     @rate_limit
     def count():
-        # 查询已读人数，使用只读连接
+        # 查询已读人数 + 定位信息（客户端可直接拿省市）
         wx = request.args.get("wxId", "")
         mid = request.args.get("id", "")
         if not wx or not mid:
@@ -143,7 +150,26 @@ def register_routes(app):
             "SELECT COUNT(DISTINCT ip_address) cnt FROM reads "
             "WHERE msg_id=? AND wx_id=?",
             (mid, wx)).fetchone()
-        return jsonify({"count": r["cnt"] if r else 0, "msg_id": mid})
+        rows = db.execute(
+            "SELECT * FROM reads WHERE msg_id=? AND wx_id=? "
+            "ORDER BY read_at DESC",
+            (mid, wx)).fetchall()
+        return jsonify({
+            "count": r["cnt"] if r else 0,
+            "msg_id": mid,
+            "reads": [{
+                "ip_address": x["ip_address"],
+                "location": " ".join([y for y in [x["country"], x["region"],
+                                                 x["city"]] if y]) or "-",
+                "province": x["region"],
+                "city": x["city"],
+                "country": x["country"],
+                "isp": x["isp"],
+                "user_agent": x["user_agent"],
+                "read_at": datetime.fromtimestamp(x["read_at"])
+                           .strftime("%Y-%m-%d %H:%M:%S"),
+            } for x in rows],
+        })
 
     @app.route("/")
     @require_api_key
@@ -179,7 +205,7 @@ def register_routes(app):
     @require_api_key
     @rate_limit
     def detail(mid):
-        # 消息详情
+        # 消息详情（支持 ?json=1 返回 JSON）
         db = get_db(readonly=True)
         m = db.execute(
             "SELECT m.*,(SELECT COUNT(DISTINCT ip_address) FROM reads r "
@@ -191,7 +217,67 @@ def register_routes(app):
             "SELECT ip_address,user_agent,read_at,country,region,city,isp "
             "FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
         hg = any(r["country"] or r["city"] for r in rs) if rs else False
+
+        if request.args.get("json") == "1":
+            return jsonify({
+                "message": {"id": m["id"], "wxId": m["wx_id"],
+                             "content": m["content"]},
+                "reads": [{
+                    "ip_address": r["ip_address"],
+                    "location": " ".join([x for x in [r["country"], r["region"],
+                                                     r["city"]] if x]) or "-",
+                    "country": r["country"], "region": r["region"],
+                    "city": r["city"], "isp": r["isp"],
+                    "user_agent": r["user_agent"],
+                    "read_at": datetime.fromtimestamp(r["read_at"])
+                               .strftime("%Y-%m-%d %H:%M:%S"),
+                } for r in rs],
+            })
         return render_template("detail.html", message=m, reads=rs, has_geo=hg)
+
+    @app.route("/api/reads/<mid>")
+    @rate_limit
+    def api_reads(mid):
+        # 客户端专用：JSON 已读记录（含省市定位）
+        db = get_db(readonly=True)
+        m = db.execute("SELECT * FROM messages WHERE id=?", (mid,)).fetchone()
+        if not m:
+            return jsonify({"error": "not found"}), 404
+        rs = db.execute(
+            "SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC",
+            (mid,)).fetchall()
+        return jsonify({
+            "msg_id": mid,
+            "wxId": m["wx_id"],
+            "content": m["content"],
+            "read_count": len(rs),
+            "reads": [{
+                "ip_address": r["ip_address"],
+                "location": " ".join([x for x in [r["country"], r["region"],
+                                                 r["city"]] if x]) or "-",
+                "country": r["country"], "region": r["region"],
+                "city": r["city"], "isp": r["isp"],
+                "user_agent": r["user_agent"],
+                "read_at": datetime.fromtimestamp(r["read_at"])
+                           .strftime("%Y-%m-%d %H:%M:%S"),
+            } for r in rs],
+        })
+
+    @app.route("/api/messages")
+    @rate_limit
+    def api_messages():
+        # 客户端专用：JSON 消息列表
+        db = get_db(readonly=True)
+        rows = db.execute(
+            "SELECT m.*,(SELECT COUNT(DISTINCT ip_address) FROM reads r "
+            "WHERE r.msg_id=m.id) cnt "
+            "FROM messages m ORDER BY registered_at DESC LIMIT 100").fetchall()
+        return jsonify({"messages": [{
+            "id": r["id"], "wxId": r["wx_id"], "content": r["content"],
+            "read_count": r["cnt"],
+            "registered_at": datetime.fromtimestamp(r["registered_at"])
+                             .strftime("%Y-%m-%d %H:%M:%S"),
+        } for r in rows]})
 
     @app.route("/api/delete/<mid>", methods=["POST"])
     @require_api_key
