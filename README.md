@@ -1,13 +1,18 @@
 # 📬 read-receipt-tracker
 
-> 轻量级消息已读追踪服务 · Python / Flask · 一行命令部署
+> 轻量级消息已读追踪服务 · Python(uv) + C++(meson) 双实现 <br/>
+> Flask 像素埋点 · 管理后台 · 三端部署 · 可选 IP 定位
 
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)
+[![C++](https://img.shields.io/badge/C++-17-00599C.svg)](https://isocpp.org/)
 [![Flask](https://img.shields.io/badge/flask-2.3+-green.svg)](https://flask.palletsprojects.com/)
+[![uv](https://img.shields.io/badge/uv-package%20manager-purple.svg)](https://astral.sh/uv)
+[![ruff](https://img.shields.io/badge/ruff-linter-black.svg)](https://astral.sh/ruff)
+[![meson](https://img.shields.io/badge/meson-build-5f5f5f.svg)](https://mesonbuild.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED.svg)](Dockerfile)
 
-一个极简的**已读回执追踪服务**，通过嵌入 1×1 透明像素来记录邮件/消息是否被打开。提供 Web 管理后台，支持本地、云服务器、Docker 和 Android Termux 四种部署方式。
+通过嵌入 **1×1 透明像素** 记录邮件/消息是否被打开。提供 Web 管理后台，支持 Termux (Android)、Linux 服务器、Docker 三种部署方式。
 
 ---
 
@@ -15,50 +20,67 @@
 
 - 🔌 **一行注册** — `POST /register` 注册消息，返回追踪像素 URL
 - 👁 **透明追踪** — `/pixel` 端点返回 1x1 透明 GIF，无感记录已读
-- 📊 **管理面板** — 内置 Web 后台，查看消息列表、已读统计、每条消息的读取记录
-- 🌐 **IP/UA 记录** — 自动记录读取者 IP、User-Agent 和时间戳
-- 🐳 **Docker 支持** — 支持 Docker / Docker Compose 一键部署
-- 📱 **Termux 方案** — 提供 Android 手机端一键部署脚本 + Cloudflare Tunnel 内网穿透
+- 📊 **管理面板** — 内置 Web 后台，消息列表 + 统计 + 搜索 + CSV 导出
+- 🌍 **IP 定位** (可选) — 设置 GeoLite2 数据库即可获取读取者国家/地区/城市
+- ⚡ **请求限流** — IP 级频率限制 (可配置)
+- 🔐 **API 认证** — 管理接口支持 API Key 保护
+- 🐳 **Docker** — 一键构建，非 root 用户运行
+- 📱 **Termux** — Android 手机端一键脚本 + Cloudflare Tunnel
+- 📦 **双语言后端**:
+  - **Python** — uv 管理依赖 + ruff 代码检测
+  - **C++** — meson + ninja 构建，原生高性能
 - 🔒 **去重** — 同一消息 + 同一 IP 只计一次已读
 
 ---
 
 ## 🚀 快速开始
 
-### 1. 本地运行
+### 1. Python 后端 (推荐)
 
 ```bash
-# 克隆仓库
 git clone https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker.git
 cd read-receipt-tracker
 
-# 安装依赖
-pip install -r requirements.txt
+# 方式 A: uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv pip install --system flask
+python run.py
 
-# 启动 (默认监听 0.0.0.0:5000)
+# 方式 B: pip
+pip install flask
 python run.py
 ```
 
-打开浏览器访问 `http://localhost:5000` 即可看到管理面板。
+打开 `http://localhost:5000` 即可看到管理面板。
 
-### 2. Docker 部署
+### 2. C++ 后端
 
 ```bash
-# 构建并启动
+pip install meson  # 或 apt install meson ninja-build
+apt install libsqlite3-dev libssl-dev
+
+cd cpp
+meson setup builddir
+meson compile -C builddir
+./builddir/rrtracker-server 5000 receipts.db
+```
+
+### 3. Docker
+
+```bash
+# 构建
 docker compose up -d
 
-# 或者用 Docker 命令
+# 或
 docker build -t read-receipt-tracker .
 docker run -d -p 5000:5000 -v $(pwd)/data:/app/data read-receipt-tracker
 ```
 
-### 3. Termux (Android) 一键脚本
+### 4. Termux (Android)
 
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/gaigebeckmanChristinaJames/read-receipt-tracker/main/scripts/setup-termux.sh)
 ```
-
-脚本会自动配置 Python 环境、Flask 服务、保活守护进程、以及 Cloudflare Tunnel 内网穿透。
 
 ---
 
@@ -77,12 +99,12 @@ Content-Type: application/json
 }
 ```
 
-**响应:**
+**响应：**
 
 ```json
 {
     "success": true,
-    "id": "a1b2c3d4...",
+    "id": "a1b2c3d4e5f6...",
     "wxId": "user123",
     "pixel_url": "http://your-server:5000/pixel?wxId=user123&id=a1b2c3d4..."
 }
@@ -94,7 +116,7 @@ Content-Type: application/json
 GET /pixel?wxId=user123&id=a1b2c3d4...
 ```
 
-返回 1×1 透明 GIF（`Content-Type: image/gif`），可嵌入 HTML 邮件或网页。
+返回 1×1 透明 GIF，可嵌入 HTML 邮件或网页。
 
 ### 查询已读数
 
@@ -102,10 +124,18 @@ GET /pixel?wxId=user123&id=a1b2c3d4...
 GET /count?wxId=user123&id=a1b2c3d4...
 ```
 
-**响应:**
-
 ```json
 { "count": 5, "msg_id": "a1b2c3d4..." }
+```
+
+### 批量查询
+
+```http
+GET /batch-status?ids=id1,id2,id3
+```
+
+```json
+{ "statuses": { "id1": 3, "id2": 0, "id3": 7 } }
 ```
 
 ### 健康检查
@@ -120,13 +150,13 @@ GET /health
 
 | 页面 | 路由 | 说明 |
 |------|------|------|
-| 首页仪表盘 | `/` | 总消息数、总已读数、平均已读数、消息列表 + 搜索 |
-| 消息详情 | `/message/<id>` | 消息内容 + 所有读取记录 (IP / UA / 时间) |
+| 仪表盘 | `/` | 统计 + 消息列表 + 搜索 + CSV 导出 |
+| 消息详情 | `/message/<id>` | 消息内容 + IP/地理位置/UA/时间 |
 | 健康检查 | `/health` | 服务健康状态 |
 
-管理接口：
-- `POST /api/delete/<id>` — 删除单条消息
-- `POST /api/delete-all` — 清空全部数据
+管理接口（需 API Key）：
+- `POST /api/delete/<id>` — 删除单条
+- `POST /api/delete-all` — 清空全部
 
 ---
 
@@ -134,21 +164,39 @@ GET /health
 
 ```
 read-receipt-tracker/
-├── app/
-│   ├── __init__.py          # 包入口，版本号
-│   ├── app.py               # Flask 应用工厂
-│   ├── database.py          # SQLite 数据库层
-│   ├── routes.py            # API 路由 + 管理后台
-│   ├── utils.py             # 工具函数 (IP / ID 生成)
-│   └── templates/
-│       ├── index.html       # 管理后台 - 首页
-│       └── detail.html      # 管理后台 - 消息详情
+├── python/                    # Python 后端
+│   ├── app/
+│   │   ├── __init__.py        # 入口，version 2.1.0
+│   │   ├── app.py             # Flask 应用工厂
+│   │   ├── database.py        # SQLite 数据库层
+│   │   ├── routes.py          # API 路由 + 管理后台
+│   │   ├── utils.py           # 工具 + IP 定位
+│   │   └── templates/
+│   │       ├── index.html     # 管理后台首页
+│   │       ├── detail.html    # 消息详情
+│   │       └── error.html     # 错误页面
+├── cpp/                       # C++ 后端 (meson + ninja)
+│   ├── meson.build
+│   ├── src/
+│   │   ├── rrtracker.h        # 头文件
+│   │   ├── main.cpp           # 入口
+│   │   ├── server.cpp         # HTTP 服务器
+│   │   ├── tracker.cpp        # 追踪核心逻辑
+│   │   └── database.cpp       # SQLite 封装
+│   └── test/
+│       └── test_tracker.cpp   # 单元测试
 ├── scripts/
-│   └── setup-termux.sh      # Termux 一键部署脚本
-├── run.py                   # 启动入口
+│   ├── setup-termux.sh        # Termux 一键部署
+│   └── setup-linux.sh         # Linux 服务器部署
+├── docs/                      # 文档
+│   ├── API.md                 # API 详细文档
+│   ├── DEVELOPMENT.md         # 开发指南
+│   └── TOOLCHAIN.md           # 构建工具链教程
+├── run.py                     # Python 启动入口
+├── pyproject.toml             # Python 项目配置 (uv + ruff)
 ├── Dockerfile
 ├── docker-compose.yml
-├── requirements.txt
+├── .env.example
 ├── .gitignore
 ├── LICENSE
 └── README.md
@@ -156,26 +204,68 @@ read-receipt-tracker/
 
 ---
 
-## 🔧 消息 ID 生成算法
+## 🔧 配置
+
+复制配置模板：
+
+```bash
+cp .env.example .env
+# 编辑 .env
+```
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `DATABASE_PATH` | `receipts.db` | 数据库路径 |
+| `API_KEY` | (空) | 管理后台认证密钥 |
+| `GEOIP_DB` | (空) | GeoLite2-City.mmdb 路径 (启用 IP 定位) |
+| `RATE_LIMIT_PER_MINUTE` | 60 | 请求频率限制 |
+| `HOST` | `0.0.0.0` | 监听地址 |
+| `PORT` | 5000 | 监听端口 |
+
+---
+
+## 🔧 消息 ID 算法
 
 ```
 SHA-256(wxId + '\0' + content + '\0' + createTime)
 ```
 
-- 相同的 `wxId` + `content` + `createTime` 会生成相同的 ID
-- `INSERT OR IGNORE` 策略保证幂等性
+- 相同的 wxId + content + createTime → 相同 ID
+- `INSERT OR IGNORE` 保证幂等性
 
 ---
 
 ## 🛠 技术栈
 
-| 层级 | 技术 |
-|------|------|
-| Web 框架 | Flask 2.3+ |
-| 数据库 | SQLite (WAL 模式) |
-| 运行时 | Python 3.9+ |
-| 容器化 | Docker / Docker Compose |
-| 内网穿透 | Cloudflare Tunnel (Termux 方案) |
+| 层级 | Python | C++ |
+|------|--------|-----|
+| 框架 | Flask 2.3+ | 自建 HTTP 服务 |
+| 数据库 | SQLite (WAL) | SQLite3 C API |
+| 包管理 | uv | meson + ninja |
+| 代码检查 | ruff | clang-tidy (可选) |
+| 部署 | Docker / systemd / Termux | 原生二进制 |
+| IP 定位 | maxminddb (可选) | — |
+
+---
+
+## 🌍 IP 定位（可选）
+
+启用 IP 地理位置功能：
+
+```bash
+# 1. 注册 MaxMind 账号并下载 GeoLite2-City.mmdb
+#    https://www.maxmind.com/en/account/
+
+# 2. 安装依赖
+pip install maxminddb
+
+# 3. 配置
+echo "GEOIP_DB=./data/GeoLite2-City.mmdb" >> .env
+
+# 4. 重启服务
+```
+
+启用后已读记录会包含国家/地区/城市信息，在管理后台详情页可见。
 
 ---
 
