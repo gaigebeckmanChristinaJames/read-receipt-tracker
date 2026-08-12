@@ -149,7 +149,7 @@ async function copyID(){
 async function copyPixel(){
   const wx="{{message.wx_id}}";
   const id="{{message.id}}";
-  await navigator.clipboard.writeText(location.origin+"/pixel?wxID="+wx+"&id="+id);
+  await navigator.clipboard.writeText(location.origin+"/pixel?wxId="+wx+"&id="+id);
   alert("追踪链接已复制");
 }
 </script>
