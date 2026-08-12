@@ -26,6 +26,11 @@ tunnel.log
 daemon.log
 current_url.txt
 
+# 敏感配置
+.env
+.env.local
+.env.*.local
+
 # 系统
 .DS_Store
 Thumbs.db
