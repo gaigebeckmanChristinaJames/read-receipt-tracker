@@ -17,7 +17,14 @@
 
 一个极简的 **消息已读回执追踪服务**：注册消息后得到一个 URL，将该 URL 作为 1×1 透明像素嵌入邮件或网页，对方打开时自动记录已读。提供漂亮的 Web 管理面板查看统计和每条消息的读取详情。
 
-> 🎯 **定位**：为 **WeKit** / **WuYu** 等微信模块提供已读回执后端服务。也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
+> 🎯 **定位**：为微信模块 **WeKit** / **WuYu** 提供已读回执后端服务。也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
+
+## 🔗 关联项目
+
+| 项目 | 说明 | 地址 |
+|------|------|------|
+| **WeKit** | 微信模块（客户端） | [点击跳转 → github.com/Ujhhgtg/WeKit](https://github.com/Ujhhgtg/WeKit) |
+| **WuYu** | 微信模块（无 GitHub 仓库） | — |
 
 ---
 
@@ -43,16 +50,8 @@
 
 ### 1. Termux 一键部署 (推荐，零下载全内嵌)
 
-**标准版（含 IP 定位）：**
-
 ```bash
 bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup.sh")
-```
-
-**Lite 版（无 IP 定位，更轻量）：**
-
-```bash
-bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup-lite.sh")
 ```
 
 > 💡 全新 Termux 首次使用先装 curl：
@@ -65,7 +64,13 @@ bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-rec
 
 > 💡 全部代码内嵌在脚本中，不下载任何仓库文件、不依赖 GitHub 直连（走 jsDelivr CDN）、不写 /tmp，彻底避免网络超时和权限报错。
 >
-> 🌍 **标准版** 内置 IP 定位（支持 IPv4/IPv6，ip-api.com/ipwho.is/ipinfo.io 三接口备份），已读记录自动附带国家/地区/城市/ISP，首页列表显示定位城市数；**Lite 版** 去除定位功能，响应更快、无外部依赖。
+> 🌍 **IP 定位开关**（所有部署形态通用）：默认开启（中文省市定位）。关闭方式：
+>
+> ```bash
+> ENABLE_GEO=0 python app.py     # Termux / Linux 本地运行
+> ENABLE_GEO=0 docker compose up # Docker 部署
+> ```
+> 关闭后为 Lite 模式：零外部请求、零延迟，纯追踪。
 >
 > 🔗 脚本与隧道**完全分离**。需要公网地址时，另开一个 Termux 会话：
 >
