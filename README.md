@@ -55,11 +55,18 @@ bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-rec
 bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup-lite.sh")
 ```
 
-**一条命令搞定**：自动配置清华源 → 安装 Python + Flask + cloudflared → 内嵌代码落地 → Flask 后台运行 → Cloudflare Tunnel 前台直显日志（屏幕直接出现 `https://xxx.trycloudflare.com` 公网地址）。
+**一条命令搞定**：自动配置清华源 → 安装 Python + Flask → 内嵌代码落地 → 服务前台运行（屏幕实时显示日志与控制台地址 `http://127.0.0.1:5000`）。
 
 > 💡 全部代码内嵌在脚本中，不下载任何仓库文件、不依赖 GitHub 直连（走 jsDelivr CDN）、不写 /tmp，彻底避免网络超时和权限报错。
 >
 > 🌍 **标准版** 内置 IP 定位（ip-api.com 免费接口，无需 Key），已读记录自动附带国家/地区/城市/ISP；**Lite 版** 去除定位功能，响应更快、无外部依赖。
+>
+> 🔗 脚本与隧道**完全分离**。需要公网地址时，另开一个 Termux 会话执行：
+>
+> ```bash
+> cloudflared tunnel --url http://127.0.0.1:5000
+> ```
+> 隧道日志会显示 `https://xxx.trycloudflare.com` 公网地址。
 
 ### 2. Python 后端 (Linux 服务器)
 
