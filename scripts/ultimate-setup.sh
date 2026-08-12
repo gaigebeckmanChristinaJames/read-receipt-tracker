@@ -9,7 +9,8 @@ GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 log() { echo -e "${GREEN}[OK]${NC} $1"; }
 warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 
-echo "=== read-receipt-tracker 一键部署 PRO 版 (含 IP 定位) ==="
+echo "=== read-receipt-tracker 一键部署 (IP 定位默认开启) ==="
+echo "   关闭定位(Lite模式): ENABLE_GEO=0 python app.py"
 echo ""
 
 echo "[1/4] 检查环境 + 配置清华源..."
@@ -233,6 +234,9 @@ def get_ip():
     return request.remote_addr or "0.0.0.0"
 
 def lookup_geo(ip):
+    # IP 定位开关: 环境变量 ENABLE_GEO=0 关闭 (Lite 模式, 零外部请求)
+    if os.environ.get("ENABLE_GEO", "1").lower() in ("0", "off", "false", "no"):
+        return None
     # IP 定位：中文优先 (ip-api.com lang=zh-CN)，失败回退 ipwho.is / ipinfo.io
     if ip in ("0.0.0.0", "127.0.0.1", "::1", "") or not ip:
         return None
