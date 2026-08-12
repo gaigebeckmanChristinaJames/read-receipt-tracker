@@ -123,7 +123,7 @@ def register_routes(app):
         country = geo.get("country", "") if geo else ""
         region = geo.get("region", "") if geo else ""
         city = geo.get("city", "") if geo else ""
-        isp = ""
+        isp = geo.get("isp", "") if geo else ""
 
         db = get_db()
         try:
