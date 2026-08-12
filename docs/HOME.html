@@ -89,14 +89,14 @@ body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI
       <span class="fname">IP 定位</span>
       <span class="fcount">中文省市 · 可选开关</span>
     </div>
-    <div class="fdesc">自动获取读取者省市/运营商/经纬度</div>
+    <div class="fdesc">自动获取读取者国家/省份/城市</div>
     <div class="detail">
       <b>功能：</b>每次已读自动查询 IP 归属地，返回中文省市信息（如：中国 上海市 上海）。<br><br>
       <b>三级接口自动备份（无需 Key）：</b><br>
       <ul>
         <li>ip-api.com（中文）→ ipwho.is（中文）→ ipinfo.io（英文兜底）</li>
         <li>支持 IPv4 与 IPv6，超时 5 秒静默降级</li>
-        <li>记录字段：国家 / 省份 / 城市 / 运营商 / 经纬度</li>
+        <li>记录字段：国家 / 省份 / 城市</li>
       </ul>
       <b>关闭定位（Lite 模式）：</b> <code>ENABLE_GEO=0 python app.py</code> —— 零外部请求、响应最快
     </div>
@@ -140,7 +140,7 @@ body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI
         <li><code>GET /message/&lt;id&gt;?json=1</code> — 详情 JSON</li>
         <li><code>GET /batch-status?ids=</code> — 批量查询</li>
       </ul>
-      <b>定位返回示例：</b> <code>{"location":"中国 上海市 上海","province":"上海市","city":"上海","isp":"China Mobile"}</code>
+      <b>定位返回示例：</b> <code>{"location":"中国 上海市 上海","province":"上海市","city":"上海"}</code>
     </div>
   </div>
 
