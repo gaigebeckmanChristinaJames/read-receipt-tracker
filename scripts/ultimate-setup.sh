@@ -271,6 +271,23 @@ def lookup_geo(ip):
             }
     except Exception:
         pass
+
+    # 接口 3: ipinfo.io (HTTPS, 支持 IPv6)
+    try:
+        req = urllib.request.Request(
+            f"https://ipinfo.io/{ip}/json",
+            headers={"User-Agent": "rrt/2.1"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            d = _json.load(resp)
+        if d.get("country"):
+            return {
+                "country": d.get("country", ""),
+                "region": d.get("region", ""),
+                "city": d.get("city", ""),
+                "isp": (d.get("org") or "").split(" ", 1)[-1] if d.get("org") else "",
+            }
+    except Exception:
+        pass
     return None
 
 @app.route("/health")
@@ -361,7 +378,57 @@ def detail(mid):
     msg = {"id": m["id"], "wxid": m["wx_id"], "content": m["content"],
            "cnt": len(rows),
            "t": datetime.fromtimestamp(m["registered_at"]).strftime("%Y-%m-%d %H:%M:%S")}
+    # 支持 JSON 返回 (?json=1 或 Accept: application/json)
+    if request.args.get("json") == "1" or "application/json" in request.headers.get("Accept", ""):
+        return jsonify({
+            "message": msg,
+            "reads": [{
+                "ip_address": r["ip_address"],
+                "user_agent": r["user_agent"],
+                "country": (db.execute("SELECT country FROM reads WHERE id=?", (r["id"],)).fetchone() or {"country": ""})["country"],
+                "location": r["geo"],
+                "read_at": r["t"],
+            } for r in rows],
+        })
     return render_template_string(DETAIL_HTML, m=msg, reads=reads)
+
+# JSON 详情接口: /api/reads/<mid> (客户端专用)
+@app.route("/api/reads/<mid>")
+def api_reads(mid):
+    db = get_db()
+    m = db.execute("SELECT * FROM messages WHERE id=?", (mid,)).fetchone()
+    if not m:
+        return jsonify({"error": "not found"}), 404
+    rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
+    return jsonify({
+        "msg_id": mid,
+        "wxId": m["wx_id"],
+        "content": m["content"],
+        "read_count": len(rows),
+        "reads": [{
+            "ip_address": r["ip_address"],
+            "location": " ".join([x for x in [r["country"], r["region"], r["city"]] if x]) or "-",
+            "country": r["country"],
+            "region": r["region"],
+            "city": r["city"],
+            "isp": r["isp"],
+            "user_agent": r["user_agent"],
+            "read_at": datetime.fromtimestamp(r["read_at"]).strftime("%Y-%m-%d %H:%M:%S"),
+        } for r in rows],
+    })
+
+# JSON 消息列表: /api/messages (客户端专用)
+@app.route("/api/messages")
+def api_messages():
+    db = get_db()
+    rows = db.execute(
+        "SELECT m.*, (SELECT COUNT(DISTINCT ip_address) FROM reads r WHERE r.msg_id=m.id) cnt "
+        "FROM messages m ORDER BY registered_at DESC LIMIT 100").fetchall()
+    return jsonify({"messages": [{
+        "id": r["id"], "wxId": r["wx_id"], "content": r["content"],
+        "read_count": r["cnt"],
+        "registered_at": datetime.fromtimestamp(r["registered_at"]).strftime("%Y-%m-%d %H:%M:%S"),
+    } for r in rows]})
 
 @app.route("/api/delete/<mid>", methods=["POST"])
 def del_msg(mid):
