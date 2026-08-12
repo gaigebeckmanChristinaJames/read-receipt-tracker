@@ -12,7 +12,7 @@ services:
     environment:
       - DATABASE_PATH=/app/data/receipts.db
       - API_KEY=${API_KEY:-}
-      - GEOIP_DB=/app/data/GeoLite2-City.mmdb
+      - ENABLE_GEO=${ENABLE_GEO:-1}
       - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-60}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
