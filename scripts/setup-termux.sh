@@ -88,40 +88,28 @@ if [ ! -f "$APP_DIR/routes.py" ]; then
 fi
 
 echo ""
-echo "🌐 [6/8] 启动 Cloudflare Tunnel..."
+echo "🌐 [6/8] 启动服务..."
 pkill -f "cloudflared tunnel" 2>/dev/null || true
-rm -f current_url.txt tunnel.log
+for PID in $(pgrep -f "python.*run\.py"); do kill "$PID" 2>/dev/null; done
 cd "$INSTALL_DIR"
-cloudflared tunnel --url http://127.0.0.1:5000 > tunnel.log 2>&1 < /dev/null &
-echo "   Tunnel 进程已启动，等待地址..."
 
-echo ""
-echo "⏳ [7/8] 等待隧道地址 (最多 30 秒)..."
-TUNNEL_URL=""
-for i in $(seq 1 30); do
-    URL=$(grep -o 'https://[a-zA-Z0-9.-]*\.trycloudflare\.com' tunnel.log 2>/dev/null | tail -1)
-    if [ -n "$URL" ]; then
-        echo "$URL" > current_url.txt
-        TUNNEL_URL="$URL"
-        break
-    fi
-    echo -n "."
-    sleep 1
-done
-
-echo ""
-echo ""
-echo "════════════════════════════════════════════"
-echo "  ✅ 部署完成！"
-echo "  🖥  控制台地址: http://127.0.0.1:5000"
-if [ -n "$TUNNEL_URL" ]; then
-    echo "  🔗 隧道地址:   $TUNNEL_URL"
+# Flask 后台运行 (日志写 app.log)
+nohup python run.py --host 0.0.0.0 --port 5000 > app.log 2>&1 &
+sleep 2
+if timeout 5 curl -sf http://127.0.0.1:5000/health >/dev/null 2>&1; then
+    log "Flask 服务已启动: http://127.0.0.1:5000"
 else
-    echo "  🔗 隧道地址:   建立中... (cat current_url.txt 查看)"
+    warn "Flask 可能还在启动中，日志: tail -f app.log"
 fi
+
+echo ""
+echo "════════════════════════════════════════════"
+echo "  🖥  控制台地址: http://127.0.0.1:5000"
 echo "════════════════════════════════════════════"
 echo ""
-echo "▶ 服务在前台运行中 (Ctrl+C 停止)"
+echo "▶ 正在前台启动 Cloudflare Tunnel (日志直接显示)..."
+echo "▶ 看到 https://xxx.trycloudflare.com 即隧道地址"
+echo "▶ 按 Ctrl+C 停止"
 echo ""
 
 # 可选自动清理
@@ -155,5 +143,5 @@ CLEANSCRIPT
     log "自动清理已启动"
 fi
 
-# 前台运行服务
-exec python run.py --host 0.0.0.0 --port 5000
+# cloudflared 前台运行 (日志直接显示在屏幕上，像截图那样)
+exec cloudflared tunnel --url http://127.0.0.1:5000
