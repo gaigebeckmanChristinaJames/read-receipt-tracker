@@ -254,6 +254,9 @@ def lookup_geo(ip):
                 "country": d.get("country", ""),
                 "region": d.get("regionName", ""),
                 "city": d.get("city", ""),
+                "isp": d.get("isp", ""),
+                "org": d.get("isp", ""),
+                "loc": f"{d.get('lat','')},{d.get('lon','')}" if d.get("lat") is not None else "",
             }
     except Exception:
         pass
@@ -270,6 +273,9 @@ def lookup_geo(ip):
                 "country": d.get("country", ""),
                 "region": d.get("region", ""),
                 "city": d.get("city", ""),
+                "isp": (d.get("connection") or {}).get("isp", ""),
+                "org": (d.get("connection") or {}).get("isp", ""),
+                "loc": f"{d.get('latitude','')},{d.get('longitude','')}" if d.get("latitude") is not None else "",
             }
     except Exception:
         pass
@@ -286,6 +292,9 @@ def lookup_geo(ip):
                 "country": d.get("country", ""),
                 "region": d.get("region", ""),
                 "city": d.get("city", ""),
+                "isp": (d.get("org", "") or "").split(" ", 1)[-1] if d.get("org") else "",
+                "org": d.get("org", ""),
+                "loc": d.get("loc", ""),
             }
     except Exception:
         pass
@@ -329,7 +338,7 @@ def pixel():
     country = geo["country"] if geo else ""
     region = geo["region"] if geo else ""
     city = geo["city"] if geo else ""
-    isp = ""
+    isp = geo["isp"] if geo else ""
     db = get_db()
     try:
         db.execute("INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent,country,region,city,isp) VALUES(?,?,?,?,?,?,?,?)",
