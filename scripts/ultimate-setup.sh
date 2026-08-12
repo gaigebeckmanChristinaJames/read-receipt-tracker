@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ================================================================
-# read-receipt-tracker · 终极一键版 (零下载，全内嵌)
+# read-receipt-tracker · 终极一键版 PRO (含 IP 定位，零下载，全内嵌)
 # 所有代码内置在脚本中，不需要从任何网站下载文件
 # 只需: bash setup.sh
 # ================================================================
@@ -9,7 +9,7 @@ GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 log() { echo -e "${GREEN}[OK]${NC} $1"; }
 warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 
-echo "=== read-receipt-tracker 一键部署 (全内嵌版) ==="
+echo "=== read-receipt-tracker 一键部署 PRO 版 (含 IP 定位) ==="
 echo ""
 
 echo "[1/4] 检查环境 + 配置清华源..."
@@ -169,9 +169,9 @@ th{background:#1c2129;color:var(--t2);font-size:12px}
 <button class="btn-d" onclick="del()">🗑 删除本条</button></div>
 <div class="card"><h2>👁 已读记录 ({{reads|length}})</h2>
 {%if reads%}
-<table><thead><tr><th>IP</th><th>User-Agent</th><th>读取时间</th></tr></thead><tbody>
+<table><thead><tr><th>IP</th><th>📍 位置</th><th>User-Agent</th><th>读取时间</th></tr></thead><tbody>
 {%for r in reads%}
-<tr><td class="ip">{{r.ip_address}}</td><td class="ua" title="{{r.user_agent}}">{{r.user_agent or "-"}}</td><td>{{r.t}}</td></tr>
+<tr><td class="ip">{{r.ip_address}}</td><td>{{r.geo}}</td><td class="ua" title="{{r.user_agent}}">{{r.user_agent or "-"}}</td><td>{{r.t}}</td></tr>
 {%endfor%}
 </tbody></table>{%else%}<div class="emp">📭 暂无读取记录</div>{%endif%}</div>
 </div>
@@ -236,6 +236,27 @@ def get_ip():
     if xri: return xri.strip()
     return request.remote_addr or "0.0.0.0"
 
+def lookup_geo(ip):
+    # 免费 IP 定位 (ip-api.com)，无需 Key，失败静默降级
+    if ip in ("0.0.0.0", "127.0.0.1", ""):
+        return None
+    try:
+        import urllib.request, json as _json
+        with urllib.request.urlopen(
+            f"http://ip-api.com/json/{ip}?lang=zh-CN&fields=country,regionName,city,isp",
+            timeout=3) as resp:
+            d = _json.load(resp)
+        if d.get("status") == "success":
+            return {
+                "country": d.get("country", ""),
+                "region": d.get("regionName", ""),
+                "city": d.get("city", ""),
+                "isp": d.get("isp", ""),
+            }
+    except Exception:
+        pass
+    return None
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"})
@@ -270,10 +291,15 @@ def pixel():
         return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
     ip = get_ip()
     ua = (request.headers.get("User-Agent", "") or "")[:500]
+    geo = lookup_geo(ip)
+    country = geo["country"] if geo else ""
+    region = geo["region"] if geo else ""
+    city = geo["city"] if geo else ""
+    isp = geo["isp"] if geo else ""
     db = get_db()
     try:
-        db.execute("INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent) VALUES(?,?,?,?)",
-                   (mid, wx, ip, ua))
+        db.execute("INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent,country,region,city,isp) VALUES(?,?,?,?,?,?,?,?)",
+                   (mid, wx, ip, ua, country, region, city, isp))
         db.commit()
     except Exception:
         pass
@@ -313,6 +339,7 @@ def detail(mid):
         return "not found", 404
     rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
     reads = [{"ip_address": r["ip_address"], "user_agent": r["user_agent"],
+              "geo": " ".join([x for x in [r["country"], r["region"], r["city"]] if x]) or "-",
               "t": datetime.fromtimestamp(r["read_at"]).strftime("%Y-%m-%d %H:%M:%S")}
              for r in rows]
     msg = {"id": m["id"], "wxid": m["wx_id"], "content": m["content"],
