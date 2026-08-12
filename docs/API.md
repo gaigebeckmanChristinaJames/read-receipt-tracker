@@ -121,3 +121,62 @@ POST /api/delete-all
 |------|------|------|
 | 仪表盘 | `GET /` | 统计、消息列表、搜索、CSV 导出 |
 | 消息详情 | `GET /message/<id>` | 消息内容 + 已读记录 + 地理位置 |
+
+---
+
+## 客户端 JSON 接口 (v2.1)
+
+### 8. 查询已读记录（含省市定位）
+
+```http
+GET /api/reads/<msg_id>
+```
+
+**响应**：
+
+```json
+{
+    "msg_id": "a1b2c3d4...",
+    "wxId": "user123",
+    "content": "消息内容",
+    "read_count": 3,
+    "reads": [
+        {
+            "ip_address": "2409:8a1e:...",
+            "location": "中国 上海市 上海",
+            "country": "中国",
+            "region": "上海市",
+            "city": "上海",
+            "isp": "China Mobile",
+            "user_agent": "Mozilla/5.0...",
+            "read_at": "2026-08-13 04:10:16"
+        }
+    ]
+}
+```
+
+### 9. 消息列表 JSON
+
+```http
+GET /api/messages
+```
+
+### 10. 已读计数（含定位）
+
+```http
+GET /count?wxId=xxx&id=xxx
+```
+
+返回 `count` + `reads` 数组（每条含 location/province/city/country/isp）。
+
+### IP 定位说明
+
+三级免费接口自动备份（无需 Key）：
+
+| 优先级 | 接口 | 语言 |
+|--------|------|------|
+| 1 | ip-api.com | 中文 |
+| 2 | ipwho.is | 中文 |
+| 3 | ipinfo.io | 英文 |
+
+支持 IPv4 / IPv6，失败静默降级，绝不阻塞像素响应。
