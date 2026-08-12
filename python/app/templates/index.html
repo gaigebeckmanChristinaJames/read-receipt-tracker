@@ -78,7 +78,7 @@ tr:hover td{background:#1c2129}
   <div class="top-bar">
     <div class="search-box">
       <span class="icon">🔍</span>
-      <input type="text" id="search-box" placeholder="搜索 wxid / 内容 / ID…" oninput="doFilter()">
+      <input type="text" id="search-box" placeholder="搜索 wxId / 内容 / ID…" oninput="doFilter()">
     </div>
     <button class="refresh-btn" onclick="location.reload()" title="刷新">🔄</button>
   </div>
@@ -103,7 +103,7 @@ tr:hover td{background:#1c2129}
   <!-- 表格 -->
   <div class="table-box">
     <table>
-      <thead><tr><th>ID</th><th>wxid</th><th>内容</th><th>已读数</th><th>时间</th><th>操作</th></tr></thead>
+      <thead><tr><th>ID</th><th>wxId</th><th>内容</th><th>已读数</th><th>时间</th><th>操作</th></tr></thead>
       <tbody id="msg-list">
         {%for m in messages%}
         <tr data-content="{{m.content}}" data-wx="{{m.wx_id}}" data-id="{{m.id}}">
@@ -168,7 +168,7 @@ async function deleteAll(){
   if(r.ok)location.reload();else alert("清空失败");
 }
 function expCSV(){
-  const rows=[["ID","wxid","内容","已读数","时间"]];
+  const rows=[["ID","wxId","内容","已读数","时间"]];
   document.querySelectorAll("#msg-list tr[data-content]").forEach(r=>{
     if(r.style.display==="none")return;
     const td=r.querySelectorAll("td");
