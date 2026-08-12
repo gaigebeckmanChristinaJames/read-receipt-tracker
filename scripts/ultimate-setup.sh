@@ -30,12 +30,8 @@ fi
 log "环境 OK"
 
 echo ""
-echo "[2/4] 安装 Python + Flask + cloudflared (如已装会跳过)..."
+echo "[2/4] 安装 Python + Flask (如已装会跳过)..."
 command -v python >/dev/null 2>&1 || { echo "  安装 python..."; pkg install -y python; }
-command -v cloudflared >/dev/null 2>&1 && log "cloudflared 已安装" || {
-    echo "  安装 cloudflared..."
-    pkg install -y cloudflared 2>/dev/null || warn "cloudflared 安装失败，隧道功能不可用（核心服务不受影响）"
-}
 python -c "import flask" 2>/dev/null && log "Flask 已安装" || {
     echo "  安装 Flask (清华源)..."
     pip install flask -i https://pypi.tuna.tsinghua.edu.cn/simple 2>/dev/null || pip install flask
@@ -392,35 +388,19 @@ PYEOF
 log "代码写入完成: $HOME/rrt/app.py"
 
 echo ""
-echo "[4/4] 启动服务 (后台) + Cloudflare Tunnel (前台)..."
+echo "[4/4] 启动服务 (前台运行)..."
 cd "$HOME/rrt"
 
-# Flask 后台运行 (日志写 app.log)
 pkill -f "python app\.py" 2>/dev/null || true
-nohup python app.py > app.log 2>&1 &
-sleep 3
-if curl -sf --max-time 5 http://127.0.0.1:5000/health >/dev/null 2>&1; then
-    log "Flask 已后台运行: http://127.0.0.1:5000"
-else
-    warn "Flask 可能还在启动，日志: tail -f app.log"
-fi
 
 echo ""
 echo "════════════════════════════════════════════"
 echo "  🖥  控制台地址: http://127.0.0.1:5000"
 echo "════════════════════════════════════════════"
 echo ""
+echo "▶ 服务前台运行中 (Ctrl+C 停止)"
+echo "▶ 需要公网地址？另开一个 Termux 会话执行:"
+echo "   cloudflared tunnel --url http://127.0.0.1:5000"
+echo ""
 
-# cloudflared 前台运行 (日志直接显示，看到 trycloudflare.com 就是隧道地址)
-if command -v cloudflared >/dev/null 2>&1; then
-    pkill -f "cloudflared tunnel" 2>/dev/null || true
-    echo "▶ 正在前台启动 Cloudflare Tunnel..."
-    echo "▶ 日志中会出现 https://xxx.trycloudflare.com 即公网地址"
-    echo "▶ Ctrl+C 停止隧道 (Flask 仍在后台运行)"
-    echo ""
-    exec cloudflared tunnel --url http://127.0.0.1:5000
-else
-    warn "cloudflared 未安装，无法启动隧道"
-    echo "▶ 回退：前台显示服务日志 (Ctrl+C 停止)"
-    tail -f app.log
-fi
+exec python app.py
