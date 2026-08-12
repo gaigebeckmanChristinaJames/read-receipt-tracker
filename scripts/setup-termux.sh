@@ -71,16 +71,27 @@ log "Flask 就绪"
 echo ""
 echo "📥 [5/8] 下载服务源码..."
 mkdir -p "$APP_DIR/templates"
+
+# 下载函数：优先 jsDelivr CDN（国内快），失败回退 GitHub raw
+download() {
+    local src="$1" dest="$2"
+    if curl -fL --max-time 60 "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/$src" -o "$dest" 2>/dev/null; then
+        echo "   ✅ $src (CDN)"
+    elif curl -fL --max-time 60 "$RAW/$src" -o "$dest" 2>/dev/null; then
+        echo "   ✅ $src (GitHub直连)"
+    else
+        echo "   ❌ $src 下载失败"
+        return 1
+    fi
+}
+
 for f in __init__.py app.py database.py routes.py utils.py; do
-    echo "   → 下载 $f"
-    curl -fL "$RAW/python/app/$f" -o "$APP_DIR/$f"
+    download "python/app/$f" "$APP_DIR/$f" || true
 done
 for t in index.html detail.html error.html; do
-    echo "   → 下载模板 $t"
-    curl -fL "$RAW/python/app/templates/$t" -o "$APP_DIR/templates/$t"
+    download "python/app/templates/$t" "$APP_DIR/templates/$t" || true
 done
-echo "   → 下载 run.py"
-curl -fL "$RAW/run.py" -o "$INSTALL_DIR/run.py"
+download "run.py" "$INSTALL_DIR/run.py" || true
 log "源码下载完成"
 
 if [ ! -f "$APP_DIR/routes.py" ]; then
