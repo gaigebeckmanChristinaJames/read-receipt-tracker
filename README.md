@@ -82,6 +82,44 @@ docker run -d -p 5000:5000 -v $(pwd)/data:/app/data read-receipt-tracker
 bash <(curl -s https://raw.githubusercontent.com/gaigebeckmanChristinaJames/read-receipt-tracker/main/scripts/setup-termux.sh)
 ```
 
+> 💡 Termux 脚本**会自动配置** Cloudflare Tunnel，因为手机没有公网 IP，必须通过内网穿透才能让追踪像素被外部访问。
+
+---
+
+## 🌐 公网访问 & Cloudflare Tunnel
+
+### 我是否需要 Tunnel？
+
+| 部署场景 | 需要 Tunnel？ | 说明 |
+|----------|:---:|------|
+| **VPS / 云服务器** (阿里云、腾讯云、AWS 等) | ❌ | 服务器自带公网 IP，直接 `http://你的IP:5000` 即可 |
+| **本地电脑** (127.0.0.1) | ❌ | 本地测试用 `localhost:5000`，无需内网穿透 |
+| **树莓派 / 内网服务器** | ✅ | 没有公网 IP，需要 Tunnel 才能让追踪像素被外部访问 |
+| **Termux (Android 手机)** | ✅ | 手机网络没有公网 IP，脚本默认自动配置 |
+
+### 启用 Tunnel (Linux)
+
+```bash
+# 一键部署 + Tunnel
+bash scripts/setup-linux.sh --tunnel
+
+# 查看实时公网地址
+cat .tunnel_url.txt
+```
+
+Tunnel 脚本会自动：
+1. 安装 `cloudflared`
+2. 启动保活守护进程
+3. 网络切换时自动重建隧道
+4. 将公网 URL 写入 `.tunnel_url.txt`
+
+### 查看当前 Tunnel 地址
+
+```bash
+cat .tunnel_url.txt
+# 示例输出: https://example-name.trycloudflare.com
+```
+
 ---
 
 ## 📡 API 文档
