@@ -158,17 +158,22 @@ def register_routes(app):
                 CASE WHEN (SELECT COUNT(*) FROM messages)=0 THEN 0.0
                      ELSE ROUND((SELECT COUNT(*) FROM reads)*1.0
                           /(SELECT COUNT(*) FROM messages),1)
-                END ar
+                END ar,
+                (SELECT COUNT(DISTINCT ip_address) FROM reads
+                 WHERE country != '' OR city != '') gr
         """).fetchone()
         tm = s["tm"] or 0
         tr = s["tr"] or 0
         ar = float(s["ar"] or 0)
+        gr = s["gr"] or 0
         ms = db.execute(
             "SELECT m.*,(SELECT COUNT(DISTINCT ip_address) FROM reads r "
-            "WHERE r.msg_id=m.id) read_cnt "
+            "WHERE r.msg_id=m.id) read_cnt, "
+            "(SELECT COUNT(DISTINCT ip_address) FROM reads r "
+            "WHERE r.msg_id=m.id AND (r.country!='' OR r.city!='')) geo_cnt "
             "FROM messages m ORDER BY registered_at DESC LIMIT 100").fetchall()
         return render_template("index.html", total_messages=tm, total_reads=tr,
-                               avg_reads=ar, messages=ms)
+                               avg_reads=ar, geo_reads=gr, messages=ms)
 
     @app.route("/message/<mid>")
     @require_api_key
