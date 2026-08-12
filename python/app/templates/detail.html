@@ -5,87 +5,63 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>消息详情 · 已读追踪</title>
 <style>
-:root{--primary:#6366f1;--primary-dark:#4f46e5;--danger:#ef4444;--danger-hover:#dc2626;
---success:#10b981;--warning:#f59e0b;--bg:#f0f2f5;--card:#fff;--text:#1f2937;--t2:#6b7280;
---bd:#e5e7eb;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+:root{--bg:#0d1117;--card:#161b22;--bd:#30363d;--text:#e6edf3;--t2:#8b949e;
+--primary:#3fb950;--danger:#f85149;--accent:#58a6ff}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--text);line-height:1.6}
-.container{max-width:960px;margin:0 auto;padding:24px}
-.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--primary);text-decoration:none;font-weight:600;margin-bottom:20px;font-size:14px}
-.back-link:hover{text-decoration:underline}
-.card{background:var(--card);border-radius:var(--radius);padding:28px;margin-bottom:24px;box-shadow:var(--shadow)}
-.card h2{font-size:20px;margin-bottom:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
-.item{background:#f9fafb;padding:16px;border-radius:8px}
+body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--text);line-height:1.6;min-height:100vh}
+.container{max-width:900px;margin:0 auto;padding:20px}
+.back-link{color:var(--accent);text-decoration:none;font-weight:600;margin-bottom:18px;display:inline-block;font-size:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:26px;margin-bottom:22px}
+.card h2{font-size:19px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px}
+.item{background:var(--bg);border:1px solid var(--bd);padding:14px;border-radius:8px}
 .label{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
 .val{word-break:break-all;font-size:14px}
-.mono{font-family:"SF Mono","Fira Code",monospace;font-size:12px;color:var(--primary)}
-.content-box{background:#f9fafb;padding:20px;border-radius:8px;white-space:pre-wrap;font-size:15px;margin:12px 0;border-left:3px solid var(--primary)}
-.count-badge{display:inline-block;padding:8px 20px;border-radius:24px;background:var(--success);color:#fff;font-size:18px;font-weight:700}
-.count-badge.zero{background:#9ca3af}
-.geo-summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.geo-chip{background:#eef2ff;color:#4338ca;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600}
-table{width:100%;border-collapse:collapse;margin-top:16px}
-th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--bd);font-size:14px}
-th{background:#f9fafb;color:var(--t2);font-weight:600;font-size:12px;text-transform:uppercase}
-tr:hover td{background:#fafbff}
-.ip-cell{font-family:monospace;color:var(--primary);font-weight:600}
-.ua-cell{font-size:12px;color:var(--t2);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mono{font-family:"SF Mono",Consolas,monospace;font-size:12px;color:var(--accent)}
+.content-box{background:var(--bg);border:1px solid var(--bd);border-left:3px solid var(--primary);padding:18px;border-radius:8px;white-space:pre-wrap;font-size:15px;margin:10px 0}
+.count-badge{display:inline-block;padding:7px 18px;border-radius:20px;background:rgba(63,185,80,.15);color:var(--primary);font-size:17px;font-weight:700}
+.count-badge.zero{background:rgba(139,148,158,.15);color:var(--t2)}
+.geo-summary{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.geo-chip{background:rgba(88,166,255,.12);color:var(--accent);padding:5px 13px;border-radius:16px;font-size:12px;font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:14px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--bd);font-size:14px}
+th{background:#1c2129;color:var(--t2);font-weight:600;font-size:12px;text-transform:uppercase}
+tr:hover td{background:#1c2129}
+.ip-cell{font-family:monospace;color:var(--accent);font-weight:600}
+.ua-cell{font-size:12px;color:var(--t2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .time-cell{color:var(--t2);font-size:13px}
 .geo-cell{font-size:13px}
-.geo-flag{font-size:16px;margin-right:4px}
-.geo-none{color:#d1d5db}
-.btn-danger{background:var(--danger);color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px;transition:background .15s}
-.btn-danger:hover{background:var(--danger-hover)}
-.btn-ghost{background:#eef2ff;color:var(--primary);border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px;margin-left:8px}
+.geo-none{color:#484f58}
+.btn-danger{background:var(--danger);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px}
+.btn-danger:hover{opacity:.85}
+.btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--bd);padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px;margin-left:8px}
 .empty-state{padding:40px;text-align:center;color:var(--t2)}
-.empty-state .icon{font-size:40px;margin-bottom:8px}
+.empty-state .icon{font-size:38px;margin-bottom:8px}
 @media(max-width:640px){.grid{grid-template-columns:1fr}th:nth-child(3),td:nth-child(3){display:none}}
 </style>
 </head>
 <body>
 <div class="container">
+  <a class="back-link" href="/">← 返回列表</a>
 
-  <a class="back-link" href="/">← 返回消息列表</a>
-
-  <!-- 消息卡片 -->
   <div class="card">
     <h2>📨 消息信息</h2>
     <div class="grid">
-      <div class="item">
-        <div class="label">消息 ID</div>
-        <div class="val mono">{{message.id}}</div>
-      </div>
-      <div class="item">
-        <div class="label">发送者</div>
-        <div class="val">{{message.wx_id}}</div>
-      </div>
-      <div class="item">
-        <div class="label">已读数</div>
-        <div class="val"><span class="count-badge {%if message.read_cnt==0%}zero{%endif%}">{{message.read_cnt}} 人</span></div>
-      </div>
-      <div class="item">
-        <div class="label">注册时间</div>
-        <div class="val time-cell">{{message.registered_at|int|ts2date}}</div>
-      </div>
+      <div class="item"><div class="label">消息 ID</div><div class="val mono">{{message.id}}</div></div>
+      <div class="item"><div class="label">发送者</div><div class="val">{{message.wx_id}}</div></div>
+      <div class="item"><div class="label">已读数</div><div class="val"><span class="count-badge {%if message.read_cnt==0%}zero{%endif%}">{{message.read_cnt}} 人</span></div></div>
+      <div class="item"><div class="label">注册时间</div><div class="val time-cell">{{message.registered_at|int|ts2date}}</div></div>
     </div>
-
     <div class="label">消息内容</div>
     <div class="content-box">{{message.content}}</div>
-
-    <div class="toolbar-actions">
-      <button class="btn-danger" onclick="doDelete()">🗑 删除本条</button>
-      <button class="btn-ghost" onclick="copyID()">📋 复制 ID</button>
-      <button class="btn-ghost" onclick="copyPixel()">🔗 复制追踪链接</button>
-    </div>
+    <button class="btn-danger" onclick="doDelete()">🗑 删除本条</button>
+    <button class="btn-ghost" onclick="copyID()">📋 复制 ID</button>
+    <button class="btn-ghost" onclick="copyPixel()">🔗 复制追踪链接</button>
   </div>
 
-  <!-- 已读记录卡片 -->
   <div class="card">
     <h2>👁 已读记录 ({{reads|length}})</h2>
-
     {%if reads%}
-    <!-- 地理位置汇总 -->
     {%if has_geo%}
     <div class="geo-summary">
       {%set ns = namespace(countries=[]) %}
@@ -102,11 +78,8 @@ tr:hover td{background:#fafbff}
       {%endif%}
     </div>
     {%endif%}
-
     <table>
-      <thead>
-        <tr><th>IP 地址</th><th>📍 地理位置</th><th>User-Agent</th><th>读取时间</th></tr>
-      </thead>
+      <thead><tr><th>IP 地址</th><th>📍 地理位置</th><th>User-Agent</th><th>读取时间</th></tr></thead>
       <tbody>
         {%for r in reads%}
         <tr>
@@ -116,9 +89,7 @@ tr:hover td{background:#fafbff}
               {%if r.country%}{{r.country}}{%endif%}
               {%if r.region%} · {{r.region}}{%endif%}
               {%if r.city%} · {{r.city}}{%endif%}
-            {%else%}
-              <span class="geo-none">—</span>
-            {%endif%}
+            {%else%}<span class="geo-none">—</span>{%endif%}
           </td>
           <td class="ua-cell" title="{{r.user_agent}}">{{r.user_agent or "—"}}</td>
           <td class="time-cell">{{r.read_at|int|ts2date}}</td>
@@ -127,13 +98,9 @@ tr:hover td{background:#fafbff}
       </tbody>
     </table>
     {%else%}
-    <div class="empty-state">
-      <div class="icon">📭</div>
-      <p>暂无读取记录</p>
-    </div>
+    <div class="empty-state"><div class="icon">📭</div><p>暂无读取记录</p></div>
     {%endif%}
   </div>
-
 </div>
 
 <script>
