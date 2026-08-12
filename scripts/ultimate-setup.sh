@@ -233,14 +233,17 @@ def get_ip():
     return request.remote_addr or "0.0.0.0"
 
 def lookup_geo(ip):
-    # 免费 IP 定位 (ip-api.com)，无需 Key，失败静默降级
-    if ip in ("0.0.0.0", "127.0.0.1", ""):
+    # IP 定位：双接口备份 (ip-api.com / ipwho.is)，支持 IPv4 + IPv6，失败静默降级
+    if ip in ("0.0.0.0", "127.0.0.1", "::1", "") or not ip:
         return None
+    import urllib.request, json as _json
+
+    # 接口 1: ip-api.com (支持 IPv6)
     try:
-        import urllib.request, json as _json
-        with urllib.request.urlopen(
-            f"http://ip-api.com/json/{ip}?lang=zh-CN&fields=country,regionName,city,isp",
-            timeout=3) as resp:
+        req = urllib.request.Request(
+            f"http://ip-api.com/json/{ip}?lang=zh-CN&fields=status,message,country,regionName,city,isp",
+            headers={"User-Agent": "rrt/2.1"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
             d = _json.load(resp)
         if d.get("status") == "success":
             return {
@@ -248,6 +251,23 @@ def lookup_geo(ip):
                 "region": d.get("regionName", ""),
                 "city": d.get("city", ""),
                 "isp": d.get("isp", ""),
+            }
+    except Exception:
+        pass
+
+    # 接口 2: ipwho.is (支持 IPv6)
+    try:
+        req = urllib.request.Request(
+            f"https://ipwho.is/{ip}?lang=zh-CN",
+            headers={"User-Agent": "rrt/2.1"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            d = _json.load(resp)
+        if d.get("success", False):
+            return {
+                "country": d.get("country", ""),
+                "region": d.get("region", ""),
+                "city": d.get("city", ""),
+                "isp": (d.get("connection") or {}).get("isp", ""),
             }
     except Exception:
         pass
