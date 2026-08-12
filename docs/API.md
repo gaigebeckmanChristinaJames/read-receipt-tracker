@@ -24,7 +24,7 @@ POST /register
 Content-Type: application/json
 
 {
-    "wxID": "user123",
+    "wxId": "user123",
     "content": "你好，这是一条测试消息",
     "createTime": 1700000000000
 }
@@ -32,7 +32,7 @@ Content-Type: application/json
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| wxID | string | ✅ | 发送者标识 |
+| wxId | string | ✅ | 发送者标识 |
 | content | string | | 消息内容 (最大 50000 字符) |
 | createTime | int | | 创建时间 (毫秒时间戳)，默认当前时间 |
 
@@ -42,15 +42,15 @@ Content-Type: application/json
 {
     "success": true,
     "id": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a",
-    "wxID": "user123",
-    "pixel_url": "http://your-server:5000/pixel?wxID=user123&id=a1b2c3d4..."
+    "wxId": "user123",
+    "pixel_url": "http://your-server:5000/pixel?wxId=user123&id=a1b2c3d4..."
 }
 ```
 
 ### 3. 追踪像素
 
 ```http
-GET /pixel?wxID=user123&id=a1b2c3d4...
+GET /pixel?wxId=user123&id=a1b2c3d4...
 ```
 
 返回 1×1 透明 GIF (`Content-Type: image/gif`)，同时记录已读信息：
@@ -63,7 +63,7 @@ GET /pixel?wxID=user123&id=a1b2c3d4...
 ### 4. 查询已读数
 
 ```http
-GET /count?wxID=user123&id=a1b2c3d4...
+GET /count?wxId=user123&id=a1b2c3d4...
 ```
 
 **响应**: `{"count":5,"msg_id":"a1b2c3d4..."}`
