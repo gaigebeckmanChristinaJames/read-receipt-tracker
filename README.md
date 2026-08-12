@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/docker-ready-2496ED.svg" alt="Docker">
 </p>
 
-一个极简的 **消息已读回执追踪服务**：注册消息后得到一个 URL，将该 URL 作为 1×1 透明像素嵌入邮件或网页，对方打开时自动记录已读。提供漂亮的 Web 管理面板查看统计和每条消息的读取详情，全部由我一个人完成，有bug请见谅，不涉及wekit和wuyu的作者
+一个极简的 **消息已读回执追踪服务**：注册消息后得到一个 URL，将该 URL 作为 1×1 透明像素嵌入邮件或网页，对方打开时自动记录已读。提供漂亮的 Web 管理面板查看统计和每条消息的读取详情。
 
 > 🎯 **定位**：为 **WeKit** / **WuYu** 等微信模块提供已读回执后端服务。也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
 
@@ -41,7 +41,23 @@
 
 ## 👀 30 秒体验
 
-### 1. Python 后端 (推荐)
+### 1. Termux 一键部署 (推荐，零下载全内嵌)
+
+```bash
+bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup.sh")
+```
+
+**一条命令搞定**：自动装 Python + Flask → 内嵌代码落地 → 前台运行服务，屏幕实时输出日志，最后显示控制台地址 `http://127.0.0.1:5000`。
+
+> 💡 全部代码内嵌在脚本中，不下载任何仓库文件、不依赖 GitHub 直连（走 jsDelivr CDN）、不写 /tmp，彻底避免网络超时和权限报错。
+
+需要公网地址时，另开一个 Termux 会话：
+
+```bash
+cloudflared tunnel --url http://127.0.0.1:5000
+```
+
+### 2. Python 后端 (Linux 服务器)
 
 ```bash
 git clone https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker.git
@@ -59,7 +75,7 @@ python run.py
 
 打开 `http://localhost:5000` 即可看到管理面板。
 
-### 2. C++ 后端
+### 3. C++ 后端
 
 ```bash
 pip install meson  # 或 apt install meson ninja-build
@@ -71,7 +87,7 @@ meson compile -C builddir
 ./builddir/rrtracker-server 5000 receipts.db
 ```
 
-### 3. Docker
+### 4. Docker
 
 ```bash
 # 构建
@@ -82,13 +98,13 @@ docker build -t read-receipt-tracker .
 docker run -d -p 5000:5000 -v $(pwd)/data:/app/data read-receipt-tracker
 ```
 
-### 4. Termux (Android)
+### 5. Linux 服务器一键部署
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/gaigebeckmanChristinaJames/read-receipt-tracker/main/scripts/setup-termux.sh)
+bash scripts/setup-linux.sh                # systemd 托管（推荐）
+bash scripts/setup-linux.sh --foreground   # 前台运行 + cloudflared 日志直显
+bash scripts/setup-linux.sh --tunnel       # 无公网 IP 时的隧道保活模式
 ```
-
-> 💡 Termux 脚本**会自动配置** Cloudflare Tunnel，因为手机没有公网 IP，必须通过内网穿透才能让追踪像素被外部访问。
 
 ---
 
