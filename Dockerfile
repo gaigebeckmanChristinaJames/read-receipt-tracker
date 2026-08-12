@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# 创建非 root 用户
+RUN useradd --create-home --shell /bin/bash appuser
+
 WORKDIR /app
 
 # 先安装依赖（利用 Docker 缓存层）
@@ -18,10 +21,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 复制源码
-COPY . .
+COPY --chown=appuser:appuser . .
 
 # 数据库持久化目录
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data && chown -R appuser:appuser /app/data
 ENV DATABASE_PATH=/app/data/receipts.db
 
 EXPOSE 5000
@@ -29,5 +32,8 @@ EXPOSE 5000
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
+
+# 切换非 root 用户
+USER appuser
 
 CMD ["python", "run.py", "--host", "0.0.0.0", "--port", "5000"]
