@@ -1,0 +1,70 @@
+[project]
+name = "read-receipt-tracker"
+version = "2.1.0"
+description = "轻量级消息已读追踪服务 · 像素埋点 · 管理后台 · 多端部署"
+requires-python = ">=3.9"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Heather Howard", email = "gaigebeckmanChristinaJames@users.noreply.github.com"},
+]
+keywords = ["read-receipt", "email-tracking", "pixel-tracking", "flask"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: Flask",
+]
+
+[project.urls]
+Homepage = "https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker"
+Documentation = "https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker#readme"
+Repository = "https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker"
+Issues = "https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/issues"
+
+[project.scripts]
+read-receipt-tracker = "app:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "ruff>=0.4",
+    "pytest>=8",
+    "pytest-cov>=5",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/app"]
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "C4",  # flake8-comprehensions
+]
+ignore = ["E501"]  # line too long handled by formatter
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
