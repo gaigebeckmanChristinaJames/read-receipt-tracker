@@ -1,39 +1,45 @@
 # 📬 read-receipt-tracker
 
-> 轻量级消息已读追踪服务 · Python(uv) + C++(meson) 双实现 <br/>
-> Flask 像素埋点 · 管理后台 · 三端部署 · 可选 IP 定位
+<p align="center">
+  <b>轻量级消息已读追踪服务</b> — 像素埋点 · 管理后台 · 多端部署 · 可选 IP 定位
+</p>
 
-[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)
-[![C++](https://img.shields.io/badge/C++-17-00599C.svg)](https://isocpp.org/)
-[![Flask](https://img.shields.io/badge/flask-2.3+-green.svg)](https://flask.palletsprojects.com/)
-[![uv](https://img.shields.io/badge/uv-package%20manager-purple.svg)](https://astral.sh/uv)
-[![ruff](https://img.shields.io/badge/ruff-linter-black.svg)](https://astral.sh/ruff)
-[![meson](https://img.shields.io/badge/meson-build-5f5f5f.svg)](https://mesonbuild.com/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/docker-ready-2496ED.svg)](Dockerfile)
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python">
+  <img src="https://img.shields.io/badge/C++-17-00599C.svg" alt="C++">
+  <img src="https://img.shields.io/badge/flask-2.3+-green.svg" alt="Flask">
+  <img src="https://img.shields.io/badge/uv-package%20manager-purple.svg" alt="uv">
+  <img src="https://img.shields.io/badge/ruff-linter-black.svg" alt="ruff">
+  <img src="https://img.shields.io/badge/meson-build-5f5f5f.svg" alt="meson">
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/docker-ready-2496ED.svg" alt="Docker">
+</p>
 
-通过嵌入 **1×1 透明像素** 记录邮件/消息是否被打开。提供 Web 管理后台，支持 Termux (Android)、Linux 服务器、Docker 三种部署方式。
+一个极简的 **消息已读回执追踪服务**：注册消息后得到一个 URL，将该 URL 作为 1×1 透明像素嵌入邮件或网页，对方打开时自动记录已读。提供漂亮的 Web 管理面板查看统计和每条消息的读取详情。
 
----
-
-## ✨ 特性
-
-- 🔌 **一行注册** — `POST /register` 注册消息，返回追踪像素 URL
-- 👁 **透明追踪** — `/pixel` 端点返回 1x1 透明 GIF，无感记录已读
-- 📊 **管理面板** — 内置 Web 后台，消息列表 + 统计 + 搜索 + CSV 导出
-- 🌍 **IP 定位** (可选) — 设置 GeoLite2 数据库即可获取读取者国家/地区/城市
-- ⚡ **请求限流** — IP 级频率限制 (可配置)
-- 🔐 **API 认证** — 管理接口支持 API Key 保护
-- 🐳 **Docker** — 一键构建，非 root 用户运行
-- 📱 **Termux** — Android 手机端一键脚本 + Cloudflare Tunnel
-- 📦 **双语言后端**:
-  - **Python** — uv 管理依赖 + ruff 代码检测
-  - **C++** — meson + ninja 构建，原生高性能
-- 🔒 **去重** — 同一消息 + 同一 IP 只计一次已读
+> 🎯 **定位**：为 **WeKit** / **WuYu** 等微信模块提供已读回执后端服务。也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
 
 ---
 
-## 🚀 快速开始
+## ✨ 为什么选择它
+
+| 特性 | 说明 |
+|------|------|
+| 🔌 **一行注册** | `POST /register` 传入消息内容，返回追踪链接，直接嵌入即可 |
+| 👁 **透明无感** | 1×1 透明 GIF，用户完全感知不到 |
+| 📊 **管理后台** | Web 界面查看统计、消息列表、搜索、一键导出 CSV |
+| 🌍 **IP 定位** | 可选 GeoLite2 数据库，自动获取读取者国家/地区/城市 |
+| ⚡ **请求限流** | IP 级频率限制，防止滥用 |
+| 🔐 **API 认证** | 管理接口支持 API Key 保护 |
+| 🔒 **智能去重** | 同一消息 + 同一 IP 只计一次已读 |
+| 🧹 **自动清理** | Termux 支持定期清理过期数据 |
+| 📦 **双语言后端** | Python (Flask) + C++ (原生 HTTP)，按需选择 |
+| 🐳 **三端部署** | Docker / Linux (systemd) / Android (Termux + Tunnel) |
+| 🛠 **现代工具链** | uv 包管理 · ruff 代码检测 · meson + ninja 构建 |
+
+---
+
+## 👀 30 秒体验
 
 ### 1. Python 后端 (推荐)
 
