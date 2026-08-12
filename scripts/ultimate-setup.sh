@@ -365,54 +365,35 @@ PYEOF
 log "代码写入完成: $HOME/rrt/app.py"
 
 echo ""
-echo "[4/4] 启动服务 + Cloudflare Tunnel..."
+echo "[4/4] 启动服务 (后台) + Cloudflare Tunnel (前台)..."
 cd "$HOME/rrt"
 
-# 后台启动 Flask
+# Flask 后台运行 (日志写 app.log)
+pkill -f "python app\.py" 2>/dev/null || true
 nohup python app.py > app.log 2>&1 &
 sleep 3
 if curl -sf --max-time 5 http://127.0.0.1:5000/health >/dev/null 2>&1; then
-    log "Flask 服务已启动: http://127.0.0.1:5000"
+    log "Flask 已后台运行: http://127.0.0.1:5000"
 else
     warn "Flask 可能还在启动，日志: tail -f app.log"
 fi
 
-# 启动 cloudflared (后台)，提取隧道地址
 echo ""
-echo "启动 Cloudflare Tunnel..."
+echo "════════════════════════════════════════════"
+echo "  🖥  控制台地址: http://127.0.0.1:5000"
+echo "════════════════════════════════════════════"
+echo ""
+
+# cloudflared 前台运行 (日志直接显示，看到 trycloudflare.com 就是隧道地址)
 if command -v cloudflared >/dev/null 2>&1; then
     pkill -f "cloudflared tunnel" 2>/dev/null || true
-    nohup cloudflared tunnel --url http://127.0.0.1:5000 > tunnel.log 2>&1 < /dev/null &
-    TUNNEL_URL=""
-    echo "⏳ 等待隧道地址 (最多 30 秒)..."
-    for i in $(seq 1 30); do
-        URL=$(grep -o 'https://[a-zA-Z0-9.-]*\.trycloudflare\.com' tunnel.log 2>/dev/null | tail -1)
-        if [ -n "$URL" ]; then
-            echo "$URL" > current_url.txt
-            TUNNEL_URL="$URL"
-            break
-        fi
-        echo -n "."
-        sleep 1
-    done
+    echo "▶ 正在前台启动 Cloudflare Tunnel..."
+    echo "▶ 日志中会出现 https://xxx.trycloudflare.com 即公网地址"
+    echo "▶ Ctrl+C 停止隧道 (Flask 仍在后台运行)"
     echo ""
+    exec cloudflared tunnel --url http://127.0.0.1:5000
 else
-    warn "cloudflared 未安装，跳过隧道"
+    warn "cloudflared 未安装，无法启动隧道"
+    echo "▶ 回退：前台显示服务日志 (Ctrl+C 停止)"
+    tail -f app.log
 fi
-
-echo ""
-echo "════════════════════════════════════════════"
-echo "  ✅ 部署完成！"
-echo "  🖥  控制台地址: http://127.0.0.1:5000"
-if [ -n "$TUNNEL_URL" ]; then
-    echo "  🔗 隧道地址:   $TUNNEL_URL"
-else
-    echo "  🔗 隧道地址:   建立中 (cat current_url.txt 查看)"
-fi
-echo "════════════════════════════════════════════"
-echo ""
-echo "▶ 服务日志实时输出 (Ctrl+C 停止)..."
-echo ""
-
-# 前台跟踪日志 (实时显示，Ctrl+C 停止)
-tail -f app.log tunnel.log 2>/dev/null
