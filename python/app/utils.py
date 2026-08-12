@@ -70,9 +70,6 @@ def lookup_ip_location(ip: str) -> Optional[dict]:
                 "country": d.get("country", ""),
                 "region": d.get("regionName", ""),
                 "city": d.get("city", ""),
-                "isp": d.get("isp", ""),
-                "loc": f"{d.get('lat','')},{d.get('lon','')}"
-                       if d.get("lat") is not None else "",
             }
     except Exception:
         pass
@@ -89,9 +86,6 @@ def lookup_ip_location(ip: str) -> Optional[dict]:
                 "country": d.get("country", ""),
                 "region": d.get("region", ""),
                 "city": d.get("city", ""),
-                "isp": (d.get("connection") or {}).get("isp", ""),
-                "loc": f"{d.get('latitude','')},{d.get('longitude','')}"
-                       if d.get("latitude") is not None else "",
             }
     except Exception:
         pass
@@ -108,9 +102,6 @@ def lookup_ip_location(ip: str) -> Optional[dict]:
                 "country": d.get("country", ""),
                 "region": d.get("region", ""),
                 "city": d.get("city", ""),
-                "isp": (d.get("org", "") or "").split(" ", 1)[-1]
-                       if d.get("org") else "",
-                "loc": d.get("loc", ""),
             }
     except Exception:
         pass
