@@ -19,13 +19,6 @@
 
 > 🎯 **定位**：为微信模块 **WeKit** / **WuYu** 提供已读回执后端服务。也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
 
-## 🔗 关联项目
-
-| 项目 | 说明 | 地址 |
-|------|------|------|
-| **WeKit** | 微信模块（客户端） | [点击跳转 → github.com/Ujhhgtg/WeKit](https://github.com/Ujhhgtg/WeKit) |
-| **WuYu** | 微信模块（无 GitHub 仓库） | — |
-
 ---
 
 ## ✨ 为什么选择它
@@ -50,8 +43,16 @@
 
 ### 1. Termux 一键部署 (推荐，零下载全内嵌)
 
+**标准版（含 IP 定位）：**
+
 ```bash
 bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup.sh")
+```
+
+**Lite 版（无 IP 定位）：**
+
+```bash
+bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup-lite.sh")
 ```
 
 > 💡 全新 Termux 首次使用先装 curl：
@@ -64,13 +65,13 @@ bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-rec
 
 > 💡 全部代码内嵌在脚本中，不下载任何仓库文件、不依赖 GitHub 直连（走 jsDelivr CDN）、不写 /tmp，彻底避免网络超时和权限报错。
 >
-> 🌍 **IP 定位开关**（所有部署形态通用）：默认开启（中文省市定位）。关闭方式：
+> 🌍 **标准版** 内置 IP 定位（中文省市 + 运营商 + 经纬度，三接口自动备份）；**Lite 版** 无定位功能，零外部请求、零延迟，纯追踪。
+>
+> 其他部署形态（Linux / Docker）也可用环境变量开关：
 >
 > ```bash
-> ENABLE_GEO=0 python app.py     # Termux / Linux 本地运行
-> ENABLE_GEO=0 docker compose up # Docker 部署
+> ENABLE_GEO=0 python app.py     # 关闭定位 = Lite 模式
 > ```
-> 关闭后为 Lite 模式：零外部请求、零延迟，纯追踪。
 >
 > 🔗 脚本与隧道**完全分离**。需要公网地址时，另开一个 Termux 会话：
 >
@@ -82,8 +83,6 @@ bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-rec
 > cloudflared tunnel --url http://127.0.0.1:5000
 > ```
 > 隧道日志会显示 `https://xxx.trycloudflare.com` 公网地址。
-
-📋 想要带复制按钮的图文安装教程？打开 [docs/INSTALL.html](https://htmlpreview.github.io/?https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/blob/main/docs/INSTALL.html)（每个命令旁一键复制）。
 
 ### 2. Python 后端 (Linux 服务器)
 
