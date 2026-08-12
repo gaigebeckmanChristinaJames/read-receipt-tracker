@@ -1,15 +1,13 @@
-"""工具函数 — IP 获取、消息 ID 生成、IP 定位（可选）"""
+"""工具函数 — IP 获取、消息 ID 生成、IP 定位（中文优先）"""
 import hashlib
 import logging
 import os
+import urllib.request
 from typing import Optional
 
 from flask import request
 
 logger = logging.getLogger(__name__)
-
-# GeoIP 数据库路径缓存
-_geoip_reader = None
 
 
 def get_client_ip() -> str:
@@ -35,45 +33,86 @@ def generate_message_id(wx_id: str, content: str, create_time_ms: int) -> str:
 
 
 def lookup_ip_location(ip: str) -> Optional[dict]:
-    """查询 IP 地理位置信息 (需要 GeoLite2 或类似数据库)。
+    """查询 IP 地理位置（中文优先，支持 IPv4/IPv6）。
 
-    设置环境变量 GEOIP_DB 指向 .mmdb 文件即可启用。
-    使用 maxminddb 库（pip install maxminddb）。
-    未安装或未配置时静默跳过。
+    全局开关：环境变量 ENABLE_GEO=0 时直接关闭定位（Lite 模式），
+    不发起任何外部请求，零延迟、零外部依赖。
+
+    三级接口备份，全部免费无需 Key：
+    1. ip-api.com  (lang=zh-CN，返回 中国/上海市/上海)
+    2. ipwho.is    (lang=zh-CN)
+    3. ipinfo.io   (英文，兜底)
+
+    失败静默降级返回 None，绝不阻塞调用方。
     """
-    global _geoip_reader
+    # Lite 模式开关：ENABLE_GEO=0/off/false 时关闭定位
+    if os.environ.get("ENABLE_GEO", "1").lower() in ("0", "off", "false", "no"):
+        return None
+
+    if ip in ("0.0.0.0", "127.0.0.1", "::1", "") or not ip:
+        return None
+
     try:
-        import maxminddb  # type: ignore[import-untyped]
+        import json as _json
     except ImportError:
-        logger.debug("maxminddb not installed, ip geolocation disabled")
         return None
 
-    db_path = os.environ.get("GEOIP_DB", "")
-    if not db_path or not os.path.isfile(db_path):
-        return None
-
-    if _geoip_reader is None:
-        try:
-            _geoip_reader = maxminddb.open_database(db_path)
-        except Exception as exc:
-            logger.warning("Failed to open GeoIP DB: %s", exc)
-            return None
-
+    # 接口 1: ip-api.com 中文
     try:
-        result = _geoip_reader.get(ip)
+        req = urllib.request.Request(
+            f"http://ip-api.com/json/{ip}"
+            f"?lang=zh-CN&fields=status,message,country,regionName,city,isp,lat,lon",
+            headers={"User-Agent": "rrt/2.1"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            d = _json.load(resp)
+        if d.get("status") == "success":
+            return {
+                "country": d.get("country", ""),
+                "region": d.get("regionName", ""),
+                "city": d.get("city", ""),
+                "isp": d.get("isp", ""),
+                "loc": f"{d.get('lat','')},{d.get('lon','')}"
+                       if d.get("lat") is not None else "",
+            }
     except Exception:
-        return None
+        pass
 
-    if not result:
-        return None
+    # 接口 2: ipwho.is 中文
+    try:
+        req = urllib.request.Request(
+            f"https://ipwho.is/{ip}?lang=zh-CN",
+            headers={"User-Agent": "rrt/2.1"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            d = _json.load(resp)
+        if d.get("success", False):
+            return {
+                "country": d.get("country", ""),
+                "region": d.get("region", ""),
+                "city": d.get("city", ""),
+                "isp": (d.get("connection") or {}).get("isp", ""),
+                "loc": f"{d.get('latitude','')},{d.get('longitude','')}"
+                       if d.get("latitude") is not None else "",
+            }
+    except Exception:
+        pass
 
-    # 标准化字段
-    return {
-        "country": result.get("country", {}).get("names", {}).get("zh-CN",
-                              result.get("country", {}).get("names", {}).get("en", "")),
-        "region": result.get("subdivisions", [{}])[0].get("names", {}).get("zh-CN",
-                              result.get("subdivisions", [{}])[0].get("names", {}).get("en", "")),
-        "city": result.get("city", {}).get("names", {}).get("zh-CN",
-                            result.get("city", {}).get("names", {}).get("en", "")),
-        "iso_code": result.get("country", {}).get("iso_code", ""),
-    }
+    # 接口 3: ipinfo.io 英文兜底
+    try:
+        req = urllib.request.Request(
+            f"https://ipinfo.io/{ip}/json",
+            headers={"User-Agent": "curl/7.81.0"})
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            d = _json.load(resp)
+        if d.get("country"):
+            return {
+                "country": d.get("country", ""),
+                "region": d.get("region", ""),
+                "city": d.get("city", ""),
+                "isp": (d.get("org", "") or "").split(" ", 1)[-1]
+                       if d.get("org") else "",
+                "loc": d.get("loc", ""),
+            }
+    except Exception:
+        pass
+
+    return None
