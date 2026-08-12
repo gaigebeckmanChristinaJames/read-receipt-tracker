@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ message }}</title>
+<style>
+  :root { --primary: #6366f1; --bg: #f0f2f5; --text: #1f2937; --text-secondary: #6b7280; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .error-card { background: #fff; padding: 48px; border-radius: 16px; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.08); max-width: 480px; }
+  .error-card .icon { font-size: 64px; margin-bottom: 16px; }
+  .error-card h1 { font-size: 24px; margin-bottom: 8px; }
+  .error-card p { color: var(--text-secondary); margin-bottom: 24px; }
+  .error-card a { color: var(--primary); text-decoration: none; font-weight: 600; }
+  .error-card a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="error-card">
+  <div class="icon">🔍</div>
+  <h1>{{ message }}</h1>
+  <p>你要找的页面不存在或已被删除</p>
+  <a href="/">← 返回管理后台</a>
+</div>
+</body>
+</html>
