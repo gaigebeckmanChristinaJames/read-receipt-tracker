@@ -1,10 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
 
-# ==========================================
-# 终极保活增强版 v7.1 (自动提取 + 手动兜底 + 网络跟随 + 防卡死)
-# 基于 开启已读.txt 原版源码构建
-# 修复: pkg/pip 无超时卡死、tail -F 前台阻塞、pkill 误杀
-# ==========================================
 
 echo "🚀 [1/8] 权限探测与系统级保活配置..."
 
@@ -13,10 +7,8 @@ if [ ! -d "/data/data/com.termux" ]; then
     exit 1
 fi
 
-# 基础保活：申请 Termux 唤醒锁（失败不阻塞）
 termux-wake-lock 2>/dev/null || true
 
-# 探测 Root 权限以实现终极保活
 HAS_ROOT=false
 if command -v su >/dev/null 2>&1 && su -c "exit" >/dev/null 2>&1; then
     HAS_ROOT=true
@@ -39,15 +31,12 @@ fi
 echo -e "\n📦 [2/8] 配置清华源与安装环境 (带超时保护，不再卡死)..."
 echo "deb https://mirrors.tuna.tsinghua.edu.cn/termux/apt/termux-main stable main" > $PREFIX/etc/apt/sources.list
 
-# 所有 apt 操作加 300 秒超时，防止网络问题无限等待
 pkg update -y 2>&1 | head -50 || echo "⚠️ pkg update 失败，继续尝试..."
 pkg upgrade -y 2>&1 | head -50 || true
 
-# 分批安装 + 超时保护
 pkg install python wget tur-repo cloudflared curl -y 2>&1 | head -80 || true
 
 echo -e "\n🐍 [3/8] 安装 Python Flask 环境 (超时120秒)..."
-# 带超时的 pip 安装，卡住自动跳过
 timeout 120 pip install flask -i https://pypi.tuna.tsinghua.edu.cn/simple 2>&1 | head -30 || {
     echo "⚠️ pip 超时/失败，尝试直连源..."
     timeout 120 pip install flask 2>&1 | head -30 || echo "⚠️ Flask 安装失败，稍后 watchdog 会重试"
@@ -80,7 +69,6 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{border:1px solid #ddd;padding:8px}
 .btn{padding:6px 10px;border:none;border-radius:6px;cursor:pointer}
 .btn-del{background:#ed4337;color:white}
-#search{width:100%;padding:10px;margin-bottom:12px;border:1px solid #ccc;border-radius:8px}
 </style>
 </head>
 <body>
@@ -171,8 +159,11 @@ a{text-decoration:none}
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
+        db = g._database = sqlite3.connect(DATABASE, timeout=10)
         db.row_factory = sqlite3.Row
+        db.execute("PRAGMA journal_mode=WAL")
+        db.execute("PRAGMA synchronous=NORMAL")
+        db.execute("PRAGMA busy_timeout=5000")
     return db
 
 @app.teardown_appcontext
@@ -198,6 +189,8 @@ def init_db():
         read_at INTEGER,
         UNIQUE(msg_id,ip_address)
     )''')
+    db.execute("CREATE INDEX IF NOT EXISTS idx_reads_msg ON reads(msg_id)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_msgs_insert ON messages(insert_at)")
     db.commit()
     db.close()
 
@@ -209,7 +202,10 @@ def get_ip():
     fwd = request.headers.get("X-Forwarded-For")
     if fwd:
         return fwd.split(',')[0].strip()
-    return request.remote_addr
+    real = request.headers.get("X-Real-IP")
+    if real:
+        return real.strip()
+    return request.remote_addr or "0.0.0.0"
 
 @app.route("/health")
 def health():
@@ -226,6 +222,8 @@ def register():
         create_time = int(time.time()*1000)
     if not wxid:
         return {"error":"wxid required"},400
+    if len(content) > 50000:
+        return {"error":"content too long"},400
 
     mid = gen_msg_id(wxid,content,create_time)
     db = get_db()
@@ -254,9 +252,12 @@ def pixel():
     ip = get_ip()
     ua = request.headers.get("User-Agent","")
     db = get_db()
-    db.execute("INSERT OR IGNORE INTO reads(msg_id,ip_address,ua,read_at) VALUES (?,?,?,?)",
-               (mid,ip,ua,int(time.time()*1000)))
-    db.commit()
+    try:
+        db.execute("INSERT OR IGNORE INTO reads(msg_id,ip_address,ua,read_at) VALUES (?,?,?,?)",
+                   (mid,ip,ua[:500],int(time.time()*1000)))
+        db.commit()
+    except Exception:
+        pass  # 写库失败不影响 GIF 返回，绝不卡住像素响应
     gif = b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
     resp = make_response(gif)
     resp.headers["Content-Type"] = "image/gif"
@@ -334,13 +335,12 @@ def api_del_all():
 
 if __name__ == "__main__":
     init_db()
-    app.run(host="0.0.0.0",port=5000,debug=False)
+    app.run(host="0.0.0.0",port=5000,debug=False,threaded=True)
 EOF
 
 echo "🧹 [5/8] 自动清理可能冲突的旧进程..."
 pkill -f "watchdog.sh" 2>/dev/null || true
 pkill -f "cloudflared" 2>/dev/null || true
-# 用 pgrep 精确匹配，避免误杀自己
 for PID in $(pgrep -f "python.*app\.py"); do
     [ "$PID" != "$$" ] && kill "$PID" 2>/dev/null
 done
@@ -348,14 +348,12 @@ rm -f tunnel.log current_url.txt daemon.log
 
 echo "🛡️ [6/8] 编写并初始化 Watchdog 智能守护进程..."
 cat << 'EOF' > watchdog.sh
-#!/data/data/com.termux/files/usr/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$DIR"
 
 LAST_IP=""
 
 while true; do
-    # 模块 A: 公网 IP 检测（带超时，网络断不卡死）
     CURRENT_IP=$(timeout 5 curl -s --max-time 3 https://1.1.1.1/cdn-cgi/trace 2>/dev/null | grep -oE "ip=[0-9.]+" | cut -d= -f2)
 
     if [ -n "$CURRENT_IP" ] && [ "$CURRENT_IP" != "$LAST_IP" ]; then
@@ -367,19 +365,16 @@ while true; do
         LAST_IP=$CURRENT_IP
     fi
 
-    # 模块 B: 保活 Flask 服务（带超时，不会卡住）
     if ! timeout 5 curl -s --max-time 2 http://127.0.0.1:5000/health 2>/dev/null | grep -q '"ok":true'; then
         for PID in $(pgrep -f "python.*app\.py"); do kill "$PID" 2>/dev/null; done
         nohup python app.py > app.log 2>&1 &
     fi
 
-    # 模块 C: 保活 Cloudflared 隧道
     if ! pgrep -f "cloudflared tunnel" > /dev/null 2>&1; then
         rm -f tunnel.log current_url.txt
         cloudflared tunnel --url http://127.0.0.1:5000 > tunnel.log 2>&1 < /dev/null &
     fi
 
-    # 模块 D: 后台持续提取 URL 备份到文件
     if [ ! -f current_url.txt ] && [ -f tunnel.log ]; then
         CURRENT_URL=$(grep -o 'https://[a-zA-Z0-9.-]*\.trycloudflare\.com' tunnel.log | tail -n 1)
         if [ -n "$CURRENT_URL" ]; then
@@ -411,7 +406,6 @@ done
 
 echo -e "\n"
 
-# 逻辑分流：提取成功 or 提取失败兜底
 if [ -n "$TUNNEL_URL" ]; then
     echo "================================================================"
     echo "🎉 自动提取成功！"
