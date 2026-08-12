@@ -119,7 +119,7 @@ tr:hover td{background:#fafbff}
   <div class="toolbar">
     <h2>📋 消息列表</h2>
     <div class="toolbar-actions">
-      <input type="text" class="search-input" id="search-box" placeholder="🔍 搜索内容 / wxID / ID…" oninput="doFilter()">
+      <input type="text" class="search-input" id="search-box" placeholder="🔍 搜索内容 / wxId / ID…" oninput="doFilter()">
       <button class="btn btn-info" onclick="openBatch()">📦 批量查已读</button>
       <button class="btn btn-ghost" onclick="expCSV()">📥 导出 CSV</button>
       <button class="btn btn-danger" onclick="deleteAll()">🧹 清空全部</button>
@@ -186,7 +186,7 @@ tr:hover td{background:#fafbff}
 </div>
 
 <script>
-// 搜索过滤（内容 + wxID + ID）
+// 搜索过滤（内容 + wxId + ID）
 function doFilter(){
   const v=document.getElementById("search-box").value.toLowerCase();
   document.querySelectorAll("#msg-list tr[data-content]").forEach(r=>{
