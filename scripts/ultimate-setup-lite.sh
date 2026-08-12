@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ================================================================
-# read-receipt-tracker · 终极一键版 (零下载，全内嵌)
+# read-receipt-tracker · 终极一键版 PRO (含 IP 定位，零下载，全内嵌)
 # 所有代码内置在脚本中，不需要从任何网站下载文件
 # 只需: bash setup.sh
 # ================================================================
@@ -9,7 +9,8 @@ GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 log() { echo -e "${GREEN}[OK]${NC} $1"; }
 warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 
-echo "=== read-receipt-tracker 一键部署 (全内嵌版) ==="
+echo "=== read-receipt-tracker 一键部署 Lite 版 (IP 定位已关闭) ==="
+echo "   如需开启定位: 编辑 app.py 或删除本行 export"
 echo ""
 
 echo "[1/4] 检查环境 + 配置清华源..."
@@ -113,7 +114,7 @@ a{color:var(--blue);text-decoration:none;margin-right:10px}
 <tr data-c="{{m.content}}" data-w="{{m.wxid}}">
 <td class="mono">{{m.id[:12]}}…</td><td>{{m.wxid}}</td>
 <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{m.content}}</td>
-<td><span class="badge {%if m.cnt==0%}b-0{%else%}b-ok{%endif%}">{{m.cnt}} 人</span></td>
+<td><span class="badge {%if m.cnt==0%}b-0{%else%}b-ok{%endif%}">{{m.cnt}} 人</span>{%if m.loc%}<span style="margin-left:6px;font-size:12px;color:var(--blue)">📍{{m.loc}}城</span>{%endif%}</td>
 <td style="color:var(--t2)">{{m.t}}</td>
 <td><a href="/message/{{m.id}}">详情</a><button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="del('{{m.id}}')">删</button></td>
 </tr>{%endfor%}
@@ -165,9 +166,9 @@ th{background:#1c2129;color:var(--t2);font-size:12px}
 <button class="btn-d" onclick="del()">🗑 删除本条</button></div>
 <div class="card"><h2>👁 已读记录 ({{reads|length}})</h2>
 {%if reads%}
-<table><thead><tr><th>IP</th><th>User-Agent</th><th>读取时间</th></tr></thead><tbody>
+<table><thead><tr><th>IP</th><th>📍 位置</th><th>User-Agent</th><th>读取时间</th></tr></thead><tbody>
 {%for r in reads%}
-<tr><td class="ip">{{r.ip_address}}</td><td class="ua" title="{{r.user_agent}}">{{r.user_agent or "-"}}</td><td>{{r.t}}</td></tr>
+<tr><td class="ip">{{r.ip_address}}</td><td>{{r.geo}}</td><td class="ua" title="{{r.user_agent}}">{{r.user_agent or "-"}}</td><td>{{r.t}}</td></tr>
 {%endfor%}
 </tbody></table>{%else%}<div class="emp">📭 暂无读取记录</div>{%endif%}</div>
 </div>
@@ -232,6 +233,73 @@ def get_ip():
     if xri: return xri.strip()
     return request.remote_addr or "0.0.0.0"
 
+def lookup_geo(ip):
+    # IP 定位开关: 环境变量 ENABLE_GEO=0 关闭 (Lite 模式, 零外部请求)
+    if os.environ.get("ENABLE_GEO", "1").lower() in ("0", "off", "false", "no"):
+        return None
+    # IP 定位：中文优先 (ip-api.com lang=zh-CN)，失败回退 ipwho.is / ipinfo.io
+    if ip in ("0.0.0.0", "127.0.0.1", "::1", "") or not ip:
+        return None
+    import urllib.request, json as _json
+
+    # 接口 1: ip-api.com 中文 (支持 IPv6，返回 中国/上海市/上海)
+    try:
+        req = urllib.request.Request(
+            f"http://ip-api.com/json/{ip}?lang=zh-CN&fields=status,message,country,regionName,city,isp,lat,lon",
+            headers={"User-Agent": "rrt/2.1"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            d = _json.load(resp)
+        if d.get("status") == "success":
+            return {
+                "country": d.get("country", ""),
+                "region": d.get("regionName", ""),
+                "city": d.get("city", ""),
+                "isp": d.get("isp", ""),
+                "org": d.get("isp", ""),
+                "loc": f"{d.get('lat','')},{d.get('lon','')}" if d.get("lat") is not None else "",
+            }
+    except Exception:
+        pass
+
+    # 接口 2: ipwho.is 中文 (支持 IPv6)
+    try:
+        req = urllib.request.Request(
+            f"https://ipwho.is/{ip}?lang=zh-CN",
+            headers={"User-Agent": "rrt/2.1"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            d = _json.load(resp)
+        if d.get("success", False):
+            return {
+                "country": d.get("country", ""),
+                "region": d.get("region", ""),
+                "city": d.get("city", ""),
+                "isp": (d.get("connection") or {}).get("isp", ""),
+                "org": (d.get("connection") or {}).get("isp", ""),
+                "loc": f"{d.get('latitude','')},{d.get('longitude','')}" if d.get("latitude") is not None else "",
+            }
+    except Exception:
+        pass
+
+    # 接口 3: ipinfo.io (英文，仅兜底)
+    try:
+        req = urllib.request.Request(
+            f"https://ipinfo.io/{ip}/json",
+            headers={"User-Agent": "curl/7.81.0"})
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            d = _json.load(resp)
+        if d.get("country"):
+            return {
+                "country": d.get("country", ""),
+                "region": d.get("region", ""),
+                "city": d.get("city", ""),
+                "isp": (d.get("org", "") or "").split(" ", 1)[-1] if d.get("org") else "",
+                "org": d.get("org", ""),
+                "loc": d.get("loc", ""),
+            }
+    except Exception:
+        pass
+    return None
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"})
@@ -266,10 +334,15 @@ def pixel():
         return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
     ip = get_ip()
     ua = (request.headers.get("User-Agent", "") or "")[:500]
+    geo = lookup_geo(ip)
+    country = geo["country"] if geo else ""
+    region = geo["region"] if geo else ""
+    city = geo["city"] if geo else ""
+    isp = geo["isp"] if geo else ""
     db = get_db()
     try:
-        db.execute("INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent) VALUES(?,?,?,?)",
-                   (mid, wx, ip, ua))
+        db.execute("INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent,country,region,city,isp) VALUES(?,?,?,?,?,?,?,?)",
+                   (mid, wx, ip, ua, country, region, city, isp))
         db.commit()
     except Exception:
         pass
@@ -284,7 +357,23 @@ def count():
     db = get_db()
     r = db.execute("SELECT COUNT(DISTINCT ip_address) c FROM reads WHERE msg_id=? AND wx_id=?",
                    (mid, wx)).fetchone()
-    return jsonify({"count": r["c"] if r else 0, "msg_id": mid})
+    rows = db.execute(
+        "SELECT * FROM reads WHERE msg_id=? AND wx_id=? ORDER BY read_at DESC",
+        (mid, wx)).fetchall()
+    return jsonify({
+        "count": r["c"] if r else 0,
+        "msg_id": mid,
+        "reads": [{
+            "ip_address": x["ip_address"],
+            "location": " ".join([y for y in [x["country"], x["region"], x["city"]] if y]) or "-",
+            "province": x["region"],
+            "city": x["city"],
+            "country": x["country"],
+            "isp": x["isp"],
+            "user_agent": x["user_agent"],
+            "read_at": datetime.fromtimestamp(x["read_at"]).strftime("%Y-%m-%d %H:%M:%S"),
+        } for x in rows],
+    })
 
 @app.route("/")
 def index():
@@ -293,10 +382,13 @@ def index():
     tr = db.execute("SELECT COUNT(DISTINCT ip_address) c FROM reads").fetchone()["c"]
     ar = round(tr / tm, 1) if tm else 0
     rows = db.execute(
-        "SELECT m.*, (SELECT COUNT(DISTINCT ip_address) FROM reads r WHERE r.msg_id=m.id) cnt "
+        "SELECT m.*, (SELECT COUNT(DISTINCT ip_address) FROM reads r WHERE r.msg_id=m.id) cnt, "
+        "(SELECT COUNT(DISTINCT city) FROM reads r WHERE r.msg_id=m.id AND r.city!='') loc_cnt, "
+        "(SELECT GROUP_CONCAT(DISTINCT city) FROM reads r WHERE r.msg_id=m.id AND r.city!='') locs "
         "FROM messages m ORDER BY registered_at DESC LIMIT 100").fetchall()
     msgs = [{"id": r["id"], "wxid": r["wx_id"], "content": r["content"],
-             "cnt": r["cnt"],
+             "cnt": r["cnt"], "loc": r["loc_cnt"] or 0,
+             "locs": (r["locs"] or "")[:60],
              "t": datetime.fromtimestamp(r["registered_at"]).strftime("%Y-%m-%d %H:%M:%S")}
             for r in rows]
     return render_template_string(INDEX_HTML, tm=tm, tr=tr, ar=ar, msgs=msgs)
@@ -309,12 +401,63 @@ def detail(mid):
         return "not found", 404
     rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
     reads = [{"ip_address": r["ip_address"], "user_agent": r["user_agent"],
+              "geo": " ".join([x for x in [r["country"], r["region"], r["city"]] if x]) or "-",
               "t": datetime.fromtimestamp(r["read_at"]).strftime("%Y-%m-%d %H:%M:%S")}
              for r in rows]
     msg = {"id": m["id"], "wxid": m["wx_id"], "content": m["content"],
            "cnt": len(rows),
            "t": datetime.fromtimestamp(m["registered_at"]).strftime("%Y-%m-%d %H:%M:%S")}
+    # 支持 JSON 返回 (?json=1 或 Accept: application/json)
+    if request.args.get("json") == "1" or "application/json" in request.headers.get("Accept", ""):
+        return jsonify({
+            "message": msg,
+            "reads": [{
+                "ip_address": r["ip_address"],
+                "user_agent": r["user_agent"],
+                "country": (db.execute("SELECT country FROM reads WHERE id=?", (r["id"],)).fetchone() or {"country": ""})["country"],
+                "location": r["geo"],
+                "read_at": r["t"],
+            } for r in rows],
+        })
     return render_template_string(DETAIL_HTML, m=msg, reads=reads)
+
+# JSON 详情接口: /api/reads/<mid> (客户端专用)
+@app.route("/api/reads/<mid>")
+def api_reads(mid):
+    db = get_db()
+    m = db.execute("SELECT * FROM messages WHERE id=?", (mid,)).fetchone()
+    if not m:
+        return jsonify({"error": "not found"}), 404
+    rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
+    return jsonify({
+        "msg_id": mid,
+        "wxId": m["wx_id"],
+        "content": m["content"],
+        "read_count": len(rows),
+        "reads": [{
+            "ip_address": r["ip_address"],
+            "location": " ".join([x for x in [r["country"], r["region"], r["city"]] if x]) or "-",
+            "country": r["country"],
+            "region": r["region"],
+            "city": r["city"],
+            "isp": r["isp"],
+            "user_agent": r["user_agent"],
+            "read_at": datetime.fromtimestamp(r["read_at"]).strftime("%Y-%m-%d %H:%M:%S"),
+        } for r in rows],
+    })
+
+# JSON 消息列表: /api/messages (客户端专用)
+@app.route("/api/messages")
+def api_messages():
+    db = get_db()
+    rows = db.execute(
+        "SELECT m.*, (SELECT COUNT(DISTINCT ip_address) FROM reads r WHERE r.msg_id=m.id) cnt "
+        "FROM messages m ORDER BY registered_at DESC LIMIT 100").fetchall()
+    return jsonify({"messages": [{
+        "id": r["id"], "wxId": r["wx_id"], "content": r["content"],
+        "read_count": r["cnt"],
+        "registered_at": datetime.fromtimestamp(r["registered_at"]).strftime("%Y-%m-%d %H:%M:%S"),
+    } for r in rows]})
 
 @app.route("/api/delete/<mid>", methods=["POST"])
 def del_msg(mid):
@@ -361,7 +504,8 @@ PYEOF
 log "代码写入完成: $HOME/rrt/app.py"
 
 echo ""
-echo "[4/4] 启动服务 (前台运行)..."
+echo "[4/4] 启动服务 (前台运行, Lite 模式)..."
+export ENABLE_GEO=0
 cd "$HOME/rrt"
 
 pkill -f "python app\.py" 2>/dev/null || true
