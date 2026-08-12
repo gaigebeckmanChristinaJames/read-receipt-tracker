@@ -45,25 +45,47 @@ echo "deb https://mirrors.tuna.tsinghua.edu.cn/termux/apt/termux-main stable mai
 pkg update -y -q && pkg upgrade -y -q || true
 
 echo "📦 [3/9] 安装系统依赖…"
-pkg install -y python wget curl cloudflared tur-repo clang make cmake ninja pkg-config sqlite openssl 2>/dev/null || true
-pkg install -y python wget curl cloudflared clang ninja pkg-config sqlite 2>/dev/null || true
+pkg install -y python wget curl cloudflared tur-repo clang make cmake ninja pkg-config sqlite openssl rust binutils 2>/dev/null || true
+pkg install -y python wget curl cloudflared clang ninja pkg-config sqlite rust 2>/dev/null || true
 
 echo "🐍 [4/9] 安装 uv (Python 包管理器)…"
 if ! command -v uv >/dev/null 2>&1; then
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.local/bin:$PATH"
-    log "uv 安装完成: $(uv --version)"
+    # 方案1: 官方一键脚本
+    if curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null; then
+        export PATH="$HOME/.local/bin:$PATH"
+        log "uv 安装完成 (官方脚本): $(uv --version 2>/dev/null)"
+    # 方案2: pip 安装
+    elif pip install uv -i https://pypi.tuna.tsinghua.edu.cn/simple 2>/dev/null; then
+        log "uv 安装完成 (pip): $(uv --version 2>/dev/null)"
+    # 方案3: cargo 源码编译
+    elif command -v cargo >/dev/null 2>&1; then
+        echo "   🔨 cargo 源码编译 uv (需要几分钟)…"
+        cargo install uv 2>/dev/null && {
+            export PATH="$HOME/.cargo/bin:$PATH"
+            log "uv 安装完成 (cargo): $(uv --version 2>/dev/null)"
+        } || warn "cargo 编译失败，跳过 uv"
+    else
+        warn "uv 安装失败 (脚本/pip/cargo 均不可用)，回退到 pip"
+    fi
 else
     log "uv 已安装: $(uv --version)"
 fi
 
 echo "🐍 [5/9] 安装 Python 依赖…"
 cd "$DIR"
-uv pip install --system flask 2>/dev/null || pip install flask -i https://pypi.tuna.tsinghua.edu.cn/simple
+if command -v uv >/dev/null 2>&1; then
+    uv pip install --system flask 2>/dev/null || pip install flask -i https://pypi.tuna.tsinghua.edu.cn/simple
+else
+    pip install flask -i https://pypi.tuna.tsinghua.edu.cn/simple
+fi
 
 # 可选：ruff 代码检查
 echo "🧹 [6/9] 安装 ruff (代码检查)…"
-uv pip install --system ruff 2>/dev/null || true
+if command -v uv >/dev/null 2>&1; then
+    uv pip install --system ruff 2>/dev/null || true
+else
+    pip install ruff -i https://pypi.tuna.tsinghua.edu.cn/simple 2>/dev/null || true
+fi
 
 echo "🔧 [7/9] 编译 C++ 后端…"
 if [ -f "$DIR/cpp/meson.build" ]; then
