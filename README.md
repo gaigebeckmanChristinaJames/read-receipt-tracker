@@ -61,9 +61,10 @@ bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-rec
 >
 > 🌍 **标准版** 内置 IP 定位（ip-api.com 免费接口，无需 Key），已读记录自动附带国家/地区/城市/ISP；**Lite 版** 去除定位功能，响应更快、无外部依赖。
 >
-> 🔗 脚本与隧道**完全分离**。需要公网地址时，另开一个 Termux 会话执行：
+> 🔗 脚本与隧道**完全分离**。需要公网地址时，另开一个 Termux 会话：
 >
 > ```bash
+> pkg install cloudflared
 > cloudflared tunnel --url http://127.0.0.1:5000
 > ```
 > 隧道日志会显示 `https://xxx.trycloudflare.com` 公网地址。
