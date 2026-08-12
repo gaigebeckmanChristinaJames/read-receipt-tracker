@@ -3,11 +3,22 @@
 # read-receipt-tracker · Termux 一键部署脚本 v2.1
 # 自动安装 uv + ruff + meson + ninja + 编译依赖
 # 配置 Flask 服务 + Cloudflare Tunnel 内网穿透
+# 可选: 自动清理过期聊天记录 (--cleanup N)
 # ================================================================
 set -e
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
-INSTALL_DIR="$HOME/read-receipt-tracker" DIR="$(cd "$(dirname "$0")" && pwd)"
+INSTALL_DIR="$HOME/read-receipt-tracker"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# 可选参数: --cleanup 天数
+CLEANUP_DAYS=""
+for arg in "$@"; do
+    case "$arg" in
+        --cleanup) CLEANUP_DAYS="$2"; shift 2 ;;
+        --cleanup=*) CLEANUP_DAYS="${arg#*=}" ;;
+    esac
+done
 
 log() { echo -e "${GREEN}[✓]${NC} $1"; }
 warn() { echo -e "${YELLOW}[!]${NC} $1"; }
@@ -142,3 +153,81 @@ echo ""
 warn "自动提取超时，但服务已在后台运行"
 echo "👉 手动获取地址: cat $INSTALL_DIR/current_url.txt"
 echo "👉 查看原始日志: tail -f $INSTALL_DIR/tunnel.log"
+
+# ================================================================
+#  可选: 自动清理过期聊天记录
+# ================================================================
+if [ -n "$CLEANUP_DAYS" ]; then
+    echo ""
+    echo "🧹 [额外] 配置自动清理: 每 ${CLEANUP_DAYS} 天清除旧记录"
+
+    cat << 'CLEANSCRIPT' > "$INSTALL_DIR/auto-cleanup.sh"
+#!/data/data/com.termux/files/usr/bin/bash
+# ================================================================
+# read-receipt-tracker · 自动清理过期记录
+# 定期删除超过指定天数的消息和已读记录
+# 配置方法: 修改 CLEANUP_DAYS 变量
+# 启用: bash setup-termux.sh --cleanup 30
+# 禁用: pkill -f auto-cleanup.sh
+# 手动运行: bash auto-cleanup.sh --once
+# ================================================================
+
+CLEANUP_DAYS=__DAYS__
+DB_PATH="${DATABASE_PATH:-$HOME/read-receipt-tracker/receipts.db}"
+LOG_FILE="$HOME/read-receipt-tracker/cleanup.log"
+
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"; }
+
+if [ "$1" = "--once" ]; then
+    # 手动执行一次
+    if [ -f "$DB_PATH" ]; then
+        DEL_READS=$(sqlite3 "$DB_PATH" \
+            "DELETE FROM reads WHERE read_at < CAST(strftime('%s','now') AS INTEGER) - ${CLEANUP_DAYS}*86400; SELECT changes();")
+        DEL_MSGS=$(sqlite3 "$DB_PATH" \
+            "DELETE FROM messages WHERE registered_at < CAST(strftime('%s','now') AS INTEGER) - ${CLEANUP_DAYS}*86400; SELECT changes();")
+        ORPHANS=$(sqlite3 "$DB_PATH" \
+            "DELETE FROM reads WHERE msg_id NOT IN (SELECT id FROM messages); SELECT changes();")
+        echo "清理完成: 消息+${DEL_MSGS}条, 已读+${DEL_READS}条, 孤儿+${ORPHANS}条"
+        log "手动清理: 消息-${DEL_MSGS}, 已读-${DEL_READS}, 孤儿-${ORPHANS}"
+    fi
+    exit 0
+fi
+
+while true; do
+    if [ -f "$DB_PATH" ]; then
+        DEL_READS=$(sqlite3 "$DB_PATH" \
+            "DELETE FROM reads WHERE read_at < CAST(strftime('%s','now') AS INTEGER) - ${CLEANUP_DAYS}*86400; SELECT changes();")
+        DEL_MSGS=$(sqlite3 "$DB_PATH" \
+            "DELETE FROM messages WHERE registered_at < CAST(strftime('%s','now') AS INTEGER) - ${CLEANUP_DAYS}*86400; SELECT changes();")
+        ORPHANS=$(sqlite3 "$DB_PATH" \
+            "DELETE FROM reads WHERE msg_id NOT IN (SELECT id FROM messages); SELECT changes();")
+
+        if [ "$DEL_READS" != "0" ] || [ "$DEL_MSGS" != "0" ] || [ "$ORPHANS" != "0" ]; then
+            log "清理: 消息-${DEL_MSGS}, 已读-${DEL_READS}, 孤儿-${ORPHANS}"
+        fi
+    fi
+    # 每 24 小时执行一次
+    sleep 86400
+done
+CLEANSCRIPT
+
+    sed -i "s/__DAYS__/${CLEANUP_DAYS}/" "$INSTALL_DIR/auto-cleanup.sh"
+    chmod +x "$INSTALL_DIR/auto-cleanup.sh"
+
+    pkill -f "auto-cleanup.sh" 2>/dev/null || true
+    nohup "$INSTALL_DIR/auto-cleanup.sh" > /dev/null 2>&1 &
+
+    log "自动清理已配置: 保留最近 ${CLEANUP_DAYS} 天，每 24h 执行一次"
+    echo "   📋 清理日志: tail -f $INSTALL_DIR/cleanup.log"
+    echo "   ⚡ 手动执行: bash $INSTALL_DIR/auto-cleanup.sh --once"
+    echo "   ⏸  停止清理: pkill -f auto-cleanup.sh"
+fi
+
+if [ -z "$CLEANUP_DAYS" ]; then
+    echo ""
+    warn "提示: 可启用自动清理过期消息"
+    echo "   用法: bash setup-termux.sh --cleanup 30  (仅保留最近30天)"
+    echo "         bash setup-termux.sh --cleanup 7   (仅保留最近7天)"
+fi
+
+exit 0
