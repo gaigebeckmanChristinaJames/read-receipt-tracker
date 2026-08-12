@@ -347,7 +347,23 @@ def count():
     db = get_db()
     r = db.execute("SELECT COUNT(DISTINCT ip_address) c FROM reads WHERE msg_id=? AND wx_id=?",
                    (mid, wx)).fetchone()
-    return jsonify({"count": r["c"] if r else 0, "msg_id": mid})
+    rows = db.execute(
+        "SELECT * FROM reads WHERE msg_id=? AND wx_id=? ORDER BY read_at DESC",
+        (mid, wx)).fetchall()
+    return jsonify({
+        "count": r["c"] if r else 0,
+        "msg_id": mid,
+        "reads": [{
+            "ip_address": x["ip_address"],
+            "location": " ".join([y for y in [x["country"], x["region"], x["city"]] if y]) or "-",
+            "province": x["region"],
+            "city": x["city"],
+            "country": x["country"],
+            "isp": x["isp"],
+            "user_agent": x["user_agent"],
+            "read_at": datetime.fromtimestamp(x["read_at"]).strftime("%Y-%m-%d %H:%M:%S"),
+        } for x in rows],
+    })
 
 @app.route("/")
 def index():
