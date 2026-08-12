@@ -137,7 +137,7 @@ POST /register
 Content-Type: application/json
 
 {
-    "wxId": "user123",
+    "wxID": "user123",
     "content": "你好，这是一条测试消息",
     "createTime": 1700000000000
 }
@@ -149,15 +149,15 @@ Content-Type: application/json
 {
     "success": true,
     "id": "a1b2c3d4e5f6...",
-    "wxId": "user123",
-    "pixel_url": "http://your-server:5000/pixel?wxId=user123&id=a1b2c3d4..."
+    "wxID": "user123",
+    "pixel_url": "http://your-server:5000/pixel?wxID=user123&id=a1b2c3d4..."
 }
 ```
 
 ### 已读追踪像素
 
 ```http
-GET /pixel?wxId=user123&id=a1b2c3d4...
+GET /pixel?wxID=user123&id=a1b2c3d4...
 ```
 
 返回 1×1 透明 GIF，可嵌入 HTML 邮件或网页。
@@ -165,7 +165,7 @@ GET /pixel?wxId=user123&id=a1b2c3d4...
 ### 查询已读数
 
 ```http
-GET /count?wxId=user123&id=a1b2c3d4...
+GET /count?wxID=user123&id=a1b2c3d4...
 ```
 
 ```json
@@ -271,10 +271,10 @@ cp .env.example .env
 ## 🔧 消息 ID 算法
 
 ```
-SHA-256(wxId + '\0' + content + '\0' + createTime)
+SHA-256(wxID + '\0' + content + '\0' + createTime)
 ```
 
-- 相同的 wxId + content + createTime → 相同 ID
+- 相同的 wxID + content + createTime → 相同 ID
 - `INSERT OR IGNORE` 保证幂等性
 
 ---
