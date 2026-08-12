@@ -2,17 +2,28 @@
 __pycache__/
 *.py[cod]
 *.pyo
+*.egg-info/
+dist/
+build/
 
-# 数据库文件
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# uv
+uv.lock
+
+# 数据库
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
 
-# 环境
-venv/
-.venv/
-env/
+# 敏感配置
+.env
+.env.local
+.env.*.local
 
 # IDE
 .vscode/
@@ -26,11 +37,13 @@ tunnel.log
 daemon.log
 current_url.txt
 
-# 敏感配置
-.env
-.env.local
-.env.*.local
+# C++ / meson
+cpp/builddir/
+cpp/build/
+*.o
+*.a
+*.so
 
-# 系统
+# 系统文件
 .DS_Store
 Thumbs.db
