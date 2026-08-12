@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>已读追踪 · 管理后台</title>
+<style>
+:root{--primary:#6366f1;--danger:#ef4444;--success:#10b981;--bg:#f0f2f5;--card:#fff;--text:#1f2937;--t2:#6b7280;--bd:#e5e7eb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);font-family:system-ui;color:var(--text);line-height:1.6}
+.container{max-width:1200px;margin:0 auto;padding:24px}
+.hdr{background:linear-gradient(135deg,var(--primary),#8b5cf6);color:#fff;padding:36px 32px;border-radius:12px;margin-bottom:28px;box-shadow:0 10px 15px -3px rgba(0,0,0,.1)}
+.hdr h1{font-size:28px;font-weight:700}
+.hdr p{opacity:.85;margin-top:6px;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:28px}
+.stat-card{background:var(--card);padding:24px 20px;border-radius:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stat-card .num{font-size:36px;font-weight:800;color:var(--primary)}
+.stat-card .label{color:var(--t2);font-size:13px;margin-top:4px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.toolbar h2{font-size:18px}
+.search-input{padding:10px 16px;border:1.5px solid var(--bd);border-radius:8px;width:280px;font-size:14px;outline:none}
+.search-input:focus{border-color:var(--primary)}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.9}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-info{background:var(--primary);color:#fff;margin-right:6px}
+.table-box{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--bd);font-size:14px}
+th{background:#f9fafb;color:var(--t2);font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.5px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbff}
+.mono{font-family:"SF Mono","Fira Code",monospace;font-size:12px;color:var(--primary)}
+.content-cell{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
+.badge-ok{background:#dcfce7;color:#166534}
+.badge-zero{background:#f3f4f6;color:var(--t2)}
+.action-link{color:var(--primary);text-decoration:none;font-weight:600}
+.action-link:hover{text-decoration:underline}
+.empty-state{padding:60px;text-align:center;color:var(--t2)}
+@media(max-width:768px){.stats{grid-template-columns:1fr}.search-input{width:100%}th:nth-child(2),td:nth-child(2),th:nth-child(5),td:nth-child(5){display:none}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="hdr"><h1>📬 已读追踪</h1><p>轻量级消息已读记录管理 · 实时追踪 · 多端部署</p></div>
+<div class="stats">
+<div class="stat-card"><div class="num">{{total_messages}}</div><div class="label">消息总数</div></div>
+<div class="stat-card"><div class="num">{{total_reads}}</div><div class="label">已读人次</div></div>
+<div class="stat-card"><div class="num">{{avg_reads}}</div><div class="label">平均已读</div></div>
+</div>
+<div class="toolbar">
+<h2>📋 消息列表</h2>
+<div>
+<input class="search-input" id="s" placeholder="🔍 搜索内容或 wxId…" oninput="f()">
+<button class="btn btn-info" onclick="expCSV()">📥 CSV</button>
+<button class="btn btn-danger" onclick="delAll()">🧹 清空</button>
+</div>
+</div>
+<div class="table-box">
+<table>
+<thead><tr><th>ID</th><th>wxId</th><th>内容</th><th>已读</th><th>时间</th><th>操作</th></tr></thead>
+<tbody id="list">
+{%for m in messages%}
+<tr data-cont="{{m.content}}" data-wx="{{m.wx_id}}">
+<td class="mono">{{m.id[:16]}}…</td><td>{{m.wx_id}}</td>
+<td class="content-cell" title="{{m.content}}">{{m.content}}</td>
+<td><span class="badge {%if m.read_cnt==0%}badge-zero{%else%}badge-ok{%endif%}">{{m.read_cnt}} 人</span></td>
+<td style="color:var(--t2)">{{m.registered_at|int|ts2date}}</td>
+<td>
+<a class="action-link" href="/message/{{m.id}}">详情</a>
+<button class="btn btn-danger" style="padding:6px 12px;font-size:12px" onclick="del('{{m.id}}')">删</button>
+</td>
+</tr>{%endfor%}
+{%if not messages%}<tr><td colspan="6" class="empty-state">📭 暂无消息</td></tr>{%endif%}
+</tbody>
+</table>
+</div>
+</div>
+<script>
+function f(){let v=document.getElementById("s").value.toLowerCase();document.querySelectorAll("#list tr[data-cont]").forEach(r=>{r.style.display=(r.dataset.cont.toLowerCase().includes(v)||r.dataset.wx.toLowerCase().includes(v))?"":"none"})}
+async function del(id){if(!confirm("删除这条？"))return;await fetch("/api/delete/"+id,{method:"POST"});location.reload()}
+async function delAll(){if(!confirm("⚠️ 清空全部？"))return;await fetch("/api/delete-all",{method:"POST"});location.reload()}
+function expCSV(){let rows=[["ID","wxId","内容","已读数","时间"]];document.querySelectorAll("#list tr[data-cont]").forEach(r=>{let c=r.querySelectorAll("td");rows.push([(c[0].textContent||"").trim(),c[1].textContent||"",(r.dataset.cont||"").replace(/"/g,'""'),(c[3].textContent||"").trim(),(c[4].textContent||"").trim()])});let csv=rows.map(r=>r.map(v=>'"'+v+'"').join(",")).join("\n");let b=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});let a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="read-receipt-export.csv";a.click()}
+</script>
+</body>
+</html>
