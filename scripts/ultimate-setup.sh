@@ -12,11 +12,21 @@ warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 echo "=== read-receipt-tracker 一键部署 (全内嵌版) ==="
 echo ""
 
-echo "[1/4] 检查环境..."
+echo "[1/4] 检查环境 + 配置清华源..."
 if [ ! -d "/data/data/com.termux" ]; then
     echo "提示: 非 Termux 环境，继续尝试..."
 fi
 termux-wake-lock 2>/dev/null || true
+
+# 自动配置清华源 (解决 pkg 卡住/下载慢)
+if [ -w "$PREFIX/etc/apt/sources.list" ]; then
+    echo "  写入清华镜像源..."
+    echo "deb https://mirrors.tuna.tsinghua.edu.cn/termux/apt/termux-main stable main" > "$PREFIX/etc/apt/sources.list"
+    echo "  更新软件列表..."
+    pkg update -y 2>&1 | tail -3 || true
+else
+    echo "  无法写 sources.list，跳过换源"
+fi
 log "环境 OK"
 
 echo ""
