@@ -167,24 +167,24 @@ private:
                 return body.substr(p, e - p);
             };
 
-            wx = extract("wxId");
+            wx = extract("wxID");
             content = extract("content");
             auto ct_str = extract("createTime");
             if (!ct_str.empty()) ct = std::stoll(ct_str);
 
             if (wx.empty())
-                return http_response("{\"error\":\"wxId required\"}", 400);
+                return http_response("{\"error\":\"wxID required\"}", 400);
 
             std::string mid = tracker_->register_message(wx, content, ct);
             std::ostringstream oss;
-            oss << "{\"success\":true,\"id\":\"" << mid << "\",\"wxId\":\"" << wx << "\"}";
+            oss << "{\"success\":true,\"id\":\"" << mid << "\",\"wxID\":\"" << wx << "\"}";
             return http_response(oss.str());
         }
 
         // GET /pixel
         if (path == "/pixel") {
             std::string wx, mid;
-            // 解析 query ?wxId=xxx&id=yyy
+            // 解析 query ?wxID=xxx&id=yyy
             auto get_param = [&query](const std::string& key) -> std::string {
                 size_t p = query.find(key + "=");
                 if (p == std::string::npos) return "";
@@ -192,7 +192,7 @@ private:
                 size_t e = query.find("&", p);
                 return query.substr(p, e == std::string::npos ? query.size() - p : e - p);
             };
-            wx = get_param("wxId");
+            wx = get_param("wxID");
             mid = get_param("id");
 
             if (!wx.empty() && !mid.empty())
@@ -213,7 +213,7 @@ private:
                 size_t e = query.find("&", p);
                 return query.substr(p, e == std::string::npos ? query.size() - p : e - p);
             };
-            std::string wx = get_param("wxId"), mid = get_param("id");
+            std::string wx = get_param("wxID"), mid = get_param("id");
             int cnt = tracker_->count_reads(mid, wx);
             return http_response("{\"count\":" + std::to_string(cnt) + ",\"msg_id\":\"" + mid + "\"}");
         }
@@ -241,7 +241,7 @@ private:
                  << "<div class=sc><div class=n>" << stats.total_reads << "</div>总已读</div>"
                  << "<div class=sc><div class=n>" << stats.avg_reads << "</div>平均已读</div>"
                  << "</div><table>"
-                 << "<thead><tr><th>ID</th><th>wxId</th><th>内容</th><th>已读</th><th>时间</th></tr></thead><tbody>";
+                 << "<thead><tr><th>ID</th><th>wxID</th><th>内容</th><th>已读</th><th>时间</th></tr></thead><tbody>";
             for (auto& m : msgs) {
                 html << "<tr><td style='font-family:monospace;font-size:12px'>" << m.id.substr(0,16) << "…</td>"
                      << "<td>" << m.wx_id << "</td>"
