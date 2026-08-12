@@ -113,7 +113,7 @@ a{color:var(--blue);text-decoration:none;margin-right:10px}
 <tr data-c="{{m.content}}" data-w="{{m.wxid}}">
 <td class="mono">{{m.id[:12]}}…</td><td>{{m.wxid}}</td>
 <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{m.content}}</td>
-<td><span class="badge {%if m.cnt==0%}b-0{%else%}b-ok{%endif%}">{{m.cnt}} 人</span></td>
+<td><span class="badge {%if m.cnt==0%}b-0{%else%}b-ok{%endif%}">{{m.cnt}} 人</span>{%if m.loc%}<span style="margin-left:6px;font-size:12px;color:var(--blue)">📍{{m.loc}}城</span>{%endif%}</td>
 <td style="color:var(--t2)">{{m.t}}</td>
 <td><a href="/message/{{m.id}}">详情</a><button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="del('{{m.id}}')">删</button></td>
 </tr>{%endfor%}
@@ -356,10 +356,13 @@ def index():
     tr = db.execute("SELECT COUNT(DISTINCT ip_address) c FROM reads").fetchone()["c"]
     ar = round(tr / tm, 1) if tm else 0
     rows = db.execute(
-        "SELECT m.*, (SELECT COUNT(DISTINCT ip_address) FROM reads r WHERE r.msg_id=m.id) cnt "
+        "SELECT m.*, (SELECT COUNT(DISTINCT ip_address) FROM reads r WHERE r.msg_id=m.id) cnt, "
+        "(SELECT COUNT(DISTINCT city) FROM reads r WHERE r.msg_id=m.id AND r.city!='') loc_cnt, "
+        "(SELECT GROUP_CONCAT(DISTINCT city) FROM reads r WHERE r.msg_id=m.id AND r.city!='') locs "
         "FROM messages m ORDER BY registered_at DESC LIMIT 100").fetchall()
     msgs = [{"id": r["id"], "wxid": r["wx_id"], "content": r["content"],
-             "cnt": r["cnt"],
+             "cnt": r["cnt"], "loc": r["loc_cnt"] or 0,
+             "locs": (r["locs"] or "")[:60],
              "t": datetime.fromtimestamp(r["registered_at"]).strftime("%Y-%m-%d %H:%M:%S")}
             for r in rows]
     return render_template_string(INDEX_HTML, tm=tm, tr=tr, ar=ar, msgs=msgs)
