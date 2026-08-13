@@ -168,7 +168,7 @@ th{background:#1c2129;color:var(--t2);font-size:12px}
 {%if reads%}
 <table><thead><tr><th>IP</th><th>📍 位置</th><th>User-Agent</th><th>读取时间</th></tr></thead><tbody>
 {%for r in reads%}
-<tr><td class="ip">{{r.ip_address}}</td><td>{{r.geo}}</td><td class="ua" title="{{r.user_agent}}">{{r.user_agent or "-"}}</td><td>{{r.t}}</td></tr>
+<tr><td class="ip">{{r.ip_address}}</td><td>{{r.geo}}{%if r.isp%}<br><span style="font-size:12px;color:var(--t2)">🏢 {{r.isp}}</span>{%endif%}{%if r.loc%}<br><span style="font-size:12px;color:var(--t2)">📍 {{r.loc}}</span>{%endif%}</td><td class="ua" title="{{r.user_agent}}">{{r.user_agent or "-"}}</td><td>{{r.t}}</td></tr>
 {%endfor%}
 </tbody></table>{%else%}<div class="emp">📭 暂无读取记录</div>{%endif%}</div>
 </div>
@@ -219,6 +219,19 @@ def init_db():
     db.commit()
     db.close()
 
+def fmt_loc(loc):
+    if not loc or "," not in loc:
+        return loc
+    try:
+        lat_s, lon_s = loc.split(",", 1)
+        lat = float(lat_s)
+        lon = float(lon_s)
+        lat_dir = "北纬" if lat >= 0 else "南纬"
+        lon_dir = "东经" if lon >= 0 else "西经"
+        return f"{lat_dir}{abs(lat):.4f}°, {lon_dir}{abs(lon):.4f}°"
+    except Exception:
+        return loc
+
 def gen_id(wx, c, ct):
     m = hashlib.sha256()
     m.update(wx.encode()); m.update(b"\x00")
@@ -232,6 +245,26 @@ def get_ip():
     xri = request.headers.get("X-Real-IP")
     if xri: return xri.strip()
     return request.remote_addr or "0.0.0.0"
+
+_ISP_CN = {
+    "china mobile": "中国移动",
+    "china mobile communications": "中国移动",
+    "china unicom": "中国联通",
+    "china unicom communications": "中国联通",
+    "china telecom": "中国电信",
+    "china telecom backbone": "中国电信",
+    "chinatelecom": "中国电信",
+    "china broadband": "中国广电",
+    "china education": "教育网",
+    "shanghai mobile": "上海移动",
+    "shanghai telecom": "上海电信",
+    "beijing telecom": "北京电信",
+}
+
+def _cn_isp(isp):
+    if not isp:
+        return ""
+    return _ISP_CN.get(isp.strip().lower(), isp)
 
 def lookup_geo(ip):
     # IP 定位开关: 环境变量 ENABLE_GEO=0 关闭 (Lite 模式, 零外部请求)
@@ -254,7 +287,7 @@ def lookup_geo(ip):
                 "country": d.get("country", ""),
                 "region": d.get("regionName", ""),
                 "city": d.get("city", ""),
-                "isp": d.get("isp", ""),
+                "isp": _cn_isp(d.get("isp", "")),
                 "org": d.get("isp", ""),
                 "loc": f"{d.get('lat','')},{d.get('lon','')}" if d.get("lat") is not None else "",
             }
@@ -273,7 +306,7 @@ def lookup_geo(ip):
                 "country": d.get("country", ""),
                 "region": d.get("region", ""),
                 "city": d.get("city", ""),
-                "isp": (d.get("connection") or {}).get("isp", ""),
+                "isp": _cn_isp((d.get("connection") or {}).get("isp", "")),
                 "org": (d.get("connection") or {}).get("isp", ""),
                 "loc": f"{d.get('latitude','')},{d.get('longitude','')}" if d.get("latitude") is not None else "",
             }
@@ -292,7 +325,7 @@ def lookup_geo(ip):
                 "country": d.get("country", ""),
                 "region": d.get("region", ""),
                 "city": d.get("city", ""),
-                "isp": (d.get("org", "") or "").split(" ", 1)[-1] if d.get("org") else "",
+                "isp": _cn_isp((d.get("org", "") or "").split(" ", 1)[-1]) if d.get("org") else "",
                 "org": d.get("org", ""),
                 "loc": d.get("loc", ""),
             }
@@ -370,7 +403,7 @@ def count():
             "city": x["city"],
             "country": x["country"],
             "isp": x["isp"] if "isp" in x.keys() else "",
-            "loc": x["loc"] if "loc" in x.keys() else "",
+            "loc": fmt_loc(x["loc"]) if "loc" in x.keys() else "",
             "user_agent": x["user_agent"],
             "read_at": datetime.fromtimestamp(x["read_at"]).strftime("%Y-%m-%d %H:%M:%S"),
         } for x in rows],
@@ -403,6 +436,8 @@ def detail(mid):
     rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
     reads = [{"ip_address": r["ip_address"], "user_agent": r["user_agent"],
               "geo": " ".join([x for x in [r["country"], r["region"], r["city"]] if x]) or "-",
+              "isp": r["isp"] if "isp" in r.keys() else "",
+              "loc": fmt_loc(r["loc"]) if "loc" in r.keys() else "",
               "t": datetime.fromtimestamp(r["read_at"]).strftime("%Y-%m-%d %H:%M:%S")}
              for r in rows]
     msg = {"id": m["id"], "wxid": m["wx_id"], "content": m["content"],
@@ -442,7 +477,7 @@ def api_reads(mid):
             "region": r["region"],
             "city": r["city"],
             "isp": r["isp"] if "isp" in r.keys() else "",
-            "loc": r["loc"] if "loc" in r.keys() else "",
+            "loc": fmt_loc(r["loc"]) if "loc" in r.keys() else "",
             "user_agent": r["user_agent"],
             "read_at": datetime.fromtimestamp(r["read_at"]).strftime("%Y-%m-%d %H:%M:%S"),
         } for r in rows],
