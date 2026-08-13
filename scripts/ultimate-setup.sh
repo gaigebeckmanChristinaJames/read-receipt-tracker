@@ -191,6 +191,7 @@ table{width:100%;border-collapse:collapse;margin-top:12px}
 th,td{padding:12px;text-align:left;border-bottom:1px solid var(--bd);font-size:14px}
 th{background:#1c2129;color:var(--t2);font-size:12px}
 .ip{font-family:monospace;color:var(--blue)}
+.isp-sub{font-size:11px;color:var(--t2);margin-top:2px}
 .ua{font-size:12px;color:var(--t2);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn-d{background:var(--danger);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;margin-top:14px}
 .emp{padding:36px;text-align:center;color:var(--t2)}
@@ -207,9 +208,9 @@ th{background:#1c2129;color:var(--t2);font-size:12px}
 <button class="btn-d" onclick="del()">🗑 删除本条</button></div>
 <div class="card"><h2>👁 已读记录 ({{reads|length}})</h2>
 {%if reads%}
-<table><thead><tr><th>👤 已读人</th><th>📱 IP</th><th>🏠 地址</th><th>🏢 运营商</th><th>📍 经纬度</th><th>⏰ 已读时间</th></tr></thead><tbody>
+<table><thead><tr><th>已读人ID</th><th>IP地址</th><th>定位</th><th>经纬度</th><th>已读时间</th></tr></thead><tbody>
 {%for r in reads%}
-<tr><td>{{r.wxid}}</td><td class="ip">{{r.ip_address}}</td><td>{{r.geo or "-"}}</td><td>{{r.isp or "-"}}</td><td>{{r.loc or "-"}}</td><td>{{r.t}}</td></tr>
+<tr><td>{{r.wxid}}</td><td class="ip">{{r.ip_address or "-"}}</td><td>{{r.geo or "-"}}{%if r.isp%}<div class="isp-sub">{{r.isp}}</div>{%endif%}</td><td>{{r.loc or "-"}}</td><td>{{r.t}}</td></tr>
 {%endfor%}
 </tbody></table>{%else%}<div class="emp">📭 暂无读取记录</div>{%endif%}</div>
 </div>
@@ -404,7 +405,8 @@ def register():
 def pixel():
     wx = request.args.get("wxId", "")
     mid = request.args.get("id", "")
-    reader = request.args.get("readerWxId", "") or request.args.get("reader", "")
+    # 微信图片请求拿不到对方真实微信号，访客ID固定为「未知访客」
+    reader = "未知访客"
     if not wx or not mid:
         return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
     ip = get_ip()
@@ -434,7 +436,7 @@ def count():
     r = db.execute("SELECT COUNT(DISTINCT ip_address) c FROM reads WHERE msg_id=? AND wx_id=?",
                    (mid, wx)).fetchone()
     rows = db.execute(
-        "SELECT * FROM reads WHERE msg_id=? AND wx_id=? ORDER BY read_at DESC",
+        "SELECT * FROM reads WHERE msg_id=? AND wx_id=? ORDER BY read_at DESC, id DESC",
         (mid, wx)).fetchall()
     return jsonify({
         "count": r["c"] if r else 0,
@@ -476,8 +478,8 @@ def detail(mid):
     m = db.execute("SELECT * FROM messages WHERE id=?", (mid,)).fetchone()
     if not m:
         return "not found", 404
-    rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
-    reads = [{"wxid": r["reader_wx_id"] if "reader_wx_id" in r.keys() and r["reader_wx_id"] else r["wx_id"], "ip_address": r["ip_address"], "user_agent": r["user_agent"],
+    rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC, id DESC", (mid,)).fetchall()
+    reads = [{"wxid": (r["reader_wx_id"] if "reader_wx_id" in r.keys() and r["reader_wx_id"] else "") or "未知访客", "ip_address": r["ip_address"], "user_agent": r["user_agent"],
               "geo": " ".join([x for x in [r["country"], r["region"], r["city"]] if x]) or "-",
               "isp": r["isp"] if "isp" in r.keys() else "",
               "loc": fmt_loc(r["loc"]) if "loc" in r.keys() else "",
@@ -507,7 +509,7 @@ def api_reads(mid):
     m = db.execute("SELECT * FROM messages WHERE id=?", (mid,)).fetchone()
     if not m:
         return jsonify({"error": "not found"}), 404
-    rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
+    rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC, id DESC", (mid,)).fetchall()
     return jsonify({
         "msg_id": mid,
         "wxId": m["wx_id"],
