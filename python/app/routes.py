@@ -7,7 +7,7 @@ from io import BytesIO
 from flask import Flask, current_app, g, jsonify, render_template, request, send_file
 
 from .database import atomic_write, get_db
-from .utils import generate_message_id, get_client_ip, lookup_ip_location
+from .utils import generate_message_id, get_client_ip, lookup_ip_location, reverse_geocode
 
 # 1x1 透明 GIF
 TRANSPARENT_GIF = bytes([
@@ -151,6 +151,34 @@ def register_routes(app):
                 (mid, wx, ip, ua, country, region, city, isp, loc, reader))
         except Exception:
             _pixel_queue.append((mid, wx, ip, ua, country, region, city, isp, loc, reader))
+
+        return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
+
+    @app.route("/pixel.gif", strict_slashes=False)
+    @rate_limit
+    def pixel_gif():
+        # 微信图片请求拿不到浏览者 wxId，固定标记为未知访客
+        ip = get_client_ip()
+        geo = lookup_ip_location(ip)
+        country = geo.get("country", "") if geo else ""
+        region = geo.get("region", "") if geo else ""
+        city = geo.get("city", "") if geo else ""
+        isp = geo.get("isp", "") if geo else ""
+        loc = geo.get("loc", "") if geo else ""
+
+        # 逆地理编码街道级地址（失败静默降级）
+        street = reverse_geocode(loc) if loc else ""
+
+        db = get_db()
+        try:
+            atomic_write(db,
+                "INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent,"
+                "country,region,city,isp,loc,reader_wx_id) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?)",
+                ("pixel.gif", "未知访客", ip, "wechat-image", country, region, city,
+                 isp, loc, "未知访客"))
+        except Exception:
+            pass
 
         return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
 
