@@ -29,6 +29,21 @@ def _ts2date(ts):
         return str(ts)
 
 
+def _fmt_loc(loc):
+    """经纬度格式化: '31.2222,121.4581' -> '北纬31.2222°, 东经121.4581°'"""
+    if not loc or "," not in loc:
+        return loc
+    try:
+        lat_s, lon_s = loc.split(",", 1)
+        lat = float(lat_s)
+        lon = float(lon_s)
+        lat_dir = "北纬" if lat >= 0 else "南纬"
+        lon_dir = "东经" if lon >= 0 else "西经"
+        return f"{lat_dir}{abs(lat):.4f}°, {lon_dir}{abs(lon):.4f}°"
+    except Exception:
+        return loc
+
+
 def require_api_key(f):
     @wraps(f)
     def d(*a, **kw):
@@ -68,6 +83,7 @@ def rate_limit(f):
 
 def register_routes(app):
     app.template_filter("ts2date")(_ts2date)
+    app.template_filter("fmtloc")(_fmt_loc)
 
     @app.route("/health")
     @rate_limit
@@ -166,7 +182,7 @@ def register_routes(app):
                 "city": x["city"],
                 "country": x["country"],
                 "isp": x["isp"],
-                "loc": x["loc"] if "loc" in x.keys() else "",
+                "loc": _fmt_loc(x["loc"]) if "loc" in x.keys() else "",
                 "user_agent": x["user_agent"],
                 "read_at": datetime.fromtimestamp(x["read_at"])
                            .strftime("%Y-%m-%d %H:%M:%S"),
@@ -229,7 +245,7 @@ def register_routes(app):
                     "location": " ".join([x for x in [r["country"], r["region"],
                                                      r["city"]] if x]) or "-",
                     "country": r["country"], "region": r["region"],
-                    "city": r["city"], "isp": r["isp"], "loc": r["loc"],
+                    "city": r["city"], "isp": r["isp"], "loc": _fmt_loc(r["loc"]),
                     "user_agent": r["user_agent"],
                     "read_at": datetime.fromtimestamp(r["read_at"])
                                .strftime("%Y-%m-%d %H:%M:%S"),
@@ -258,7 +274,7 @@ def register_routes(app):
                 "location": " ".join([x for x in [r["country"], r["region"],
                                                  r["city"]] if x]) or "-",
                 "country": r["country"], "region": r["region"],
-                "city": r["city"], "isp": r["isp"], "loc": r["loc"],
+                "city": r["city"], "isp": r["isp"], "loc": _fmt_loc(r["loc"]),
                 "user_agent": r["user_agent"],
                 "read_at": datetime.fromtimestamp(r["read_at"])
                            .strftime("%Y-%m-%d %H:%M:%S"),
