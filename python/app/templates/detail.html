@@ -60,26 +60,10 @@ tr:hover td{background:#1c2129}
   </div>
 
   <div class="card">
-    <h2>👁 已读记录 ({{reads|length}})</h2>
+    <h2>👁 已读记录 ({{reads|length}}) <span style="font-size:13px;color:var(--t2);font-weight:400">wxId: {{message.wx_id}}</span></h2>
     {%if reads%}
-    {%if has_geo%}
-    <div class="geo-summary">
-      {%set ns = namespace(countries=[]) %}
-      {%for r in reads%}
-        {%if r.country and r.country not in ns.countries%}
-          {%set _ = ns.countries.append(r.country) %}
-        {%endif%}
-      {%endfor%}
-      {%for c in ns.countries[:10]%}
-        <span class="geo-chip">🌍 {{c}}</span>
-      {%endfor%}
-      {%if ns.countries|length > 10%}
-        <span class="geo-chip">+{{ns.countries|length - 10}} 更多</span>
-      {%endif%}
-    </div>
-    {%endif%}
     <table>
-      <thead><tr><th>IP 地址</th><th>📍 地理位置</th><th>User-Agent</th><th>读取时间</th></tr></thead>
+      <thead><tr><th>📱 IP</th><th>🏠 地址</th><th>🏢 运营商</th><th>📍 经纬度</th><th>⏰ 已读时间</th></tr></thead>
       <tbody>
         {%for r in reads%}
         <tr>
@@ -89,11 +73,14 @@ tr:hover td{background:#1c2129}
               {%if r.country%}{{r.country}}{%endif%}
               {%if r.region%} · {{r.region}}{%endif%}
               {%if r.city%} · {{r.city}}{%endif%}
-              {%if r.isp%}<br><span style="color:var(--t2);font-size:12px">🏢 {{r.isp}}</span>{%endif%}
-              {%if r.loc%}<br><span style="color:var(--t2);font-size:12px">📍 {{r.loc|fmtloc}}</span>{%endif%}
             {%else%}<span class="geo-none">—</span>{%endif%}
           </td>
-          <td class="ua-cell" title="{{r.user_agent}}">{{r.user_agent or "—"}}</td>
+          <td class="geo-cell">
+            {%if r.isp%}🏢 {{r.isp}}{%else%}<span class="geo-none">—</span>{%endif%}
+          </td>
+          <td class="geo-cell">
+            {%if r.loc%}📍 {{r.loc|fmtloc}}{%else%}<span class="geo-none">—</span>{%endif%}
+          </td>
           <td class="time-cell">{{r.read_at|int|ts2date}}</td>
         </tr>
         {%endfor%}
