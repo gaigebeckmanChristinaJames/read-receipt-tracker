@@ -128,6 +128,7 @@ def register_routes(app):
         # 返回 1x1 透明 GIF 并记录已读（非阻塞：先返回，失败进队列）
         wx = request.args.get("wxId", "")
         mid = request.args.get("id", "")
+        reader = request.args.get("readerWxId", "") or request.args.get("reader", "")
         if not wx or not mid:
             return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
 
@@ -146,10 +147,10 @@ def register_routes(app):
         try:
             atomic_write(db,
                 "INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent,"
-                "country,region,city,isp,loc) VALUES(?,?,?,?,?,?,?,?,?)",
-                (mid, wx, ip, ua, country, region, city, isp, loc))
+                "country,region,city,isp,loc,reader_wx_id) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                (mid, wx, ip, ua, country, region, city, isp, loc, reader))
         except Exception:
-            _pixel_queue.append((mid, wx, ip, ua, country, region, city, isp, loc))
+            _pixel_queue.append((mid, wx, ip, ua, country, region, city, isp, loc, reader))
 
         return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
 
@@ -176,6 +177,7 @@ def register_routes(app):
             "msg_id": mid,
             "reads": [{
                 "ip_address": x["ip_address"],
+                "reader_wx_id": x["reader_wx_id"] if "reader_wx_id" in x.keys() else "",
                 "location": " ".join([y for y in [x["country"], x["region"],
                                                  x["city"]] if y]) or "-",
                 "province": x["region"],
@@ -232,7 +234,7 @@ def register_routes(app):
         if not m:
             return render_template("error.html", message="404"), 404
         rs = db.execute(
-            "SELECT wx_id,ip_address,user_agent,read_at,country,region,city,isp,loc "
+            "SELECT wx_id,reader_wx_id,ip_address,user_agent,read_at,country,region,city,isp,loc "
             "FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
         hg = any(r["country"] or r["city"] for r in rs) if rs else False
 
