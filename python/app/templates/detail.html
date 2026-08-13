@@ -31,13 +31,14 @@ tr:hover td{background:#1c2129}
 .ua-cell{font-size:12px;color:var(--t2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .time-cell{color:var(--t2);font-size:13px}
 .geo-cell{font-size:13px}
+.isp-sub{font-size:11px;color:var(--t2);margin-top:2px}
 .geo-none{color:#484f58}
 .btn-danger{background:var(--danger);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px}
 .btn-danger:hover{opacity:.85}
 .btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--bd);padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px;margin-left:8px}
 .empty-state{padding:40px;text-align:center;color:var(--t2)}
 .empty-state .icon{font-size:38px;margin-bottom:8px}
-@media(max-width:640px){.grid{grid-template-columns:1fr}th:nth-child(3),td:nth-child(3){display:none}}
+@media(max-width:640px){.grid{grid-template-columns:1fr}th:nth-child(4),td:nth-child(4){display:none}}
 </style>
 </head>
 <body>
@@ -63,21 +64,19 @@ tr:hover td{background:#1c2129}
     <h2>👁 已读记录 ({{reads|length}})</h2>
     {%if reads%}
     <table>
-      <thead><tr><th>👤 已读人</th><th>📱 IP</th><th>🏠 地址</th><th>🏢 运营商</th><th>📍 经纬度</th><th>⏰ 已读时间</th></tr></thead>
+      <thead><tr><th>已读人ID</th><th>IP地址</th><th>定位</th><th>经纬度</th><th>已读时间</th></tr></thead>
       <tbody>
         {%for r in reads%}
         <tr>
-          <td class="geo-cell">{{r.reader_wx_id or r.wx_id}}</td>
-          <td class="ip-cell">{{r.ip_address}}</td>
+          <td class="geo-cell">{%if r.reader_wx_id%}{{r.reader_wx_id}}{%else%}未知访客{%endif%}</td>
+          <td class="ip-cell">{%if r.ip_address%}{{r.ip_address}}{%else%}<span class="geo-none">—</span>{%endif%}</td>
           <td class="geo-cell">
-            {%if r.country or r.city%}
+            {%if r.country or r.region or r.city%}
               {%if r.country%}{{r.country}}{%endif%}
               {%if r.region%} · {{r.region}}{%endif%}
               {%if r.city%} · {{r.city}}{%endif%}
             {%else%}<span class="geo-none">—</span>{%endif%}
-          </td>
-          <td class="geo-cell">
-            {%if r.isp%}{{r.isp}}{%else%}<span class="geo-none">—</span>{%endif%}
+            {%if r.isp%}<div class="isp-sub">{{r.isp}}</div>{%endif%}
           </td>
           <td class="geo-cell">
             {%if r.loc%}{{r.loc|fmtloc}}{%else%}<span class="geo-none">—</span>{%endif%}

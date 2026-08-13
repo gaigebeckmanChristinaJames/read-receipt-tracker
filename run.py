@@ -57,11 +57,13 @@ def _flush_pixel_queue():
         from python.app import routes as rt
         while rt._pixel_queue:
             try:
-                mid, wx, ip, ua = rt._pixel_queue.pop(0)
+                (mid, wx, ip, ua, country, region, city,
+                 isp, loc, reader) = rt._pixel_queue.pop(0)
                 atomic_write(conn,
                     "INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,"
-                    "user_agent) VALUES(?,?,?,?)",
-                    (mid, wx, ip, ua))
+                    "user_agent,country,region,city,isp,loc,reader_wx_id) "
+                    "VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    (mid, wx, ip, ua, country, region, city, isp, loc, reader))
             except Exception:
                 pass
 

@@ -128,7 +128,8 @@ def register_routes(app):
         # 返回 1x1 透明 GIF 并记录已读（非阻塞：先返回，失败进队列）
         wx = request.args.get("wxId", "")
         mid = request.args.get("id", "")
-        reader = request.args.get("readerWxId", "") or request.args.get("reader", "")
+        # 微信图片请求拿不到对方真实微信号，访客ID固定为「未知访客」
+        reader = "未知访客"
         if not wx or not mid:
             return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
 
@@ -198,7 +199,7 @@ def register_routes(app):
             (mid, wx)).fetchone()
         rows = db.execute(
             "SELECT * FROM reads WHERE msg_id=? AND wx_id=? "
-            "ORDER BY read_at DESC",
+            "ORDER BY read_at DESC, id DESC",
             (mid, wx)).fetchall()
         return jsonify({
             "count": r["cnt"] if r else 0,
@@ -212,7 +213,7 @@ def register_routes(app):
                 "city": x["city"],
                 "country": x["country"],
                 "isp": x["isp"],
-                "loc": _fmt_loc(x["loc"]) if "loc" in x.keys() else "",
+                "loc": _fmt_loc(x["loc"]) or "-",
                 "user_agent": x["user_agent"],
                 "read_at": datetime.fromtimestamp(x["read_at"])
                            .strftime("%Y-%m-%d %H:%M:%S"),
@@ -263,7 +264,7 @@ def register_routes(app):
             return render_template("error.html", message="404"), 404
         rs = db.execute(
             "SELECT wx_id,reader_wx_id,ip_address,user_agent,read_at,country,region,city,isp,loc "
-            "FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
+            "FROM reads WHERE msg_id=? ORDER BY read_at DESC, id DESC", (mid,)).fetchall()
         hg = any(r["country"] or r["city"] for r in rs) if rs else False
 
         if request.args.get("json") == "1":
@@ -275,7 +276,8 @@ def register_routes(app):
                     "location": " ".join([x for x in [r["country"], r["region"],
                                                      r["city"]] if x]) or "-",
                     "country": r["country"], "region": r["region"],
-                    "city": r["city"], "isp": r["isp"], "loc": _fmt_loc(r["loc"]),
+                    "city": r["city"], "isp": r["isp"],
+                    "loc": _fmt_loc(r["loc"]) or "-",
                     "user_agent": r["user_agent"],
                     "read_at": datetime.fromtimestamp(r["read_at"])
                                .strftime("%Y-%m-%d %H:%M:%S"),
@@ -292,7 +294,7 @@ def register_routes(app):
         if not m:
             return jsonify({"error": "not found"}), 404
         rs = db.execute(
-            "SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC",
+            "SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC, id DESC",
             (mid,)).fetchall()
         return jsonify({
             "msg_id": mid,
@@ -304,7 +306,8 @@ def register_routes(app):
                 "location": " ".join([x for x in [r["country"], r["region"],
                                                  r["city"]] if x]) or "-",
                 "country": r["country"], "region": r["region"],
-                "city": r["city"], "isp": r["isp"], "loc": _fmt_loc(r["loc"]),
+                "city": r["city"], "isp": r["isp"],
+                "loc": _fmt_loc(r["loc"]) or "-",
                 "user_agent": r["user_agent"],
                 "read_at": datetime.fromtimestamp(r["read_at"])
                            .strftime("%Y-%m-%d %H:%M:%S"),
