@@ -80,7 +80,7 @@ bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-rec
 > ```
 >
 > ```bash
-> cloudflared tunnel --url http://127.0.0.1:5000
+> cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
 > ```
 > 隧道日志会显示 `https://xxx.trycloudflare.com` 公网地址。
 
