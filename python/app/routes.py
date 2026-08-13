@@ -232,7 +232,7 @@ def register_routes(app):
         if not m:
             return render_template("error.html", message="404"), 404
         rs = db.execute(
-            "SELECT ip_address,user_agent,read_at,country,region,city,isp,loc "
+            "SELECT wx_id,ip_address,user_agent,read_at,country,region,city,isp,loc "
             "FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
         hg = any(r["country"] or r["city"] for r in rs) if rs else False
 
