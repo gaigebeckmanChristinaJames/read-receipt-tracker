@@ -31,6 +31,7 @@ def init_db(database_path: str) -> None:
             region          TEXT DEFAULT '',
             city            TEXT DEFAULT '',
             isp             TEXT DEFAULT '',
+            loc             TEXT DEFAULT '',
             read_at         INTEGER DEFAULT (CAST(strftime('%s','now') AS INTEGER)),
             UNIQUE(msg_id, ip_address)
         );
@@ -39,6 +40,12 @@ def init_db(database_path: str) -> None:
         CREATE INDEX IF NOT EXISTS idx_reads_wx   ON reads(wx_id);
         CREATE INDEX IF NOT EXISTS idx_msgs_wx    ON messages(wx_id);
     """)
+    # 兼容旧库：动态补列（loc 等新字段）
+    for col in ["country", "region", "city", "isp", "loc"]:
+        try:
+            db.execute(f"ALTER TABLE reads ADD COLUMN {col} TEXT DEFAULT ''")
+        except Exception:
+            pass
     db.commit()
     db.close()
 
