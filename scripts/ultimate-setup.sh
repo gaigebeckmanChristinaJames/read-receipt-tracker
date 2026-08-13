@@ -518,7 +518,7 @@ echo "════════════════════════�
 echo ""
 echo "▶ 服务前台运行中 (Ctrl+C 停止)"
 echo "▶ 需要公网地址？另开一个 Termux 会话执行:"
-echo "   cloudflared tunnel --url http://127.0.0.1:5000"
+echo "   cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000"
 echo ""
 
 exec python app.py
