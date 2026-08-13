@@ -211,7 +211,7 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_reads_msg ON reads(msg_id);
     """)
     # 兼容旧库：动态补列
-    for col in ["country", "region", "city", "isp"]:
+    for col in ["country", "region", "city", "isp", "loc"]:
         try:
             db.execute(f"ALTER TABLE reads ADD COLUMN {col} TEXT DEFAULT ''")
         except Exception:
@@ -369,7 +369,8 @@ def count():
             "province": x["region"],
             "city": x["city"],
             "country": x["country"],
-            "isp": x["isp"],
+            "isp": x["isp"] if "isp" in x.keys() else "",
+            "loc": x["loc"] if "loc" in x.keys() else "",
             "user_agent": x["user_agent"],
             "read_at": datetime.fromtimestamp(x["read_at"]).strftime("%Y-%m-%d %H:%M:%S"),
         } for x in rows],
@@ -440,7 +441,8 @@ def api_reads(mid):
             "country": r["country"],
             "region": r["region"],
             "city": r["city"],
-            "isp": r["isp"],
+            "isp": r["isp"] if "isp" in r.keys() else "",
+            "loc": r["loc"] if "loc" in r.keys() else "",
             "user_agent": r["user_agent"],
             "read_at": datetime.fromtimestamp(r["read_at"]).strftime("%Y-%m-%d %H:%M:%S"),
         } for r in rows],
