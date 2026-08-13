@@ -372,7 +372,7 @@ while true; do
 
     if ! pgrep -f "cloudflared tunnel" > /dev/null 2>&1; then
         rm -f tunnel.log current_url.txt
-        cloudflared tunnel --url http://127.0.0.1:5000 > tunnel.log 2>&1 < /dev/null &
+        cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000 > tunnel.log 2>&1 < /dev/null &
     fi
 
     if [ ! -f current_url.txt ] && [ -f tunnel.log ]; then
