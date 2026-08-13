@@ -245,7 +245,7 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_reads_msg ON reads(msg_id);
     """)
     # 兼容旧库：动态补列
-    for col in ["country", "region", "city", "isp", "loc"]:
+    for col in ["country", "region", "city", "isp", "loc", "reader_wx_id"]:
         try:
             db.execute(f"ALTER TABLE reads ADD COLUMN {col} TEXT DEFAULT ''")
         except Exception:
@@ -397,6 +397,7 @@ def register():
 def pixel():
     wx = request.args.get("wxId", "")
     mid = request.args.get("id", "")
+    reader = request.args.get("readerWxId", "") or request.args.get("reader", "")
     if not wx or not mid:
         return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
     ip = get_ip()
@@ -405,11 +406,12 @@ def pixel():
     country = geo["country"] if geo else ""
     region = geo["region"] if geo else ""
     city = geo["city"] if geo else ""
-    isp = geo["isp"] if geo else ""
+    isp = geo.get("isp", "") if geo else ""
+    loc = geo.get("loc", "") if geo else ""
     db = get_db()
     try:
-        db.execute("INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent,country,region,city,isp) VALUES(?,?,?,?,?,?,?,?)",
-                   (mid, wx, ip, ua, country, region, city, isp))
+        db.execute("INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent,country,region,city,isp,loc,reader_wx_id) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                   (mid, wx, ip, ua, country, region, city, isp, loc, reader))
         db.commit()
     except Exception:
         pass
@@ -468,7 +470,7 @@ def detail(mid):
     if not m:
         return "not found", 404
     rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
-    reads = [{"wxid": r["wx_id"], "ip_address": r["ip_address"], "user_agent": r["user_agent"],
+    reads = [{"wxid": r["reader_wx_id"] if "reader_wx_id" in r.keys() and r["reader_wx_id"] else r["wx_id"], "ip_address": r["ip_address"], "user_agent": r["user_agent"],
               "geo": " ".join([x for x in [r["country"], r["region"], r["city"]] if x]) or "-",
               "isp": r["isp"] if "isp" in r.keys() else "",
               "loc": fmt_loc(r["loc"]) if "loc" in r.keys() else "",
