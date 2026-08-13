@@ -100,7 +100,7 @@ if [ "$MODE" = "--foreground" ]; then
     echo "▶ cloudflared 前台运行中 (隧道日志直接显示)"
     echo "▶ Ctrl+C 停止"
     echo ""
-    exec cloudflared tunnel --url http://127.0.0.1:5000
+    exec cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
 elif [ "$MODE" = "--tunnel" ]; then
     # 隧道模式：都后台 + 保活脚本
     cd "$DIR"
@@ -123,7 +123,7 @@ while true; do
     fi
     if ! pgrep -f "cloudflared tunnel" >/dev/null 2>&1; then
         rm -f .tunnel_url.txt
-        cloudflared tunnel --url http://127.0.0.1:5000 > tunnel.log 2>&1 < /dev/null &
+        cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000 > tunnel.log 2>&1 < /dev/null &
     fi
     if [ ! -f .tunnel_url.txt ] && [ -f tunnel.log ]; then
         URL=$(grep -o 'https://[a-zA-Z0-9.-]*\.trycloudflare\.com' tunnel.log 2>/dev/null | tail -1)
