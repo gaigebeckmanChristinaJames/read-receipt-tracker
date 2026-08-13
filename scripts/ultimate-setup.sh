@@ -2,12 +2,46 @@
 # ================================================================
 # read-receipt-tracker · 终极一键版 PRO (含 IP 定位，零下载，全内嵌)
 # 所有代码内置在脚本中，不需要从任何网站下载文件
+# 自动更新：每次运行检查 GitHub 新版本，有更新自动下载新脚本
 # 只需: bash setup.sh
 # ================================================================
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 log() { echo -e "${GREEN}[OK]${NC} $1"; }
 warn() { echo -e "${YELLOW}[!]${NC} $1"; }
+
+SCRIPT_VERSION="2.1.0"
+SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+
+# ================================================================
+# 自动更新检查（默认开启，AUTO_UPDATE=0 可禁用）
+# ================================================================
+if [ "${AUTO_UPDATE:-1}" != "0" ]; then
+    echo "🔍 检查更新..."
+    # 用 CDN 取 GitHub 最新 commit hash（带超时，失败不影响部署）
+    LATEST_SHA=$(curl -fsSL --max-time 8 "https://api.github.com/repos/gaigebeckmanChristinaJames/read-receipt-tracker/commits/main" 2>/dev/null | grep -m1 -o '"sha":"[a-f0-9]*' | cut -d'"' -f4 | cut -c1-7)
+    if [ -n "$LATEST_SHA" ]; then
+        LOCAL_SHA_FILE="$HOME/.rrt_sha"
+        LOCAL_SHA=$(cat "$LOCAL_SHA_FILE" 2>/dev/null || echo "")
+        if [ "$LOCAL_SHA" != "$LATEST_SHA" ]; then
+            echo "  🔄 发现新版本 ($LATEST_SHA)，自动更新脚本..."
+            NEW_SCRIPT="$HOME/rrt-setup-latest.sh"
+            if curl -fsSL --max-time 30 "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@$LATEST_SHA/scripts/ultimate-setup.sh" -o "$NEW_SCRIPT" 2>/dev/null; then
+                echo "$LATEST_SHA" > "$LOCAL_SHA_FILE"
+                chmod +x "$NEW_SCRIPT"
+                log "更新完成，重新执行新脚本..."
+                exec bash "$NEW_SCRIPT"
+            else
+                warn "新脚本下载失败，继续使用当前版本"
+            fi
+        else
+            echo "  ✅ 已是最新版本 ($LATEST_SHA)"
+        fi
+    else
+        warn "无法检查更新（网络受限），继续本地部署"
+    fi
+    echo ""
+fi
 
 echo "=== read-receipt-tracker 一键部署 (IP 定位默认开启) ==="
 echo "   关闭定位(Lite模式): ENABLE_GEO=0 python app.py"
