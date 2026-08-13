@@ -67,7 +67,7 @@ tr:hover td{background:#1c2129}
       <tbody>
         {%for r in reads%}
         <tr>
-          <td class="geo-cell">{{r.wx_id}}</td>
+          <td class="geo-cell">{{r.reader_wx_id or r.wx_id}}</td>
           <td class="ip-cell">{{r.ip_address}}</td>
           <td class="geo-cell">
             {%if r.country or r.city%}
