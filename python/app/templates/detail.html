@@ -60,13 +60,14 @@ tr:hover td{background:#1c2129}
   </div>
 
   <div class="card">
-    <h2>👁 已读记录 ({{reads|length}}) <span style="font-size:13px;color:var(--t2);font-weight:400">wxId: {{message.wx_id}}</span></h2>
+    <h2>👁 已读记录 ({{reads|length}})</h2>
     {%if reads%}
     <table>
-      <thead><tr><th>📱 IP</th><th>🏠 地址</th><th>🏢 运营商</th><th>📍 经纬度</th><th>⏰ 已读时间</th></tr></thead>
+      <thead><tr><th>👤 已读人</th><th>📱 IP</th><th>🏠 地址</th><th>🏢 运营商</th><th>📍 经纬度</th><th>⏰ 已读时间</th></tr></thead>
       <tbody>
         {%for r in reads%}
         <tr>
+          <td class="geo-cell">{{r.wx_id}}</td>
           <td class="ip-cell">{{r.ip_address}}</td>
           <td class="geo-cell">
             {%if r.country or r.city%}
@@ -76,10 +77,10 @@ tr:hover td{background:#1c2129}
             {%else%}<span class="geo-none">—</span>{%endif%}
           </td>
           <td class="geo-cell">
-            {%if r.isp%}🏢 {{r.isp}}{%else%}<span class="geo-none">—</span>{%endif%}
+            {%if r.isp%}{{r.isp}}{%else%}<span class="geo-none">—</span>{%endif%}
           </td>
           <td class="geo-cell">
-            {%if r.loc%}📍 {{r.loc|fmtloc}}{%else%}<span class="geo-none">—</span>{%endif%}
+            {%if r.loc%}{{r.loc|fmtloc}}{%else%}<span class="geo-none">—</span>{%endif%}
           </td>
           <td class="time-cell">{{r.read_at|int|ts2date}}</td>
         </tr>
