@@ -68,9 +68,16 @@ echo ""
 echo "[2/4] 安装 Python + Flask (如已装会跳过)..."
 command -v python >/dev/null 2>&1 || { echo "  安装 python..."; pkg install -y python; }
 python -c "import flask" 2>/dev/null && log "Flask 已安装" || {
+    echo "  ⬆ 先升级 pip (旧版 pip 会连不上源)..."
+    python -m pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple 2>&1 | tail -1 || python -m pip install --upgrade pip 2>&1 | tail -1 || echo "  ⚠ pip 升级失败，继续尝试"
     echo "  安装 Flask (清华源)..."
-    pip install flask -i https://pypi.tuna.tsinghua.edu.cn/simple 2>/dev/null || pip install flask
-    log "Flask 安装完成"
+    if pip install flask -i https://pypi.tuna.tsinghua.edu.cn/simple 2>&1 | tail -2; then
+        log "Flask 安装完成"
+    elif pip install flask -i https://mirrors.aliyun.com/pypi/simple 2>&1 | tail -2; then
+        log "Flask 安装完成 (阿里源)"
+    else
+        warn "Flask 安装失败，稍后 watchdog 会重试 (不影响部署继续)"
+    fi
 }
 
 echo ""
