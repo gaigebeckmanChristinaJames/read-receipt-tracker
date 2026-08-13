@@ -142,3 +142,25 @@ def lookup_ip_location(ip: str) -> Optional[dict]:
         pass
 
     return None
+
+
+def reverse_geocode(loc: str) -> str:
+    """逆地理编码: '31.2222,121.4581' -> 街道级地址。
+
+    使用 Nominatim (OpenStreetMap)，国外服务器可能慢/不通，超时静默返回空。
+    注意: IP 定位的坐标是城市中心点，反向解析结果是近似片区，非精确定位。
+    """
+    if not loc or "," not in loc:
+        return ""
+    try:
+        lat, lon = loc.split(",", 1)
+        req = urllib.request.Request(
+            f"https://nominatim.openstreetmap.org/reverse"
+            f"?lat={lat}&lon={lon}&zoom=14&format=json",
+            headers={"User-Agent": "read-receipt-tracker/2.1"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            import json as _json
+            d = _json.load(resp)
+        return d.get("display_name", "") or ""
+    except Exception:
+        return ""
