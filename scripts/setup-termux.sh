@@ -73,12 +73,15 @@ echo "📥 [5/8] 下载服务源码..."
 mkdir -p "$APP_DIR/templates"
 
 # 下载函数：优先 jsDelivr CDN（国内快），失败回退 GitHub raw
+# 全程显示实时进度和日志
 download() {
     local src="$1" dest="$2"
-    if curl -fL --max-time 60 "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/$src" -o "$dest" 2>/dev/null; then
-        echo "   ✅ $src (CDN)"
-    elif curl -fL --max-time 60 "$RAW/$src" -o "$dest" 2>/dev/null; then
-        echo "   ✅ $src (GitHub直连)"
+    echo "   ⬇  下载 $src ..."
+    echo "      源: https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/$src"
+    if curl -fL --progress-bar --max-time 90 "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/$src" -o "$dest"; then
+        echo "   ✅ $src 完成 (CDN)  $(wc -c < "$dest" 2>/dev/null) 字节"
+    elif curl -fL --progress-bar --max-time 90 "$RAW/$src" -o "$dest"; then
+        echo "   ✅ $src 完成 (GitHub直连)  $(wc -c < "$dest" 2>/dev/null) 字节"
     else
         echo "   ❌ $src 下载失败"
         return 1
@@ -155,4 +158,4 @@ CLEANSCRIPT
 fi
 
 # cloudflared 前台运行 (日志直接显示在屏幕上，像截图那样)
-exec cloudflared tunnel --url http://127.0.0.1:5000
+exec cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
