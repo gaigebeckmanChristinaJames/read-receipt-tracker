@@ -164,11 +164,11 @@ th{background:#1c2129;color:var(--t2);font-size:12px}
 </div>
 <div class="l">消息内容</div><div class="cb">{{m.content}}</div>
 <button class="btn-d" onclick="del()">🗑 删除本条</button></div>
-<div class="card"><h2>👁 已读记录 ({{reads|length}}) <span style="font-size:13px;color:var(--t2);font-weight:400">wxId: {{m.wxid}}</span></h2>
+<div class="card"><h2>👁 已读记录 ({{reads|length}})</h2>
 {%if reads%}
-<table><thead><tr><th>📱 IP</th><th>🏠 地址</th><th>🏢 运营商</th><th>📍 经纬度</th><th>⏰ 已读时间</th></tr></thead><tbody>
+<table><thead><tr><th>👤 已读人</th><th>📱 IP</th><th>🏠 地址</th><th>🏢 运营商</th><th>📍 经纬度</th><th>⏰ 已读时间</th></tr></thead><tbody>
 {%for r in reads%}
-<tr><td class="ip">{{r.ip_address}}</td><td>{{r.geo or "-"}}</td><td>{{r.isp or "-"}}</td><td>{{r.loc or "-"}}</td><td>{{r.t}}</td></tr>
+<tr><td>{{r.wxid}}</td><td class="ip">{{r.ip_address}}</td><td>{{r.geo or "-"}}</td><td>{{r.isp or "-"}}</td><td>{{r.loc or "-"}}</td><td>{{r.t}}</td></tr>
 {%endfor%}
 </tbody></table>{%else%}<div class="emp">📭 暂无读取记录</div>{%endif%}</div>
 </div>
@@ -434,7 +434,7 @@ def detail(mid):
     if not m:
         return "not found", 404
     rows = db.execute("SELECT * FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
-    reads = [{"ip_address": r["ip_address"], "user_agent": r["user_agent"],
+    reads = [{"wxid": r["wx_id"], "ip_address": r["ip_address"], "user_agent": r["user_agent"],
               "geo": " ".join([x for x in [r["country"], r["region"], r["city"]] if x]) or "-",
               "isp": r["isp"] if "isp" in r.keys() else "",
               "loc": fmt_loc(r["loc"]) if "loc" in r.keys() else "",
