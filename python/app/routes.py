@@ -124,15 +124,16 @@ def register_routes(app):
         region = geo.get("region", "") if geo else ""
         city = geo.get("city", "") if geo else ""
         isp = geo.get("isp", "") if geo else ""
+        loc = geo.get("loc", "") if geo else ""
 
         db = get_db()
         try:
             atomic_write(db,
                 "INSERT OR IGNORE INTO reads(msg_id,wx_id,ip_address,user_agent,"
-                "country,region,city,isp) VALUES(?,?,?,?,?,?,?,?)",
-                (mid, wx, ip, ua, country, region, city, isp))
+                "country,region,city,isp,loc) VALUES(?,?,?,?,?,?,?,?,?)",
+                (mid, wx, ip, ua, country, region, city, isp, loc))
         except Exception:
-            _pixel_queue.append((mid, wx, ip, ua, country, region, city, isp))
+            _pixel_queue.append((mid, wx, ip, ua, country, region, city, isp, loc))
 
         return send_file(BytesIO(TRANSPARENT_GIF), mimetype="image/gif")
 
@@ -165,6 +166,7 @@ def register_routes(app):
                 "city": x["city"],
                 "country": x["country"],
                 "isp": x["isp"],
+                "loc": x["loc"] if "loc" in x.keys() else "",
                 "user_agent": x["user_agent"],
                 "read_at": datetime.fromtimestamp(x["read_at"])
                            .strftime("%Y-%m-%d %H:%M:%S"),
@@ -214,7 +216,7 @@ def register_routes(app):
         if not m:
             return render_template("error.html", message="404"), 404
         rs = db.execute(
-            "SELECT ip_address,user_agent,read_at,country,region,city,isp "
+            "SELECT ip_address,user_agent,read_at,country,region,city,isp,loc "
             "FROM reads WHERE msg_id=? ORDER BY read_at DESC", (mid,)).fetchall()
         hg = any(r["country"] or r["city"] for r in rs) if rs else False
 
@@ -227,7 +229,7 @@ def register_routes(app):
                     "location": " ".join([x for x in [r["country"], r["region"],
                                                      r["city"]] if x]) or "-",
                     "country": r["country"], "region": r["region"],
-                    "city": r["city"], "isp": r["isp"],
+                    "city": r["city"], "isp": r["isp"], "loc": r["loc"],
                     "user_agent": r["user_agent"],
                     "read_at": datetime.fromtimestamp(r["read_at"])
                                .strftime("%Y-%m-%d %H:%M:%S"),
@@ -256,7 +258,7 @@ def register_routes(app):
                 "location": " ".join([x for x in [r["country"], r["region"],
                                                  r["city"]] if x]) or "-",
                 "country": r["country"], "region": r["region"],
-                "city": r["city"], "isp": r["isp"],
+                "city": r["city"], "isp": r["isp"], "loc": r["loc"],
                 "user_agent": r["user_agent"],
                 "read_at": datetime.fromtimestamp(r["read_at"])
                            .strftime("%Y-%m-%d %H:%M:%S"),
