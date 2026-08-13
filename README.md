@@ -28,7 +28,7 @@
 | 🔌 **一行注册** | `POST /register` 传入消息内容，返回追踪链接，直接嵌入即可 |
 | 👁 **透明无感** | 1×1 透明 GIF，用户完全感知不到 |
 | 📊 **管理后台** | Web 界面查看统计、消息列表、搜索、一键导出 CSV |
-| 🌍 **IP 定位** | 可选 GeoLite2 数据库，自动获取读取者国家/地区/城市 |
+| 🌍 **IP 定位** | 自动获取读取者国家/省份/城市/运营商（中文，三接口备份，可开关） |
 | ⚡ **请求限流** | IP 级频率限制，防止滥用 |
 | 🔐 **API 认证** | 管理接口支持 API Key 保护 |
 | 🔒 **智能去重** | 同一消息 + 同一 IP 只计一次已读 |
@@ -65,7 +65,7 @@ bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-rec
 
 > 💡 全部代码内嵌在脚本中，不下载任何仓库文件、不依赖 GitHub 直连（走 jsDelivr CDN）、不写 /tmp，彻底避免网络超时和权限报错。
 >
-> 🌍 **标准版** 内置 IP 定位（中文省市 + 运营商 + 经纬度，三接口自动备份）；**Lite 版** 无定位功能，零外部请求、零延迟，纯追踪。
+> 🌍 **标准版** 内置 IP 定位（中文省市 + 运营商，三接口自动备份，不含经纬度）；**Lite 版** 无定位功能，零外部请求、零延迟，纯追踪。
 >
 > 其他部署形态（Linux / Docker）也可用环境变量开关：
 >
@@ -304,7 +304,7 @@ cp .env.example .env
 |------|--------|------|
 | `DATABASE_PATH` | `receipts.db` | 数据库路径 |
 | `API_KEY` | (空) | 管理后台认证密钥 |
-| `GEOIP_DB` | (空) | GeoLite2-City.mmdb 路径 (启用 IP 定位) |
+| `ENABLE_GEO` | `1` | IP 定位开关（1=开启 0=关闭） |
 | `RATE_LIMIT_PER_MINUTE` | 60 | 请求频率限制 |
 | `HOST` | `0.0.0.0` | 监听地址 |
 | `PORT` | 5000 | 监听端口 |
@@ -331,28 +331,28 @@ SHA-256(wxId + '\0' + content + '\0' + createTime)
 | 包管理 | uv | meson + ninja |
 | 代码检查 | ruff | clang-tidy (可选) |
 | 部署 | Docker / systemd / Termux | 原生二进制 |
-| IP 定位 | maxminddb (可选) | — |
+| IP 定位 | 免费三接口自动备份（无需 Key） | — |
 
 ---
 
-## 🌍 IP 定位（可选）
+## 🌍 IP 定位（默认开启）
 
-启用 IP 地理位置功能：
+无需任何配置和 Key，已读记录自动附带中文定位信息：
+
+| 字段 | 说明 |
+|------|------|
+| country | 国家（如：中国） |
+| region | 省份（如：上海市） |
+| city | 城市（如：上海） |
+| isp | 运营商（如：China Mobile） |
+
+**三级接口自动备份**：ip-api.com（中文）→ ipwho.is（中文）→ ipinfo.io（英文兜底），支持 IPv4/IPv6，超时静默降级。
+
+**关闭定位（Lite 模式）**：
 
 ```bash
-# 1. 注册 MaxMind 账号并下载 GeoLite2-City.mmdb
-#    https://www.maxmind.com/en/account/
-
-# 2. 安装依赖
-pip install maxminddb
-
-# 3. 配置
-echo "GEOIP_DB=./data/GeoLite2-City.mmdb" >> .env
-
-# 4. 重启服务
+ENABLE_GEO=0 python app.py
 ```
-
-启用后已读记录会包含国家/地区/城市信息，在管理后台详情页可见。
 
 ---
 
