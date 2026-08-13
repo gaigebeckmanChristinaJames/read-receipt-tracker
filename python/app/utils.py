@@ -9,6 +9,32 @@ from flask import request
 
 logger = logging.getLogger(__name__)
 
+# 常见运营商英文名 → 中文名映射
+_ISP_CN = {
+    "china mobile": "中国移动",
+    "china mobile communications": "中国移动",
+    "china unicom": "中国联通",
+    "china unicom communications": "中国联通",
+    "china telecom": "中国电信",
+    "china telecom backbone": "中国电信",
+    "chinatelecom": "中国电信",
+    "china broadband": "中国广电",
+    "china education": "教育网",
+    "dr peng telecom": "鹏博士",
+    "great wall broadband": "长城宽带",
+    "beijing telecom": "北京电信",
+    "shanghai telecom": "上海电信",
+    "shanghai mobile": "上海移动",
+}
+
+
+def _cn_isp(isp: str) -> str:
+    """运营商英文名转中文（未匹配的保留原文）。"""
+    if not isp:
+        return ""
+    key = isp.strip().lower()
+    return _ISP_CN.get(key, isp)
+
 
 def get_client_ip() -> str:
     """获取客户端真实 IP（支持反向代理）。"""
@@ -70,7 +96,7 @@ def lookup_ip_location(ip: str) -> Optional[dict]:
                 "country": d.get("country", ""),
                 "region": d.get("regionName", ""),
                 "city": d.get("city", ""),
-                "isp": d.get("isp", ""),
+                "isp": _cn_isp(d.get("isp", "")),
                 "loc": f"{d.get('lat','')},{d.get('lon','')}"
                        if d.get("lat") is not None else "",
             }
@@ -89,7 +115,7 @@ def lookup_ip_location(ip: str) -> Optional[dict]:
                 "country": d.get("country", ""),
                 "region": d.get("region", ""),
                 "city": d.get("city", ""),
-                "isp": (d.get("connection") or {}).get("isp", ""),
+                "isp": _cn_isp((d.get("connection") or {}).get("isp", "")),
                 "loc": f"{d.get('latitude','')},{d.get('longitude','')}"
                        if d.get("latitude") is not None else "",
             }
@@ -108,7 +134,7 @@ def lookup_ip_location(ip: str) -> Optional[dict]:
                 "country": d.get("country", ""),
                 "region": d.get("region", ""),
                 "city": d.get("city", ""),
-                "isp": (d.get("org", "") or "").split(" ", 1)[-1]
+                "isp": _cn_isp((d.get("org", "") or "").split(" ", 1)[-1])
                        if d.get("org") else "",
                 "loc": d.get("loc", ""),
             }
