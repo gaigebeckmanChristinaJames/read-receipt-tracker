@@ -49,7 +49,11 @@ def create_app(testing: bool = False) -> Flask:
                  "SET" if admin_password else "NOT SET (Fallback to API_KEY)",
                  "SET" if app.config["GEOIP_DB"] else "NOT SET",
                  testing)
-
+    if app.config.get("ADMIN_PASSWORD") and not app.config.get("API_KEY"):
+    logger.warning(
+        "ADMIN_PASSWORD 已设置但 API_KEY 为空，鉴权未启用。"
+        "请先设置 API_KEY 环境变量。"
+    )
     # 数据库初始化
     with app.app_context():
         init_db(db_path)
