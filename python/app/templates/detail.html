@@ -3,111 +3,471 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1310">
 <title>消息详情 · 已读追踪</title>
 <style>
-:root{--bg:#0d1117;--card:#161b22;--bd:#30363d;--text:#e6edf3;--t2:#8b949e;
---primary:#3fb950;--danger:#f85149;--accent:#58a6ff}
+/* ============ 本地字体 ============ */
+@font-face{font-family:"Roboto";font-style:normal;font-weight:400;font-display:swap;
+  src:local("Roboto"),local("Roboto-Regular"),url("/static/fonts/roboto-400.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215}
+@font-face{font-family:"Roboto";font-style:normal;font-weight:500;font-display:swap;
+  src:local("Roboto Medium"),local("Roboto-Medium"),url("/static/fonts/roboto-500.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215}
+@font-face{font-family:"Roboto";font-style:normal;font-weight:700;font-display:swap;
+  src:local("Roboto Bold"),local("Roboto-Bold"),url("/static/fonts/roboto-700.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215}
+
+/* ============ MD3 Tokens ============ */
+:root{
+  --bg:#0f1310;
+  --surface-1:#161c16;--surface-2:#1b211b;--surface-3:#242b24;--surface-4:#2e362e;
+  --outline-var:#3c453c;
+  --text:#e4e8e1;--text-2:#a8b1a6;--text-3:#7e877d;
+  --primary:#7ddb8c;--on-primary:#06381a;
+  --primary-c:#145127;--on-primary-c:#a9f3b5;
+  --secondary-c:#39493a;--on-secondary-c:#d3e7cf;
+  --tertiary:#9ecfe8;--tertiary-c:#134a63;--on-tertiary-c:#cfe8f8;
+  --amber-c:#4c3d14;--on-amber-c:#f6e2ab;
+  --error:#ffb4ab;--error-c:#93000a;--on-error-c:#ffdad6;
+  --inv:#e3e7de;--on-inv:#2f322c;
+  --sh1:0 1px 2px rgba(0,0,0,.35),0 1px 3px 1px rgba(0,0,0,.16);
+  --sh2:0 1px 2px rgba(0,0,0,.35),0 2px 6px 2px rgba(0,0,0,.16);
+  --sh3:0 4px 8px 3px rgba(0,0,0,.20),0 1px 3px rgba(0,0,0,.30);
+  --ease:cubic-bezier(.2,0,0,1);
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--text);line-height:1.6;min-height:100vh}
-.container{max-width:900px;margin:0 auto;padding:20px}
-.back-link{color:var(--accent);text-decoration:none;font-weight:600;margin-bottom:18px;display:inline-block;font-size:14px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:26px;margin-bottom:22px}
-.card h2{font-size:19px;margin-bottom:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px}
-.item{background:var(--bg);border:1px solid var(--bd);padding:14px;border-radius:8px}
-.label{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+html{color-scheme:dark}
+body{
+  font-family:Roboto,"Noto Sans SC","HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(1100px 480px at 50% -120px,rgba(125,219,140,.07),transparent 70%),var(--bg);
+}
+::selection{background:rgba(125,219,140,.30)}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+button{font-family:inherit}
+.container{max-width:980px;margin:0 auto;padding:0 20px}
+.ic{width:20px;height:20px;fill:currentColor;flex:none}
+.ic-xs{width:15px;height:15px}
+.ic-xl{width:40px;height:40px}
+
+/* ============ App Bar ============ */
+.appbar{position:sticky;top:0;z-index:50;background:rgba(15,19,16,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid transparent;transition:.3s}
+.appbar.scrolled{box-shadow:var(--sh2);border-color:var(--outline-var)}
+.appbar-in{max-width:980px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-badge{width:42px;height:42px;border-radius:13px;background:var(--primary-c);color:var(--on-primary-c);display:grid;place-items:center;box-shadow:var(--sh1)}
+.brand-title{display:block;font-size:17px;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+.brand-sub{display:block;font-size:10px;font-weight:500;letter-spacing:2.5px;color:var(--text-3);text-transform:uppercase}
+
+/* ============ 按钮 ============ */
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 22px;border:none;border-radius:999px;font-size:14px;font-weight:600;letter-spacing:.3px;cursor:pointer;transition:box-shadow .2s,background .2s,opacity .15s;white-space:nowrap}
+.btn .ic{width:18px;height:18px}
+.btn-filled{background:var(--primary);color:var(--on-primary)}
+.btn-filled:hover{box-shadow:var(--sh2);background:#8ee49c}
+.btn-tonal{background:var(--secondary-c);color:var(--on-secondary-c)}
+.btn-tonal:hover{box-shadow:var(--sh1);background:#425444}
+.btn-text{background:transparent;color:var(--primary)}
+.btn-text:hover{background:rgba(125,219,140,.08)}
+.btn-err{background:var(--error-c);color:var(--on-error-c)}
+.btn-err:hover{background:#a8151c;box-shadow:var(--sh1)}
+.btn-danger-filled{background:var(--error);color:#3d0500}
+.btn-danger-filled:hover{background:#ffc4bd;box-shadow:var(--sh2)}
+.icon-btn{position:relative;overflow:hidden;width:42px;height:42px;border:none;border-radius:50%;background:transparent;color:var(--text-2);display:grid;place-items:center;cursor:pointer;transition:background .2s}
+.icon-btn:hover{background:rgba(230,235,225,.08);color:var(--text)}
+.icon-sm{width:32px;height:32px}
+.ripple{position:absolute;border-radius:50%;background:currentColor;opacity:.16;transform:scale(0);animation:ripple .55s ease-out forwards;pointer-events:none}
+@keyframes ripple{to{transform:scale(1);opacity:0}}
+
+/* ============ 布局 ============ */
+main{padding-top:22px;padding-bottom:56px}
+.back-btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 18px 0 12px;border-radius:999px;color:var(--primary);font-size:14px;font-weight:600;text-decoration:none;transition:background .2s;margin-bottom:18px}
+.back-btn:hover{background:rgba(125,219,140,.08)}
+.card{background:var(--surface-1);border:1px solid var(--outline-var);border-radius:20px;box-shadow:var(--sh1);padding:26px;margin-bottom:20px}
+.card-hd{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.card-hd h2{font-size:19px;font-weight:700;letter-spacing:.1px}
+.card-hd .spacer{flex:1}
+.card-ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none}
+.sic-green{background:var(--primary-c);color:var(--on-primary-c)}
+.sic-sage{background:var(--secondary-c);color:var(--on-secondary-c)}
+.sic-amber{background:var(--amber-c);color:var(--on-amber-c)}
+
+/* 信息网格 */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+.item{background:var(--surface-2);border:1px solid var(--outline-var);padding:14px 16px;border-radius:14px;transition:background .25s}
+.item:hover{background:var(--surface-3)}
+.item-hd{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.label{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:6px}
 .val{word-break:break-all;font-size:14px}
-.mono{font-family:"SF Mono",Consolas,monospace;font-size:12px;color:var(--accent)}
-.content-box{background:var(--bg);border:1px solid var(--bd);border-left:3px solid var(--primary);padding:18px;border-radius:8px;white-space:pre-wrap;font-size:15px;margin:10px 0}
-.count-badge{display:inline-block;padding:7px 18px;border-radius:20px;background:rgba(63,185,80,.15);color:var(--primary);font-size:17px;font-weight:700}
-.count-badge.zero{background:rgba(139,148,158,.15);color:var(--t2)}
-.geo-summary{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-.geo-chip{background:rgba(88,166,255,.12);color:var(--accent);padding:5px 13px;border-radius:16px;font-size:12px;font-weight:600}
-table{width:100%;border-collapse:collapse;margin-top:14px}
-th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--bd);font-size:14px}
-th{background:#1c2129;color:var(--t2);font-weight:600;font-size:12px;text-transform:uppercase}
-tr:hover td{background:#1c2129}
-.ip-cell{font-family:monospace;color:var(--accent);font-weight:600}
-.ua-cell{font-size:12px;color:var(--t2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.time-cell{color:var(--t2);font-size:13px}
-.geo-cell{font-size:13px}
-.isp-sub{font-size:11px;color:var(--t2);margin-top:2px}
-.geo-none{color:#484f58}
-.btn-danger{background:var(--danger);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px}
-.btn-danger:hover{opacity:.85}
-.btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--bd);padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px;margin-left:8px}
-.empty-state{padding:40px;text-align:center;color:var(--t2)}
-.empty-state .icon{font-size:38px;margin-bottom:8px}
-@media(max-width:640px){.grid{grid-template-columns:1fr}th:nth-child(4),td:nth-child(4){display:none}}
+.mono{font-family:"Roboto Mono","SF Mono",Consolas,monospace;font-size:12.5px;color:var(--tertiary);letter-spacing:.2px}
+.time-txt{color:var(--text-2);font-size:13.5px}
+
+/* 已读数 Pill */
+.count-badge{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 16px;border-radius:999px;background:var(--primary-c);color:var(--on-primary-c);font-size:15px;font-weight:700}
+.count-badge.zero{background:var(--surface-4);color:var(--text-3)}
+.count-pill{display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:999px;background:var(--surface-4);color:var(--text-2);font-size:12.5px;font-weight:600}
+
+/* 内容框 */
+.content-box{background:var(--surface-2);border:1px solid var(--outline-var);border-left:3px solid var(--primary);padding:18px;border-radius:4px 14px 14px 4px;white-space:pre-wrap;font-size:15px;line-height:1.7;margin:6px 0 20px;max-height:340px;overflow-y:auto;word-break:break-all}
+.content-box::-webkit-scrollbar{width:8px}
+.content-box::-webkit-scrollbar-thumb{background:var(--surface-4);border-radius:4px}
+
+/* 操作区 */
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+
+/* 地域分布 Chips */
+.geo-wrap{display:flex;gap:8px;flex-wrap:wrap}
+.geo-chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:999px;background:var(--tertiary-c);color:var(--on-tertiary-c);font-size:12.5px;font-weight:500;animation:rise .45s var(--ease) both}
+.geo-chip b{font-weight:700;margin-left:2px}
+
+/* ============ 表格 ============ */
+.table-scroll{overflow-x:auto;margin:0 -26px -26px;padding:0}
+table{width:100%;min-width:640px;border-collapse:collapse}
+th{padding:13px 16px;text-align:left;font-size:11.5px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--text-2);background:var(--surface-2);border-bottom:1px solid var(--outline-var);white-space:nowrap}
+td{padding:13px 16px;font-size:14px;border-bottom:1px solid var(--outline-var);vertical-align:middle}
+th:first-child,td:first-child{padding-left:26px}
+th:last-child,td:last-child{padding-right:26px}
+tbody tr{transition:background .15s;animation:rise .5s var(--ease) both}
+tbody tr:hover{background:rgba(230,235,225,.05)}
+tbody tr:last-child td{border-bottom:none}
+.c-reader{display:flex;align-items:center;gap:9px;font-weight:500;white-space:nowrap}
+.c-reader .ic{color:var(--text-3)}
+.c-ip{font-family:"Roboto Mono","SF Mono",Consolas,monospace;font-size:12.5px;color:var(--tertiary);white-space:nowrap}
+.c-geo{font-size:13px}
+.isp-sub{font-size:11px;color:var(--text-3);margin-top:2px}
+.c-loc{font-size:12.5px;color:var(--text-2);white-space:nowrap}
+.c-time{color:var(--text-3);font-size:13px;white-space:nowrap}
+.geo-none{color:var(--text-3)}
+
+/* 空状态 */
+.empty{padding:48px 24px;text-align:center}
+.empty-ic{display:inline-grid;place-items:center;width:68px;height:68px;border-radius:22px;background:var(--surface-3);color:var(--text-3);margin-bottom:14px}
+.empty-t{font-size:15px;font-weight:600}
+.empty-s{font-size:13px;color:var(--text-3);margin-top:4px}
+
+/* ============ Dialog / Snackbar ============ */
+.modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.58);animation:fade .25s both}
+.dialog{position:relative;width:100%;max-width:460px;background:var(--surface-3);border-radius:28px;padding:26px;box-shadow:var(--sh3);animation:dlg .3s var(--ease) both}
+@keyframes dlg{from{opacity:0;transform:scale(.94) translateY(10px)}}
+@keyframes fade{from{opacity:0}}
+.dlg-head{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.dlg-head h3{font-size:20px;font-weight:700}
+.dlg-ic{width:44px;height:44px;border-radius:14px;background:var(--error-c);color:var(--on-error-c);display:grid;place-items:center;flex:none}
+.dlg-sub{color:var(--text-2);font-size:13.5px;margin-bottom:4px}
+.dlg-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:22px}
+#snackbar{position:fixed;left:50%;bottom:24px;transform:translate(-50%,18px);opacity:0;pointer-events:none;z-index:120;background:var(--inv);color:var(--on-inv);padding:13px 22px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:var(--sh3);max-width:calc(100vw - 40px);transition:.3s var(--ease)}
+#snackbar.show{transform:translate(-50%,0);opacity:1}
+
+/* ============ 动效 ============ */
+.reveal{animation:rise .6s var(--ease) both}
+.d1{animation-delay:.07s}.d2{animation-delay:.14s}.d3{animation-delay:.21s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ============ 响应式 ============ */
+@media (max-width:760px){
+  .container,.appbar-in{padding-left:14px;padding-right:14px}
+  main{padding-top:16px}
+  .brand-sub{display:none}
+  .card{padding:20px 16px;border-radius:18px}
+  .acts .btn{flex:1;min-width:130px}
+  .btn-err{flex-basis:100%}
+
+  /* 表格 → 卡片列表 */
+  .table-scroll{overflow:visible;margin:0 -6px;padding:0}
+  table{min-width:0}
+  thead{display:none}
+  tbody{display:block;padding:6px 0 2px}
+  tbody tr{display:grid;grid-template-columns:1fr auto;grid-template-areas:"reader time" "ip ip" "geo geo" "loc loc";gap:9px 12px;background:var(--surface-2);border:1px solid var(--outline-var);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--sh1)}
+  tbody tr:last-child{margin-bottom:0}
+  td{display:block;padding:0;border:none}
+  td[data-label]::before{content:attr(data-label);display:block;font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-3);margin-bottom:2px}
+  td.c-reader{grid-area:reader}
+  td.c-time{grid-area:time;text-align:right;font-size:12px;align-self:center}
+  td.c-ip{grid-area:ip}
+  td.c-geo{grid-area:geo}
+  td.c-loc{grid-area:loc}
+  tbody tr.plain-row{display:block;background:none;border:none;box-shadow:none;padding:0;margin:0}
+  tbody tr.plain-row td{display:block}
+  .empty{padding:36px 16px}
+  #snackbar{bottom:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
 </style>
 </head>
 <body>
-<div class="container">
-  <a class="back-link" href="/">← 返回列表</a>
 
-  <div class="card">
-    <h2>📨 消息信息</h2>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></symbol>
+  <symbol id="i-checkall" viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41 6 19l1.41-1.41L1.83 12 .41 13.41z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 8c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></symbol>
+  <symbol id="i-delete" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M19 3H4.99C3.88 3 3 3.89 3 5v14c0 1.1.88 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H4.99V5H19v10z"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></symbol>
+</svg>
+
+<header class="appbar" id="appbar">
+  <div class="appbar-in">
+    <div class="brand">
+      <span class="brand-badge"><svg class="ic"><use href="#i-checkall"/></svg></span>
+      <div>
+        <span class="brand-title">消息已读追踪</span>
+        <span class="brand-sub">Message Detail</span>
+      </div>
+    </div>
+    <div>
+      <button class="icon-btn js-ripple" onclick="logout()" title="退出登录"><svg class="ic"><use href="#i-logout"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <a class="back-btn js-ripple reveal" href="/"><svg class="ic"><use href="#i-back"/></svg>返回列表</a>
+
+  <!-- 消息信息 -->
+  <section class="card reveal d1">
+    <div class="card-hd">
+      <span class="card-ic sic-green"><svg class="ic"><use href="#i-chat"/></svg></span>
+      <h2>消息信息</h2>
+      <span class="spacer"></span>
+      <span class="count-badge {%if message.read_cnt==0%}zero{%endif%}">
+        <svg class="ic" style="width:17px;height:17px"><use href="#i-checkall"/></svg>{{message.read_cnt}} 人已读
+      </span>
+    </div>
     <div class="grid">
-      <div class="item"><div class="label">消息 ID</div><div class="val mono">{{message.id}}</div></div>
-      <div class="item"><div class="label">发送者</div><div class="val">{{message.wx_id}}</div></div>
-      <div class="item"><div class="label">已读数</div><div class="val"><span class="count-badge {%if message.read_cnt==0%}zero{%endif%}">{{message.read_cnt}} 人</span></div></div>
-      <div class="item"><div class="label">注册时间</div><div class="val time-cell">{{message.registered_at|int|ts2date}}</div></div>
+      <div class="item">
+        <div class="label">消息 ID</div>
+        <div class="item-hd">
+          <div class="val mono">{{message.id}}</div>
+          <button class="icon-btn icon-sm js-ripple" title="复制 ID" onclick="copyID()"><svg class="ic" style="width:16px;height:16px"><use href="#i-copy"/></svg></button>
+        </div>
+      </div>
+      <div class="item">
+        <div class="label">发送者</div>
+        <div class="val">{{message.wx_id}}</div>
+      </div>
+      <div class="item">
+        <div class="label">注册时间</div>
+        <div class="val time-txt">{{message.registered_at|int|ts2date}}</div>
+      </div>
     </div>
     <div class="label">消息内容</div>
     <div class="content-box">{{message.content}}</div>
-    <button class="btn-danger" onclick="doDelete()">🗑 删除本条</button>
-    <button class="btn-ghost" onclick="copyID()">📋 复制 ID</button>
-    <button class="btn-ghost" onclick="copyPixel()">🔗 复制追踪链接</button>
-  </div>
+    <div class="acts">
+      <button class="btn btn-err js-ripple" onclick="doDelete()"><svg class="ic"><use href="#i-delete"/></svg>删除本条</button>
+      <button class="btn btn-tonal js-ripple" onclick="copyID()"><svg class="ic"><use href="#i-copy"/></svg>复制 ID</button>
+      <button class="btn btn-tonal js-ripple" onclick="copyPixel()"><svg class="ic"><use href="#i-link"/></svg>复制追踪链接</button>
+    </div>
+  </section>
 
-  <div class="card">
-    <h2>👁 已读记录 ({{reads|length}})</h2>
+  <!-- 地域分布（有定位数据时由 JS 展开） -->
+  <section class="card reveal d2" id="geo-card" hidden>
+    <div class="card-hd" style="margin-bottom:14px">
+      <span class="card-ic sic-amber"><svg class="ic"><use href="#i-pin"/></svg></span>
+      <h2>地域分布</h2>
+    </div>
+    <div class="geo-wrap" id="geo-summary"></div>
+  </section>
+
+  <!-- 已读记录 -->
+  <section class="card reveal d3">
+    <div class="card-hd">
+      <span class="card-ic sic-sage"><svg class="ic"><use href="#i-checkall"/></svg></span>
+      <h2>已读记录</h2>
+      <span class="count-pill">{{reads|length}} 条</span>
+    </div>
     {%if reads%}
-    <table>
-      <thead><tr><th>已读人ID</th><th>IP地址</th><th>定位</th><th>经纬度</th><th>已读时间</th></tr></thead>
-      <tbody>
-        {%for r in reads%}
-        <tr>
-          <td class="geo-cell">{%if r.reader_wx_id%}{{r.reader_wx_id}}{%else%}未知访客{%endif%}</td>
-          <td class="ip-cell">{%if r.ip_address%}{{r.ip_address}}{%else%}<span class="geo-none">—</span>{%endif%}</td>
-          <td class="geo-cell">
-            {%if r.country or r.region or r.city%}
-              {%if r.country%}{{r.country}}{%endif%}
-              {%if r.region%} · {{r.region}}{%endif%}
-              {%if r.city%} · {{r.city}}{%endif%}
-            {%else%}<span class="geo-none">—</span>{%endif%}
-            {%if r.isp%}<div class="isp-sub">{{r.isp}}</div>{%endif%}
-          </td>
-          <td class="geo-cell">
-            {%if r.loc%}{{r.loc|fmtloc}}{%else%}<span class="geo-none">—</span>{%endif%}
-          </td>
-          <td class="time-cell">{{r.read_at|int|ts2date}}</td>
-        </tr>
-        {%endfor%}
-      </tbody>
-    </table>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>已读人</th><th>IP 地址</th><th>定位</th><th>经纬度</th><th>时间</th></tr></thead>
+        <tbody id="read-list">
+          {%for r in reads%}
+          <tr data-geo="{{[r.country,r.region,r.city]|select|join(' ')}}" title="UA: {{r.user_agent}}">
+            <td class="c-reader"><svg class="ic" style="width:18px;height:18px"><use href="#i-person"/></svg>{%if r.reader_wx_id%}{{r.reader_wx_id}}{%else%}未知访客{%endif%}</td>
+            <td class="c-ip" data-label="IP 地址">{%if r.ip_address%}{{r.ip_address}}{%else%}<span class="geo-none">—</span>{%endif%}</td>
+            <td class="c-geo" data-label="定位">
+              {%if r.country or r.region or r.city%}
+                {%if r.country%}{{r.country}}{%endif%}
+                {%if r.region%} · {{r.region}}{%endif%}
+                {%if r.city%} · {{r.city}}{%endif%}
+              {%else%}<span class="geo-none">—</span>{%endif%}
+              {%if r.isp%}<div class="isp-sub">{{r.isp}}</div>{%endif%}
+            </td>
+            <td class="c-loc" data-label="经纬度">{%if r.loc%}{{r.loc|fmtloc}}{%else%}<span class="geo-none">—</span>{%endif%}</td>
+            <td class="c-time">{{r.read_at|int|ts2date}}</td>
+          </tr>
+          {%endfor%}
+        </tbody>
+      </table>
+    </div>
     {%else%}
-    <div class="empty-state"><div class="icon">📭</div><p>暂无读取记录</p></div>
+    <div class="empty">
+      <span class="empty-ic"><svg class="ic ic-xl"><use href="#i-inbox"/></svg></span>
+      <p class="empty-t">暂无读取记录</p>
+      <p class="empty-s">对方打开消息后，读取记录会出现在这里</p>
+    </div>
     {%endif%}
+  </section>
+
+</main>
+
+<!-- 确认删除 Dialog -->
+<div class="modal" id="confirm-modal">
+  <div class="scrim" onclick="cfClose(false)"></div>
+  <div class="dialog" role="alertdialog" aria-modal="true">
+    <div class="dlg-head">
+      <span class="dlg-ic"><svg class="ic"><use href="#i-delete"/></svg></span>
+      <h3 id="cf-title">确认操作</h3>
+    </div>
+    <p class="dlg-sub" id="cf-body"></p>
+    <div class="dlg-actions">
+      <button class="btn btn-text js-ripple" id="cf-cancel">取消</button>
+      <button class="btn btn-danger-filled js-ripple" id="cf-ok">确定</button>
+    </div>
   </div>
 </div>
 
+<div id="snackbar" role="status"></div>
+
 <script>
+const $=s=>document.querySelector(s);
+const MSG_ID={{message.id|tojson}};
+const MSG_WX={{message.wx_id|tojson}};
+
+/* ---------- API Key（与首页共用 localStorage）+ 请求封装 ---------- */
+const KEY_LS="rr_api_key",MODE_LS="rr_api_mode";
+const getKey=()=>localStorage.getItem(KEY_LS)||"";
+const getMode=()=>localStorage.getItem(MODE_LS)||"header";
+function authFetch(url,opts={}){
+  const key=getKey();
+  if(key){
+    if(getMode()==="query"){
+      url+=(url.includes("?")?"&":"?")+"api_key="+encodeURIComponent(key);
+    }else{
+      opts.headers=Object.assign({},opts.headers,{"X-API-Key":key});
+    }
+  }
+  return fetch(url,opts);
+}
+function authFailed(r){
+  if(r.status===401||r.status===403){
+    snack("认证失败，正在跳转登录…");
+    setTimeout(()=>{location.href="/login?next="+encodeURIComponent(location.pathname)},900);
+    return true;
+  }
+  return false;
+}
+
+/* ---------- Snackbar ---------- */
+let snackTimer;
+function snack(msg){
+  const sb=$("#snackbar");
+  sb.textContent=msg;
+  sb.classList.add("show");
+  clearTimeout(snackTimer);
+  snackTimer=setTimeout(()=>sb.classList.remove("show"),3200);
+}
+
+/* ---------- 确认 Dialog ---------- */
+let cfResolve=null;
+function askConfirm(o){
+  $("#cf-title").textContent=o.title;
+  $("#cf-body").textContent=o.body;
+  $("#cf-ok").textContent=o.ok||"确定";
+  $("#confirm-modal").classList.add("open");
+  return new Promise(res=>cfResolve=res);
+}
+function cfClose(v){
+  if(cfResolve){cfResolve(v);cfResolve=null}
+  $("#confirm-modal").classList.remove("open");
+}
+$("#cf-ok").addEventListener("click",()=>cfClose(true));
+$("#cf-cancel").addEventListener("click",()=>cfClose(false));
+
+/* ---------- 删除 ---------- */
 async function doDelete(){
-  if(!confirm("确定删除这条消息及其所有已读记录？"))return;
-  const r=await fetch("/api/delete/{{message.id}}",{method:"POST"});
-  if(r.ok)location.href="/";else alert("删除失败");
+  const ok=await askConfirm({
+    title:"删除这条消息？",
+    body:"将同时删除该消息的所有已读与定位记录，此操作不可恢复。",
+    ok:"删除"
+  });
+  if(!ok)return;
+  try{
+    const r=await authFetch("/api/delete/"+MSG_ID,{method:"POST"});
+    if(authFailed(r))return;
+    if(r.ok){snack("已删除，正在返回…");setTimeout(()=>location.href="/",700);}
+    else snack("删除失败（HTTP "+r.status+"）");
+  }catch(e){snack("网络错误，删除失败")}
+}
+
+/* ---------- 复制（HTTP 环境降级兼容） ---------- */
+async function copyText(t){
+  try{
+    if(navigator.clipboard&&window.isSecureContext){
+      await navigator.clipboard.writeText(t);return true;
+    }
+  }catch(e){}
+  try{
+    const ta=document.createElement("textarea");
+    ta.value=t;ta.style.cssText="position:fixed;opacity:0";
+    document.body.appendChild(ta);ta.select();
+    const ok=document.execCommand("copy");ta.remove();return ok;
+  }catch(e){return false}
 }
 async function copyID(){
-  await navigator.clipboard.writeText("{{message.id}}");
-  alert("消息 ID 已复制");
+  snack(await copyText(MSG_ID)?"消息 ID 已复制":"复制失败，请手动复制");
 }
 async function copyPixel(){
-  const wx="{{message.wx_id}}";
-  const id="{{message.id}}";
-  await navigator.clipboard.writeText(location.origin+"/pixel?wxId="+wx+"&id="+id);
-  alert("追踪链接已复制");
+  const url=location.origin+"/pixel?wxId="+encodeURIComponent(MSG_WX)+"&id="+encodeURIComponent(MSG_ID);
+  snack(await copyText(url)?"追踪链接已复制":"复制失败，请手动复制");
 }
+
+/* ---------- 退出登录 ---------- */
+function logout(){
+  const f=document.createElement("form");
+  f.method="POST";f.action="/logout";
+  document.body.appendChild(f);f.submit();
+}
+
+/* ---------- 地域分布 Chips ---------- */
+(function(){
+  const m={};
+  document.querySelectorAll("#read-list tr[data-geo]").forEach(r=>{
+    const g=(r.dataset.geo||"").trim();
+    if(g)m[g]=(m[g]||0)+1;
+  });
+  const ents=Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  if(!ents.length)return;
+  $("#geo-summary").innerHTML=ents.slice(0,8).map(([g,c],i)=>
+    `<span class="geo-chip" style="animation-delay:${i*45}ms"><svg class="ic ic-xs"><use href="#i-pin"/></svg>${g}<b>${c} 人</b></span>`
+  ).join("");
+  $("#geo-card").hidden=false;
+})();
+
+/* ---------- 涟漪 / 滚动投影 / 快捷键 ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest(".js-ripple");
+  if(!t)return;
+  const rect=t.getBoundingClientRect(),d=Math.max(rect.width,rect.height)*2;
+  const s=document.createElement("span");
+  s.className="ripple";
+  s.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-rect.left-d/2}px;top:${e.clientY-rect.top-d/2}px`;
+  t.appendChild(s);
+  s.addEventListener("animationend",()=>s.remove());
+});
+document.querySelectorAll("#read-list tr").forEach((r,i)=>{
+  r.style.animationDelay=Math.min(i,12)*35+"ms";
+});
+const appbar=$("#appbar");
+addEventListener("scroll",()=>appbar.classList.toggle("scrolled",scrollY>8),{passive:true});
+addEventListener("keydown",e=>{if(e.key==="Escape")cfClose(false)});
 </script>
 </body>
 </html>
