@@ -3,200 +3,750 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1310">
 <title>消息已读追踪后台</title>
 <style>
-:root{--bg:#0d1117;--card:#161b22;--bd:#30363d;--text:#e6edf3;--t2:#8b949e;
---primary:#3fb950;--danger:#f85149;--danger-hover:#da3633;--accent:#58a6ff}
+/* ============ 本地字体（/static/fonts/，无需外网） ============ */
+@font-face{
+  font-family:"Roboto";font-style:normal;font-weight:400;font-display:swap;
+  src:local("Roboto"),local("Roboto-Regular"),
+      url("/static/fonts/roboto-400.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215;
+}
+@font-face{
+  font-family:"Roboto";font-style:normal;font-weight:500;font-display:swap;
+  src:local("Roboto Medium"),local("Roboto-Medium"),
+      url("/static/fonts/roboto-500.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215;
+}
+@font-face{
+  font-family:"Roboto";font-style:normal;font-weight:700;font-display:swap;
+  src:local("Roboto Bold"),local("Roboto-Bold"),
+      url("/static/fonts/roboto-700.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215;
+}
+/* 如需完整本地化 Noto Sans SC 拆分子集，取消下一行注释（配合 mirror-noto.sh）：
+<link rel="stylesheet" href="/static/fonts/noto-sans-sc.css"> */
+
+/* ============ MD3 Tokens（深色 · 绿色种子） ============ */
+:root{
+  --bg:#0f1310;
+  --surface-1:#161c16;
+  --surface-2:#1b211b;
+  --surface-3:#242b24;
+  --surface-4:#2e362e;
+  --outline:#8a938a;
+  --outline-var:#3c453c;
+  --text:#e4e8e1;
+  --text-2:#a8b1a6;
+  --text-3:#7e877d;
+  --primary:#7ddb8c;            --on-primary:#06381a;
+  --primary-c:#145127;          --on-primary-c:#a9f3b5;
+  --secondary-c:#39493a;        --on-secondary-c:#d3e7cf;
+  --tertiary-c:#134a63;         --on-tertiary-c:#cfe8f8;
+  --amber:#f2c76e;
+  --amber-c:#4c3d14;            --on-amber-c:#f6e2ab;
+  --error:#ffb4ab;              --error-c:#93000a;  --on-error-c:#ffdad6;
+  --inv:#e3e7de;                --on-inv:#2f322c;
+  --sh1:0 1px 2px rgba(0,0,0,.35),0 1px 3px 1px rgba(0,0,0,.16);
+  --sh2:0 1px 2px rgba(0,0,0,.35),0 2px 6px 2px rgba(0,0,0,.16);
+  --sh3:0 4px 8px 3px rgba(0,0,0,.20),0 1px 3px rgba(0,0,0,.30);
+  --ease:cubic-bezier(.2,0,0,1);
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--text);line-height:1.6;min-height:100vh}
-.container{max-width:1100px;margin:0 auto;padding:20px}
+html{color-scheme:dark}
+body{
+  font-family:Roboto,"Noto Sans SC","HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(1100px 480px at 50% -120px,rgba(125,219,140,.07),transparent 70%),var(--bg);
+}
+::selection{background:rgba(125,219,140,.30)}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+button{font-family:inherit}
+code{font-family:"Roboto Mono","SF Mono",Consolas,monospace;font-size:.92em;background:var(--surface-4);color:var(--on-secondary-c);padding:1px 7px;border-radius:6px}
+.container{max-width:1160px;margin:0 auto;padding:0 20px}
 
-/* 顶部搜索栏 */
-.top-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.search-box{flex:1;display:flex;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:0 14px}
-.search-box .icon{color:var(--t2);font-size:16px}
-.search-box input{flex:1;background:none;border:none;color:var(--text);padding:12px 10px;font-size:15px;outline:none}
-.search-box input::placeholder{color:#484f58}
-.refresh-btn{background:var(--card);border:1px solid var(--bd);color:var(--t2);border-radius:10px;padding:12px 16px;font-size:16px;cursor:pointer}
+/* ============ 图标 ============ */
+.ic{width:20px;height:20px;fill:currentColor;flex:none}
+.ic-xs{width:15px;height:15px}
+.ic-xl{width:42px;height:42px}
+.ic-mut{color:var(--text-3)}
 
-/* 标题 */
-h1{font-size:22px;font-weight:700;margin-bottom:16px}
+/* ============ App Bar ============ */
+.appbar{position:sticky;top:0;z-index:50;background:rgba(15,19,16,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid transparent;transition:box-shadow .3s,border-color .3s}
+.appbar.scrolled{box-shadow:var(--sh2);border-color:var(--outline-var)}
+.appbar-in{max-width:1160px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-badge{width:42px;height:42px;border-radius:13px;background:var(--primary-c);color:var(--on-primary-c);display:grid;place-items:center;box-shadow:var(--sh1)}
+.brand-title{display:block;font-size:17px;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+.brand-sub{display:block;font-size:10px;font-weight:500;letter-spacing:2.5px;color:var(--text-3);text-transform:uppercase}
+.appbar-right{display:flex;align-items:center;gap:10px}
+.sys-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--surface-3);border:1px solid var(--outline-var);font-size:12px;color:var(--text-2)}
+button.sys-chip{cursor:pointer;transition:background .2s}
+button.sys-chip:hover{background:var(--surface-4)}
+.sys-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--primary);animation:pulse 2.2s infinite;flex:none}
+.sys-chip .dot.warn{background:var(--amber)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(125,219,140,.45)}70%{box-shadow:0 0 0 7px rgba(125,219,140,0)}100%{box-shadow:0 0 0 0 rgba(125,219,140,0)}}
 
-/* 统计卡片 */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
-.stat-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:20px;text-align:center}
-.stat-card .num{font-size:34px;font-weight:800;color:var(--primary)}
-.stat-card .num.blue{color:var(--accent)}
-.stat-card .label{color:var(--t2);font-size:13px;margin-top:4px}
+/* ============ 按钮 ============ */
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 22px;border:none;border-radius:999px;font-size:14px;font-weight:600;letter-spacing:.3px;cursor:pointer;transition:box-shadow .2s,background .2s,opacity .15s;white-space:nowrap}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn .ic{width:18px;height:18px}
+.btn-filled{background:var(--primary);color:var(--on-primary)}
+.btn-filled:hover{box-shadow:var(--sh2);background:#8ee49c}
+.btn-tonal{background:var(--secondary-c);color:var(--on-secondary-c)}
+.btn-tonal:hover{box-shadow:var(--sh1);background:#425444}
+.btn-text{background:transparent;color:var(--primary)}
+.btn-text:hover{background:rgba(125,219,140,.08)}
+.btn-err{background:var(--error-c);color:var(--on-error-c)}
+.btn-err:hover{background:#a8151c;box-shadow:var(--sh1)}
+.btn-danger-filled{background:var(--error);color:#3d0500}
+.btn-danger-filled:hover{background:#ffc4bd;box-shadow:var(--sh2)}
+.btn-sm{height:36px;padding:0 14px;font-size:13px}
+.icon-btn{position:relative;overflow:hidden;width:42px;height:42px;border:none;border-radius:50%;background:transparent;color:var(--text-2);display:grid;place-items:center;cursor:pointer;transition:background .2s}
+.icon-btn:hover{background:rgba(230,235,225,.08);color:var(--text)}
+.icon-btn-danger:hover{background:rgba(255,180,171,.14);color:var(--error)}
+.icon-sm{width:34px;height:34px}
+.ripple{position:absolute;border-radius:50%;background:currentColor;opacity:.16;transform:scale(0);animation:ripple .55s ease-out forwards;pointer-events:none}
+@keyframes ripple{to{transform:scale(1);opacity:0}}
 
-/* 操作区 */
-.actions{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.btn{border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s}
-.btn:hover{opacity:.85}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-green{background:var(--primary);color:#fff}
-.btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--bd)}
+/* ============ Search Bar ============ */
+main{padding-top:22px;padding-bottom:56px}
+.search-row{margin-bottom:26px}
+.searchbar{display:flex;align-items:center;gap:12px;height:54px;padding:0 12px 0 18px;background:var(--surface-4);border-radius:999px;box-shadow:var(--sh1);transition:box-shadow .2s;cursor:text}
+.searchbar:focus-within{box-shadow:0 0 0 2px var(--primary),var(--sh1)}
+.searchbar input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--text);font-size:15px;font-family:inherit}
+.searchbar input::placeholder{color:var(--text-3)}
+#search-clear{visibility:hidden;opacity:0;transform:scale(.7);transition:.2s var(--ease)}
+#search-clear.show{visibility:visible;opacity:1;transform:scale(1)}
 
-/* 表格 */
-.table-box{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
-table{width:100%;border-collapse:collapse}
-th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--bd);font-size:14px}
-th{background:#1c2129;color:var(--t2);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:#1c2129}
-.mono{font-family:"SF Mono",Consolas,monospace;font-size:12px;color:var(--accent)}
-.content-cell{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.badge{display:inline-block;padding:3px 10px;border-radius:16px;font-size:12px;font-weight:600}
-.badge-ok{background:rgba(63,185,80,.15);color:#3fb950}
-.badge-zero{background:rgba(139,148,158,.15);color:var(--t2)}
-.geo-tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;background:rgba(88,166,255,.15);color:var(--accent);margin-left:6px}
-.action-link{color:var(--accent);text-decoration:none;font-weight:600;margin-right:10px}
-.action-link:hover{text-decoration:underline}
-.btn-mini{background:var(--danger);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer}
-.btn-mini:hover{background:var(--danger-hover)}
-.empty-state{padding:60px;text-align:center;color:var(--t2)}
-.empty-state .icon{font-size:44px;margin-bottom:10px}
+/* ============ 页头 ============ */
+.page-head{display:flex;align-items:baseline;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.page-head h1{font-size:24px;font-weight:700;letter-spacing:.2px}
+.page-head .muted{font-size:13px;color:var(--text-3)}
 
-/* 批量查询弹窗 */
-.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
-.modal.show{display:flex}
-.modal-box{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:28px;max-width:540px;width:90%}
-.modal-box h3{font-size:18px;margin-bottom:6px}
-.modal-box .hint{color:var(--t2);font-size:13px;margin-bottom:14px}
-.modal-box textarea{width:100%;min-height:120px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--text);padding:12px;font-size:13px;font-family:monospace;resize:vertical;outline:none}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
-.result-box{margin-top:16px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:14px;max-height:240px;overflow-y:auto;font-size:13px}
-.result-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--bd)}
+/* ============ 统计带 ============ */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--outline-var);border:1px solid var(--outline-var);border-radius:20px;overflow:hidden;box-shadow:var(--sh1);margin-bottom:22px}
+.stat{display:flex;align-items:center;gap:14px;padding:20px;background:var(--surface-1);transition:background .25s}
+.stat:hover{background:var(--surface-2)}
+.stat-ic{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;flex:none;transition:transform .25s var(--ease)}
+.stat:hover .stat-ic{transform:scale(1.08) rotate(-3deg)}
+.sic-green{background:var(--primary-c);color:var(--on-primary-c)}
+.sic-sage{background:var(--secondary-c);color:var(--on-secondary-c)}
+.sic-blue{background:var(--tertiary-c);color:var(--on-tertiary-c)}
+.sic-amber{background:var(--amber-c);color:var(--on-amber-c)}
+.stat-num{font-size:31px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.stat-label{font-size:12.5px;color:var(--text-2);letter-spacing:.4px;margin-top:1px}
+
+/* ============ 工具栏 ============ */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip-f{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:9px;border:1px solid var(--outline-var);background:transparent;color:var(--text-2);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:.2s}
+.chip-f:hover{background:rgba(230,235,225,.07)}
+.chip-f.selected{background:var(--secondary-c);border-color:transparent;color:var(--on-secondary-c);font-weight:600}
+.toolbar-btns{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ============ 数据表 ============ */
+.table-card{background:var(--surface-1);border:1px solid var(--outline-var);border-radius:20px;box-shadow:var(--sh1);overflow:hidden}
+.table-scroll{overflow-x:auto}
+.dt{width:100%;min-width:700px;border-collapse:collapse}
+.dt th{padding:14px 16px;text-align:left;font-size:11.5px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--text-2);background:var(--surface-2);border-bottom:1px solid var(--outline-var);white-space:nowrap}
+.dt td{padding:13px 16px;font-size:14px;border-bottom:1px solid var(--outline-var);vertical-align:middle}
+.dt th:first-child,.dt td:first-child{padding-left:24px}
+.dt th:last-child,.dt td:last-child{padding-right:20px}
+.dt tbody tr{transition:background .15s;animation:rise .5s var(--ease) both}
+.dt tbody tr:hover{background:rgba(230,235,225,.05)}
+.dt tbody tr:last-child td{border-bottom:none}
+.mono{font-family:"Roboto Mono","SF Mono",Consolas,monospace;font-size:12px;color:var(--tertiary);letter-spacing:.2px}
+.td-id{white-space:nowrap}
+.td-wx{font-size:13px;color:var(--text-2);white-space:nowrap}
+.td-content{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.td-read{white-space:nowrap}
+.td-time{color:var(--text-3);font-size:13px;white-space:nowrap}
+.td-act{text-align:right;white-space:nowrap}
+.td-act .btn-text{margin-right:2px}
+
+/* 徽章 Pill */
+.pill{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 11px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.2px}
+.pill-ok{background:var(--primary-c);color:var(--on-primary-c)}
+.pill-zero{background:var(--surface-4);color:var(--text-3)}
+.pill-geo{background:var(--tertiary-c);color:var(--on-tertiary-c);margin-left:6px}
+
+/* 空状态 */
+.empty{padding:64px 24px;text-align:center}
+.empty-ic{display:inline-grid;place-items:center;width:76px;height:76px;border-radius:26px;background:var(--surface-3);color:var(--text-3);margin-bottom:16px}
+.empty-t{font-size:16px;font-weight:600}
+.empty-s{font-size:13px;color:var(--text-3);margin-top:4px}
+
+.foot{text-align:center;font-size:12px;color:var(--text-3);margin-top:30px;letter-spacing:.4px}
+
+/* ============ Dialog ============ */
+.modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.58);animation:fade .25s both}
+.dialog{position:relative;width:100%;max-width:560px;max-height:86vh;overflow-y:auto;background:var(--surface-3);border-radius:28px;padding:26px 26px 22px;box-shadow:var(--sh3);animation:dlg .3s var(--ease) both}
+.dialog-sm{max-width:460px}
+@keyframes dlg{from{opacity:0;transform:scale(.94) translateY(10px)}}
+@keyframes fade{from{opacity:0}}
+.dlg-head{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.dlg-head h3{font-size:20px;font-weight:700;letter-spacing:.1px}
+.dlg-ic{width:44px;height:44px;border-radius:14px;background:var(--primary-c);color:var(--on-primary-c);display:grid;place-items:center;flex:none}
+.dlg-ic.danger{background:var(--error-c);color:var(--on-error-c)}
+.dlg-sub{color:var(--text-2);font-size:13.5px;margin-bottom:18px}
+.field textarea{width:100%;min-height:130px;background:var(--surface-4);border:1px solid transparent;border-radius:14px;color:var(--text);padding:14px;font-size:13px;font-family:"Roboto Mono",Consolas,monospace;line-height:1.7;resize:vertical;outline:none;transition:.2s}
+.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
+.field textarea::placeholder{color:var(--text-3)}
+.field-label{display:block;font-size:11.5px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px}
+
+/* API Key 输入框 */
+.key-field{display:flex;align-items:center;gap:6px;background:var(--surface-4);border:1px solid transparent;border-radius:14px;padding:0 8px 0 16px;transition:.2s}
+.key-field:focus-within{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
+.key-field input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--text);font-size:14px;font-family:"Roboto Mono",Consolas,monospace;padding:13px 0;letter-spacing:.5px}
+.key-field input::placeholder{color:var(--text-3)}
+
+/* 分段按钮：传递方式 */
+.seg{display:flex;border:1px solid var(--outline-var);border-radius:12px;overflow:hidden;margin-top:14px}
+.seg-btn{flex:1;padding:10px 6px;background:none;border:none;color:var(--text-2);font-size:12.5px;font-family:"Roboto Mono",Consolas,monospace;cursor:pointer;white-space:nowrap;transition:.2s}
+.seg-btn+.seg-btn{border-left:1px solid var(--outline-var)}
+.seg-btn:hover{background:rgba(230,235,225,.06)}
+.seg-btn.selected{background:var(--secondary-c);color:var(--on-secondary-c);font-weight:700}
+
+.result-box{margin-top:16px;background:var(--surface-2);border:1px solid var(--outline-var);border-radius:14px;padding:6px 16px;max-height:230px;overflow-y:auto;animation:rise .35s var(--ease) both}
+.result-title{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);padding:10px 0 4px;position:sticky;top:0;background:var(--surface-2)}
+.result-title span{color:var(--primary);margin-left:4px}
+.result-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px dashed var(--outline-var)}
 .result-item:last-child{border-bottom:none}
-@media(max-width:640px){th:nth-child(2),td:nth-child(2){display:none}.search-box{flex:1}}
+.result-item .mono{font-size:12.5px;overflow:hidden;text-overflow:ellipsis}
+.dlg-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:22px}
+.dlg-actions .spacer{flex:1}
+
+/* ============ Snackbar ============ */
+#snackbar{position:fixed;left:50%;bottom:24px;transform:translate(-50%,18px);opacity:0;pointer-events:none;z-index:120;background:var(--inv);color:var(--on-inv);padding:13px 22px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:var(--sh3);max-width:calc(100vw - 40px);transition:.3s var(--ease)}
+#snackbar.show{transform:translate(-50%,0);opacity:1}
+
+/* ============ 入场动效 ============ */
+.reveal{animation:rise .6s var(--ease) both}
+.d1{animation-delay:.07s}.d2{animation-delay:.14s}.d3{animation-delay:.21s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+tr.removing{opacity:0;transform:translateX(14px);transition:.25s var(--ease)}
+
+/* ============ 响应式 ============ */
+@media (max-width:960px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:760px){
+  .container,.appbar-in{padding-left:14px;padding-right:14px}
+  main{padding-top:16px}
+  .brand-sub{display:none}
+  .sys-chip{display:none}           /* 移动端用钥匙图标按钮入口 */
+  .page-head h1{font-size:21px}
+  .toolbar{flex-direction:column;align-items:stretch}
+  .toolbar-btns{flex-wrap:wrap}
+  .toolbar-btns .btn{flex:1;min-width:120px}
+  .btn-err{flex-basis:100%}
+
+  /* 表格 → 卡片列表 */
+  .table-scroll{overflow:visible}
+  .dt{min-width:0}
+  .dt thead{display:none}
+  .dt tbody{display:block;padding:12px}
+  .dt tbody tr{display:grid;grid-template-columns:1fr auto;grid-template-areas:"content content" "read read" "wx time" "id act";gap:9px 12px;background:var(--surface-2);border:1px solid var(--outline-var);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--sh1)}
+  .dt tbody tr:last-child{margin-bottom:0}
+  .dt td{display:block;padding:0;border:none}
+  .dt th:first-child,.dt td:first-child{padding-left:0}
+  .dt td:last-child{padding-right:0}
+  td.td-content{grid-area:content;white-space:normal;max-width:none;font-size:15px;font-weight:500;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  td.td-read{grid-area:read;display:flex;flex-wrap:wrap;gap:8px}
+  .pill-geo{margin-left:0}
+  td.td-wx{grid-area:wx;font-size:12px;color:var(--text-3);align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60vw}
+  td.td-time{grid-area:time;text-align:right;font-size:12px;align-self:center}
+  td.td-id{grid-area:id;align-self:center}
+  td.td-id .mono{font-size:11.5px}
+  td.td-act{grid-area:act;display:flex;justify-content:flex-end;align-items:center;text-align:right}
+  .dt tbody tr.plain-row{display:block;background:none;border:none;box-shadow:none;padding:0;margin:0}
+  .dt tbody tr.plain-row td{display:block}
+  .empty{padding:44px 16px}
+  .stats{border-radius:16px}
+  .stat{padding:16px;gap:12px}
+  .stat-num{font-size:26px}
+  .stat-ic{width:42px;height:42px;border-radius:13px}
+  .dialog{padding:22px 20px 18px;border-radius:24px}
+  #snackbar{bottom:16px}
+}
+@media (max-width:380px){
+  .toolbar-btns .btn{padding:0 14px;font-size:13px}
+  .chips{gap:6px}
+  .seg-btn{font-size:11.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
 </style>
 </head>
 <body>
-<div class="container">
 
-  <!-- 顶部搜索栏 -->
-  <div class="top-bar">
-    <div class="search-box">
-      <span class="icon">🔍</span>
-      <input type="text" id="search-box" placeholder="搜索 wxId / 内容 / ID…" oninput="doFilter()">
+<!-- Material 图标雪碧 -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08a5.99 5.99 0 0 1-5.65 4c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+  <symbol id="i-delete" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></symbol>
+  <symbol id="i-checkall" viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41 6 19l1.41-1.41L1.83 12 .41 13.41z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 8c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><path d="M21 10h-8.35C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H13l2 2 2-2 2 2 4-4.04L21 10zM7 15c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M19 3H4.99C3.88 3 3 3.89 3 5v14c0 1.1.88 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H4.99V5H19v10z"/></symbol>
+</svg>
+
+<!-- App Bar -->
+<header class="appbar" id="appbar">
+  <div class="appbar-in">
+    <div class="brand">
+      <span class="brand-badge"><svg class="ic"><use href="#i-checkall"/></svg></span>
+      <div>
+        <span class="brand-title">消息已读追踪</span>
+        <span class="brand-sub">Read-Receipt Console</span>
+      </div>
     </div>
-    <button class="refresh-btn" onclick="location.reload()" title="刷新">🔄</button>
+    <div class="appbar-right">
+      <button class="sys-chip" id="key-chip" onclick="openKeyDialog()" title="点击配置 API Key">
+        <span class="dot warn" id="key-dot"></span><span id="key-chip-text">未配置 Key</span>
+      </button>
+      <button class="icon-btn js-ripple" onclick="openKeyDialog()" title="API Key 设置"><svg class="ic"><use href="#i-key"/></svg></button>
+      <button class="icon-btn js-ripple" onclick="logout()" title="退出登录"><svg class="ic"><use href="#i-logout"/></svg></button>
+      <button class="icon-btn js-ripple" onclick="location.reload()" title="刷新"><svg class="ic"><use href="#i-refresh"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- Search Bar -->
+  <div class="search-row reveal">
+    <label class="searchbar">
+      <svg class="ic ic-mut"><use href="#i-search"/></svg>
+      <input id="search-input" type="text" placeholder="搜索 wxId / 内容 / ID…" autocomplete="off">
+      <button class="icon-btn icon-sm js-ripple" id="search-clear" type="button" title="清除"><svg class="ic" style="width:18px;height:18px"><use href="#i-close"/></svg></button>
+    </label>
   </div>
 
-  <h1>消息已读追踪后台</h1>
-
-  <!-- 统计 -->
-  <div class="stats">
-    <div class="stat-card"><div class="num">{{total_messages}}</div><div class="label">总消息</div></div>
-    <div class="stat-card"><div class="num">{{total_reads}}</div><div class="label">总读取记录</div></div>
-    <div class="stat-card"><div class="num blue">{{avg_reads}}</div><div class="label">平均已读</div></div>
-    <div class="stat-card"><div class="num blue">{{geo_reads}}</div><div class="label">已定位记录</div></div>
+  <div class="page-head reveal d1">
+    <h1>数据总览</h1>
+    <span class="muted">消息触达与已读状态一览</span>
   </div>
 
-  <!-- 操作 -->
-  <div class="actions">
-    <button class="btn btn-green" onclick="openBatch()">📦 批量查已读</button>
-    <button class="btn btn-ghost" onclick="expCSV()">📥 导出 CSV</button>
-    <button class="btn btn-danger" onclick="deleteAll()">🧹 清空全部</button>
-  </div>
+  <!-- 统计带 -->
+  <section class="stats reveal d1">
+    <div class="stat">
+      <span class="stat-ic sic-green"><svg class="ic"><use href="#i-chat"/></svg></span>
+      <div><div class="stat-num">{{total_messages}}</div><div class="stat-label">总消息</div></div>
+    </div>
+    <div class="stat">
+      <span class="stat-ic sic-sage"><svg class="ic"><use href="#i-checkall"/></svg></span>
+      <div><div class="stat-num">{{total_reads}}</div><div class="stat-label">总读取记录</div></div>
+    </div>
+    <div class="stat">
+      <span class="stat-ic sic-blue"><svg class="ic"><use href="#i-chart"/></svg></span>
+      <div><div class="stat-num">{{avg_reads}}</div><div class="stat-label">平均已读</div></div>
+    </div>
+    <div class="stat">
+      <span class="stat-ic sic-amber"><svg class="ic"><use href="#i-pin"/></svg></span>
+      <div><div class="stat-num">{{geo_reads}}</div><div class="stat-label">已定位记录</div></div>
+    </div>
+  </section>
 
-  <!-- 表格 -->
-  <div class="table-box">
-    <table>
-      <thead><tr><th>ID</th><th>wxId</th><th>内容</th><th>已读数</th><th>时间</th><th>操作</th></tr></thead>
-      <tbody id="msg-list">
-        {%for m in messages%}
-        <tr data-content="{{m.content}}" data-wx="{{m.wx_id}}" data-id="{{m.id}}">
-          <td class="mono">{{m.id[:12]}}…</td>
-          <td>{{m.wx_id}}</td>
-          <td class="content-cell" title="{{m.content}}">{{m.content}}</td>
-          <td>
-            <span class="badge {%if m.read_cnt==0%}badge-zero{%else%}badge-ok{%endif%}">{{m.read_cnt}} 人</span>
-            {%if m.geo_cnt%}<span class="geo-tag">📍 {{m.geo_cnt}}</span>{%endif%}
-          </td>
-          <td style="color:var(--t2)">{{m.registered_at|int|ts2date}}</td>
-          <td>
-            <a class="action-link" href="/message/{{m.id}}">详情</a>
-            <button class="btn-mini" onclick="deleteMsg('{{m.id}}')">删除</button>
-          </td>
-        </tr>
-        {%endfor%}
-        {%if not messages%}
-        <tr><td colspan="6">
-          <div class="empty-state">
-            <div class="icon">📭</div>
-            <p>暂无消息记录</p>
-          </div>
-        </td></tr>
-        {%endif%}
-      </tbody>
-    </table>
-  </div>
+  <!-- 工具栏 -->
+  <section class="toolbar reveal d2">
+    <div class="chips">
+      <button class="chip-f js-ripple selected" onclick="setFilter('all',this)">全部</button>
+      <button class="chip-f js-ripple" onclick="setFilter('read',this)"><svg class="ic ic-xs"><use href="#i-checkall"/></svg>有已读</button>
+      <button class="chip-f js-ripple" onclick="setFilter('zero',this)">零已读</button>
+      <button class="chip-f js-ripple" onclick="setFilter('geo',this)"><svg class="ic ic-xs"><use href="#i-pin"/></svg>有定位</button>
+    </div>
+    <div class="toolbar-btns">
+      <button class="btn btn-filled js-ripple" onclick="openBatch()"><svg class="ic"><use href="#i-checkall"/></svg>批量查已读</button>
+      <button class="btn btn-tonal js-ripple" onclick="expCSV()"><svg class="ic"><use href="#i-download"/></svg>导出 CSV</button>
+      <button class="btn btn-err js-ripple" onclick="deleteAll()"><svg class="ic"><use href="#i-delete"/></svg>清空全部</button>
+    </div>
+  </section>
 
+  <!-- 数据表 -->
+  <section class="table-card reveal d3">
+    <div class="table-scroll">
+      <table class="dt">
+        <thead>
+          <tr><th>ID</th><th>wxId</th><th>消息内容</th><th>已读情况</th><th>时间</th><th style="text-align:right">操作</th></tr>
+        </thead>
+        <tbody id="msg-list">
+          {%for m in messages%}
+          <tr data-content="{{m.content}}" data-wx="{{m.wx_id}}" data-id="{{m.id}}" data-read="{{m.read_cnt}}" data-geo="{{m.geo_cnt or 0}}">
+            <td class="td-id"><span class="mono">{{m.id[:12]}}…</span></td>
+            <td class="td-wx">{{m.wx_id}}</td>
+            <td class="td-content" title="{{m.content}}">{{m.content}}</td>
+            <td class="td-read">
+              <span class="pill {%if m.read_cnt==0%}pill-zero{%else%}pill-ok{%endif%}"><svg class="ic ic-xs"><use href="#i-checkall"/></svg>{{m.read_cnt}} 人已读</span>
+              {%if m.geo_cnt%}<span class="pill pill-geo"><svg class="ic ic-xs"><use href="#i-pin"/></svg>{{m.geo_cnt}}</span>{%endif%}
+            </td>
+            <td class="td-time">{{m.registered_at|int|ts2date}}</td>
+            <td class="td-act">
+              <a class="btn btn-text btn-sm js-ripple" href="/message/{{m.id}}"><svg class="ic" style="width:16px;height:16px"><use href="#i-eye"/></svg>详情</a>
+              <button class="icon-btn icon-sm icon-btn-danger js-ripple" title="删除" onclick="deleteMsg('{{m.id}}')"><svg class="ic" style="width:18px;height:18px"><use href="#i-delete"/></svg></button>
+            </td>
+          </tr>
+          {%endfor%}
+          {%if not messages%}
+          <tr class="plain-row"><td colspan="6">
+            <div class="empty">
+              <span class="empty-ic"><svg class="ic ic-xl"><use href="#i-inbox"/></svg></span>
+              <p class="empty-t">暂无消息记录</p>
+              <p class="empty-s">新追踪的消息会出现在这里</p>
+            </div>
+          </td></tr>
+          {%endif%}
+          <tr class="plain-row" id="no-match" style="display:none"><td colspan="6">
+            <div class="empty">
+              <span class="empty-ic"><svg class="ic ic-xl"><use href="#i-search"/></svg></span>
+              <p class="empty-t">没有匹配的结果</p>
+              <p class="empty-s">试试其他关键词或切换筛选条件</p>
+            </div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="foot">共 {{total_messages}} 条消息记录 · Material Design 3 Console</footer>
+</main>
+
+<!-- API Key 设置 Dialog -->
+<div class="modal" id="key-modal">
+  <div class="scrim" onclick="closeKeyDialog()"></div>
+  <div class="dialog dialog-sm" role="dialog" aria-modal="true" aria-label="API Key 设置">
+    <div class="dlg-head">
+      <span class="dlg-ic"><svg class="ic"><use href="#i-key"/></svg></span>
+      <h3>API Key 设置</h3>
+    </div>
+    <p class="dlg-sub">密钥仅保存在浏览器本地（localStorage），请求时以 Header <code>X-API-Key</code> 或 Query <code>?api_key=</code> 携带。</p>
+    <label class="field-label" for="key-input">API Key</label>
+    <div class="key-field">
+      <input id="key-input" type="password" placeholder="your-key" autocomplete="off" spellcheck="false">
+      <button class="icon-btn icon-sm js-ripple" id="key-eye" type="button" title="显示 / 隐藏"><svg class="ic" style="width:18px;height:18px"><use href="#i-eye"/></svg></button>
+    </div>
+    <div class="seg" role="radiogroup" aria-label="传递方式">
+      <button class="seg-btn selected" data-mode="header" type="button">Header: X-API-Key</button>
+      <button class="seg-btn" data-mode="query" type="button">Query: ?api_key=</button>
+    </div>
+    <div class="dlg-actions">
+      <button class="btn btn-text js-ripple" onclick="$('#key-input').value=''" type="button">清除输入</button>
+      <span class="spacer"></span>
+      <button class="btn btn-text js-ripple" onclick="closeKeyDialog()" type="button">取消</button>
+      <button class="btn btn-filled js-ripple" onclick="saveKeyCfg()" type="button">保存</button>
+    </div>
+  </div>
 </div>
 
-<!-- 批量查询弹窗 -->
+<!-- 批量查询 Dialog -->
 <div class="modal" id="batch-modal">
-  <div class="modal-box">
-    <h3>📦 批量查询已读状态</h3>
-    <p class="hint">每行一个消息 ID，或逗号分隔</p>
-    <textarea id="batch-ids" placeholder="a1b2c3d4...&#10;e5f6a7b8..."></textarea>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeBatch()">取消</button>
-      <button class="btn btn-green" onclick="runBatch()">查询</button>
+  <div class="scrim" onclick="closeBatch()"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-label="批量查询已读状态">
+    <div class="dlg-head">
+      <span class="dlg-ic"><svg class="ic"><use href="#i-checkall"/></svg></span>
+      <h3>批量查询已读状态</h3>
     </div>
-    <div class="result-box" id="batch-result" style="display:none"></div>
+    <p class="dlg-sub">每行一个消息 ID，或用逗号 / 空格分隔，支持一次查询多条。</p>
+    <label class="field">
+      <textarea id="batch-ids" rows="6" placeholder="a1b2c3d4e5f6…&#10;f6e5d4c3b2a1…"></textarea>
+    </label>
+    <div class="result-box" id="batch-result" hidden>
+      <div class="result-title">查询结果<span id="batch-count"></span></div>
+      <div id="batch-list"></div>
+    </div>
+    <div class="dlg-actions">
+      <button class="btn btn-text js-ripple" onclick="closeBatch()">取消</button>
+      <button class="btn btn-filled js-ripple" onclick="runBatch(this)"><svg class="ic"><use href="#i-search"/></svg>查询</button>
+    </div>
   </div>
 </div>
+
+<!-- 确认 Dialog -->
+<div class="modal" id="confirm-modal">
+  <div class="scrim" onclick="cfClose(false)"></div>
+  <div class="dialog dialog-sm" role="alertdialog" aria-modal="true">
+    <div class="dlg-head">
+      <span class="dlg-ic danger" id="cf-icon"><svg class="ic"><use href="#i-delete"/></svg></span>
+      <h3 id="cf-title">确认操作</h3>
+    </div>
+    <p class="dlg-sub" id="cf-body"></p>
+    <div class="dlg-actions">
+      <button class="btn btn-text js-ripple" id="cf-cancel">取消</button>
+      <button class="btn btn-filled js-ripple" id="cf-ok">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="snackbar" role="status"></div>
 
 <script>
-function doFilter(){
-  const v=document.getElementById("search-box").value.toLowerCase();
-  document.querySelectorAll("#msg-list tr[data-content]").forEach(r=>{
-    const hay=(r.dataset.content+" "+r.dataset.wx+" "+r.dataset.id).toLowerCase();
-    r.style.display=hay.includes(v)?"":"none";
-  });
+const $=s=>document.querySelector(s);
+const searchInput=$("#search-input");
+let filterMode="all";
+
+/* ---------- API Key 管理 ---------- */
+const KEY_LS="rr_api_key",MODE_LS="rr_api_mode";
+const getKey=()=>localStorage.getItem(KEY_LS)||"";
+const getMode=()=>localStorage.getItem(MODE_LS)||"header";
+let keyMode=getMode();
+
+function updateKeyChip(){
+  const has=!!getKey();
+  $("#key-dot").classList.toggle("warn",!has);
+  $("#key-chip-text").textContent=has?"Key 已配置":"未配置 Key";
 }
+function openKeyDialog(){
+  $("#key-input").value=getKey();
+  keyMode=getMode();
+  document.querySelectorAll(".seg-btn").forEach(b=>b.classList.toggle("selected",b.dataset.mode===keyMode));
+  $("#key-modal").classList.add("open");
+  setTimeout(()=>$("#key-input").focus(),120);
+}
+function closeKeyDialog(){$("#key-modal").classList.remove("open")}
+function saveKeyCfg(){
+  const k=$("#key-input").value.trim();
+  if(k)localStorage.setItem(KEY_LS,k);else localStorage.removeItem(KEY_LS);
+  localStorage.setItem(MODE_LS,keyMode);
+  closeKeyDialog();updateKeyChip();
+  snack(k?"API Key 已保存":"API Key 已清除");
+}
+document.querySelectorAll(".seg-btn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    keyMode=b.dataset.mode;
+    document.querySelectorAll(".seg-btn").forEach(x=>x.classList.toggle("selected",x===b));
+  });
+});
+$("#key-eye").addEventListener("click",()=>{
+  const inp=$("#key-input"),show=inp.type==="password";
+  inp.type=show?"text":"password";
+  $("#key-eye use").setAttribute("href",show?"#i-eye-off":"#i-eye");
+});
+$("#key-input").addEventListener("keydown",e=>{if(e.key==="Enter")saveKeyCfg()});
+
+/* 统一请求封装：按所选方式自动携带密钥 */
+function authFetch(url,opts={}){
+  const key=getKey();
+  if(key){
+    if(getMode()==="query"){
+      url+=(url.includes("?")?"&":"?")+"api_key="+encodeURIComponent(key);
+    }else{
+      opts.headers=Object.assign({},opts.headers,{"X-API-Key":key});
+    }
+  }
+  return fetch(url,opts);
+}
+/* 认证失败统一处理：提示并弹出设置框 */
+function authFailed(r){
+  if(r.status===401||r.status===403){
+    snack("认证失败，请检查或配置 API Key");
+    openKeyDialog();
+    return true;
+  }
+  return false;
+}
+
+/* ---------- 搜索 + 筛选 ---------- */
+function setFilter(mode,btn){
+  filterMode=mode;
+  document.querySelectorAll(".chip-f").forEach(c=>c.classList.remove("selected"));
+  btn.classList.add("selected");
+  doFilter();
+}
+function doFilter(){
+  const v=searchInput.value.trim().toLowerCase();
+  let shown=0,hasRow=false;
+  document.querySelectorAll('#msg-list tr[data-id]').forEach(r=>{
+    hasRow=true;
+    const hay=(r.dataset.content+" "+r.dataset.wx+" "+r.dataset.id).toLowerCase();
+    let ok=hay.includes(v);
+    if(ok&&filterMode!=="all"){
+      const rc=+r.dataset.read,g=+r.dataset.geo;
+      ok=filterMode==="read"?rc>0:filterMode==="zero"?rc===0:g>0;
+    }
+    r.style.display=ok?"":"none";
+    if(ok)shown++;
+  });
+  const nm=$("#no-match");
+  if(nm)nm.style.display=(hasRow&&shown===0)?"":"none";
+}
+searchInput.addEventListener("input",()=>{
+  $("#search-clear").classList.toggle("show",searchInput.value.length>0);
+  doFilter();
+});
+$("#search-clear").addEventListener("click",()=>{
+  searchInput.value="";
+  $("#search-clear").classList.remove("show");
+  searchInput.focus();
+  doFilter();
+});
+
+/* ---------- Snackbar ---------- */
+let snackTimer;
+function snack(msg){
+  const sb=$("#snackbar");
+  sb.textContent=msg;
+  sb.classList.add("show");
+  clearTimeout(snackTimer);
+  snackTimer=setTimeout(()=>sb.classList.remove("show"),3200);
+}
+
+/* ---------- 确认 Dialog ---------- */
+let cfResolve=null;
+function askConfirm(o){
+  $("#cf-title").textContent=o.title;
+  $("#cf-body").textContent=o.body;
+  const okBtn=$("#cf-ok");
+  okBtn.textContent=o.ok||"确定";
+  okBtn.classList.toggle("btn-danger-filled",!!o.danger);
+  $("#confirm-modal").classList.add("open");
+  return new Promise(res=>cfResolve=res);
+}
+function cfClose(v){
+  if(cfResolve){cfResolve(v);cfResolve=null}
+  $("#confirm-modal").classList.remove("open");
+}
+$("#cf-ok").addEventListener("click",()=>cfClose(true));
+$("#cf-cancel").addEventListener("click",()=>cfClose(false));
+
+/* ---------- 删除 / 清空 ---------- */
 async function deleteMsg(id){
-  if(!confirm("确定删除这条消息及其所有已读记录？"))return;
-  const r=await fetch("/api/delete/"+id,{method:"POST"});
-  if(r.ok)location.reload();else alert("删除失败");
+  const ok=await askConfirm({
+    title:"删除这条消息？",
+    body:"将同时删除该消息的所有已读与定位记录，此操作不可恢复。",
+    ok:"删除",danger:true
+  });
+  if(!ok)return;
+  try{
+    const r=await authFetch("/api/delete/"+id,{method:"POST"});
+    if(authFailed(r))return;
+    if(r.ok){
+      const row=document.querySelector(`tr[data-id="${id}"]`);
+      if(row){row.classList.add("removing");setTimeout(()=>{row.remove();doFilter();},240);}
+      snack("已删除消息及其读取记录");
+    }else snack("删除失败（HTTP "+r.status+"）");
+  }catch(e){snack("网络错误，删除失败")}
 }
 async function deleteAll(){
-  if(!confirm("⚠️ 确定清空全部消息和已读记录？此操作不可恢复！"))return;
-  const r=await fetch("/api/delete-all",{method:"POST"});
-  if(r.ok)location.reload();else alert("清空失败");
+  const ok=await askConfirm({
+    title:"清空全部数据？",
+    body:"将删除所有消息及其已读、定位记录，此操作不可恢复！",
+    ok:"全部清空",danger:true
+  });
+  if(!ok)return;
+  try{
+    const r=await authFetch("/api/delete-all",{method:"POST"});
+    if(authFailed(r))return;
+    if(r.ok){snack("已清空全部数据");setTimeout(()=>location.reload(),800);}
+    else snack("清空失败（HTTP "+r.status+"）");
+  }catch(e){snack("网络错误，清空失败")}
 }
+
+/* ---------- 导出 CSV（纯前端，无需鉴权） ---------- */
 function expCSV(){
   const rows=[["ID","wxId","内容","已读数","时间"]];
-  document.querySelectorAll("#msg-list tr[data-content]").forEach(r=>{
+  document.querySelectorAll("#msg-list tr[data-id]").forEach(r=>{
     if(r.style.display==="none")return;
     const td=r.querySelectorAll("td");
-    rows.push([(td[0].textContent||"").trim(),(td[1].textContent||"").trim(),'"'+(r.dataset.content||"").replace(/"/g,'""')+'"',(td[3].textContent||"").trim(),(td[4].textContent||"").trim()]);
+    rows.push([
+      (td[0].textContent||"").trim(),
+      (td[1].textContent||"").trim(),
+      '"'+(r.dataset.content||"").replace(/"/g,'""')+'"',
+      r.dataset.read,
+      (td[4].textContent||"").trim()
+    ]);
   });
+  if(rows.length<2){snack("当前没有可导出的记录");return}
   const csv=rows.map(r=>r.join(",")).join("\n");
   const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download="read-receipt-export.csv";
   a.click();
+  snack(`已导出 ${rows.length-1} 条记录到 CSV`);
 }
-function openBatch(){document.getElementById("batch-modal").classList.add("show")}
-function closeBatch(){document.getElementById("batch-modal").classList.remove("show");document.getElementById("batch-result").style.display="none"}
-async function runBatch(){
-  const raw=document.getElementById("batch-ids").value.trim();
-  if(!raw){alert("请输入消息 ID");return}
-  const ids=raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
-  if(!ids.length){alert("没有有效的 ID");return}
-  const r=await fetch("/batch-status?ids="+ids.join(","));
-  const d=await r.json();
-  if(!r.ok){alert(d.error||"查询失败");return}
-  const box=document.getElementById("batch-result");
-  box.innerHTML="<h4 style='margin-bottom:8px'>查询结果</h4>"+
-    Object.entries(d.statuses).map(([id,cnt])=>
-      `<div class="result-item"><span class="mono">${id.slice(0,20)}…</span><span class="badge ${cnt?"badge-ok":"badge-zero"}">${cnt} 人已读</span></div>`
+
+/* ---------- 批量查询 Dialog ---------- */
+function openBatch(){
+  $("#batch-result").hidden=true;
+  $("#batch-modal").classList.add("open");
+  setTimeout(()=>$("#batch-ids").focus(),120);
+}
+function closeBatch(){$("#batch-modal").classList.remove("open")}
+async function runBatch(btn){
+  const raw=$("#batch-ids").value.trim();
+  if(!raw){snack("请输入消息 ID");return}
+  const ids=raw.split(/[\n,\s]+/).map(s=>s.trim()).filter(Boolean);
+  if(!ids.length){snack("没有有效的 ID");return}
+  if(btn)btn.disabled=true;
+  try{
+    const r=await authFetch("/batch-status?ids="+encodeURIComponent(ids.join(",")));
+    if(authFailed(r))return;
+    const d=await r.json();
+    if(!r.ok){snack(d.error||"查询失败");return}
+    $("#batch-count").textContent=" "+Object.keys(d.statuses).length+" 条";
+    $("#batch-list").innerHTML=Object.entries(d.statuses).map(([id,cnt])=>
+      `<div class="result-item"><span class="mono">${id.length>22?id.slice(0,22)+"…":id}</span><span class="pill ${cnt?"pill-ok":"pill-zero"}"><svg class="ic ic-xs"><use href="#i-checkall"/></svg>${cnt} 人已读</span></div>`
     ).join("");
-  box.style.display="block";
+    $("#batch-result").hidden=false;
+  }catch(e){snack("网络错误，查询失败")}
+  finally{if(btn)btn.disabled=false}
+}
+
+/* ---------- 涟漪 ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest(".js-ripple");
+  if(!t)return;
+  const rect=t.getBoundingClientRect(),d=Math.max(rect.width,rect.height)*2;
+  const s=document.createElement("span");
+  s.className="ripple";
+  s.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-rect.left-d/2}px;top:${e.clientY-rect.top-d/2}px`;
+  t.appendChild(s);
+  s.addEventListener("animationend",()=>s.remove());
+});
+
+/* ---------- 数字滚动 ---------- */
+function countUp(el){
+  const target=parseFloat(el.textContent.trim().replace(/,/g,""));
+  if(isNaN(target))return;
+  const dec=(el.textContent.trim().split(".")[1]||"").length;
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){
+    el.textContent=dec?target.toFixed(dec):target;return;
+  }
+  const t0=performance.now(),dur=900;
+  (function tick(t){
+    const p=Math.min(1,(t-t0)/dur),ease=1-Math.pow(1-p,3),v=target*ease;
+    el.textContent=dec?v.toFixed(dec):Math.round(v);
+    if(p<1)requestAnimationFrame(tick);
+  })(t0);
+}
+
+/* ---------- 初始化 ---------- */
+document.querySelectorAll(".stat-num").forEach(countUp);
+document.querySelectorAll('#msg-list tr[data-id]').forEach((r,i)=>{
+  r.style.animationDelay=Math.min(i,12)*35+"ms";
+});
+const appbar=$("#appbar");
+addEventListener("scroll",()=>appbar.classList.toggle("scrolled",scrollY>8),{passive:true});
+addEventListener("keydown",e=>{if(e.key==="Escape"){closeBatch();closeKeyDialog();cfClose(false);}});
+updateKeyChip();
+doFilter();
+function logout(){
+  const f=document.createElement("form");
+  f.method="POST";f.action="/logout";
+  document.body.appendChild(f);f.submit();
 }
 </script>
 </body>

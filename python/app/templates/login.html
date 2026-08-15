@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1310">
+<title>登录 · 消息已读追踪后台</title>
+<style>
+@font-face{font-family:"Roboto";font-style:normal;font-weight:400;font-display:swap;
+  src:local("Roboto"),local("Roboto-Regular"),url("/static/fonts/roboto-400.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215}
+@font-face{font-family:"Roboto";font-style:normal;font-weight:500;font-display:swap;
+  src:local("Roboto Medium"),local("Roboto-Medium"),url("/static/fonts/roboto-500.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215}
+@font-face{font-family:"Roboto";font-style:normal;font-weight:700;font-display:swap;
+  src:local("Roboto Bold"),local("Roboto-Bold"),url("/static/fonts/roboto-700.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215}
+:root{
+  --bg:#0f1310;--surface-1:#161c16;--surface-4:#2e362e;--outline-var:#3c453c;
+  --text:#e4e8e1;--text-2:#a8b1a6;--text-3:#7e877d;
+  --primary:#7ddb8c;--on-primary:#06381a;--primary-c:#145127;--on-primary-c:#a9f3b5;
+  --error:#ffb4ab;--error-c:#93000a;--on-error-c:#ffdad6;
+  --sh3:0 4px 8px 3px rgba(0,0,0,.2),0 1px 3px rgba(0,0,0,.3);
+  --ease:cubic-bezier(.2,0,0,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{color-scheme:dark}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  font-family:Roboto,"Noto Sans SC","HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--text);
+  background:radial-gradient(1100px 480px at 50% -120px,rgba(125,219,140,.08),transparent 70%),var(--bg)}
+.ic{width:20px;height:20px;fill:currentColor;flex:none}
+.card{width:min(400px,100%);background:var(--surface-1);border:1px solid var(--outline-var);
+  border-radius:28px;padding:36px 32px 30px;box-shadow:var(--sh3);animation:rise .55s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+.brand-badge{width:46px;height:46px;border-radius:14px;background:var(--primary-c);color:var(--on-primary-c);display:grid;place-items:center}
+.brand-title{font-size:17px;font-weight:700}
+.brand-sub{font-size:10px;letter-spacing:2.5px;color:var(--text-3);text-transform:uppercase}
+h1{font-size:22px;font-weight:700;margin-bottom:6px}
+.sub{font-size:13.5px;color:var(--text-2);margin-bottom:22px}
+.field{display:flex;align-items:center;gap:6px;background:var(--surface-4);border:1px solid transparent;
+  border-radius:14px;padding:0 8px 0 16px;transition:.2s}
+.field:focus-within{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
+.field input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--text);
+  font-size:15px;padding:14px 0;font-family:inherit}
+.field input::placeholder{color:var(--text-3)}
+.icon-btn{width:36px;height:36px;border:none;border-radius:50%;background:transparent;color:var(--text-2);
+  display:grid;place-items:center;cursor:pointer;transition:background .2s}
+.icon-btn:hover{background:rgba(230,235,225,.08)}
+.err-box{display:flex;align-items:center;gap:8px;background:var(--error-c);color:var(--on-error-c);
+  border-radius:12px;padding:11px 14px;font-size:13px;margin-top:14px}
+.err-box .ic{width:18px;height:18px}
+.shake{animation:shake .4s}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.btn{width:100%;margin-top:22px;height:48px;border:none;border-radius:999px;background:var(--primary);
+  color:var(--on-primary);font-size:15px;font-weight:700;letter-spacing:.5px;cursor:pointer;
+  transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.btn:hover{background:#8ee49c;box-shadow:var(--sh3)}
+.btn:active{transform:scale(.985)}
+.foot{margin-top:20px;text-align:center;font-size:12px;color:var(--text-3)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-checkall" viewBox="0 0 24 24"><path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41 6 19l1.41-1.41L1.83 12 .41 13.41z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></symbol>
+  <symbol id="i-error" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></symbol>
+</svg>
+
+<form class="card{%if error%} shake{%endif%}" method="post" autocomplete="off">
+  <div class="brand">
+    <span class="brand-badge"><svg class="ic" style="width:24px;height:24px"><use href="#i-checkall"/></svg></span>
+    <div>
+      <div class="brand-title">消息已读追踪</div>
+      <div class="brand-sub">Read-Receipt Console</div>
+    </div>
+  </div>
+  <h1>控制台登录</h1>
+  <p class="sub">请输入管理密码以继续（未单独设置时为 API Key）</p>
+  <div class="field">
+    <input type="password" name="password" placeholder="管理密码" autofocus required>
+    <button class="icon-btn" type="button" id="eye" title="显示 / 隐藏">
+      <svg class="ic"><use href="#i-eye"/></svg>
+    </button>
+  </div>
+  {%if error%}
+  <div class="err-box"><svg class="ic"><use href="#i-error"/></svg>{{error}}</div>
+  {%endif%}
+  <button class="btn" type="submit">登 录</button>
+  <p class="foot">登录后会话默认保持 7 天</p>
+</form>
+
+<script>
+document.getElementById("eye").addEventListener("click",()=>{
+  const inp=document.querySelector('input[name="password"]');
+  const show=inp.type==="password";
+  inp.type=show?"text":"password";
+  document.querySelector("#eye use").setAttribute("href",show?"#i-eye-off":"#i-eye");
+});
+</script>
+</body>
+</html>

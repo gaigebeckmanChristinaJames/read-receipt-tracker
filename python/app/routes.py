@@ -1,10 +1,15 @@
-"""路由模块 — 优化并发、防阻塞版"""
+"""路由模块 — 优化并发、防阻塞版 + 登录鉴权"""
+import hmac
+import os
+import secrets
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from io import BytesIO
 
-from flask import Flask, current_app, g, jsonify, render_template, request, send_file
+from flask import (Flask, current_app, g, jsonify, redirect, render_template,
+                   request, send_file, send_from_directory, make_response, 
+                   session, url_for, abort)
 
 from .database import atomic_write, get_db
 from .utils import generate_message_id, get_client_ip, lookup_ip_location, reverse_geocode
@@ -20,6 +25,9 @@ TRANSPARENT_GIF = bytes([
 
 # pixel 端点的无阻塞写队列（高并发兜底）
 _pixel_queue = []  # (msg_id, wx_id, ip, ua)
+
+# 限流计数器（进程内；原实现存在 g 里，每请求重置，形同虚设）
+_rl_store = {}
 
 
 def _ts2date(ts):
@@ -44,16 +52,36 @@ def _fmt_loc(loc):
         return loc
 
 
-def require_api_key(f):
+def _wants_json():
+    """判断请求是否期望 JSON（决定未授权时返回 401 还是跳转登录页）"""
+    if request.path.startswith("/api/") or request.path == "/batch-status":
+        return True
+    if request.args.get("json") == "1":
+        return True
+    am = request.accept_mimetypes
+    return am["application/json"] > am["text/html"]
+
+
+def _admin_pwd():
+    return current_app.config.get("ADMIN_PASSWORD") or current_app.config.get("API_KEY", "")
+
+
+def require_admin(f):
+    """后台鉴权：会话 Cookie 或 API Key 二选一；未配置密钥时保持开放（兼容旧行为）"""
     @wraps(f)
     def d(*a, **kw):
-        ak = current_app.config.get("API_KEY", "")
-        if not ak:
+        if session.get("authed"):
             return f(*a, **kw)
-        rk = request.headers.get("X-API-Key") or request.args.get("api_key", "")
-        if rk != ak:
+        ak = current_app.config.get("API_KEY", "")
+        if ak:
+            rk = request.headers.get("X-API-Key") or request.args.get("api_key", "")
+            if rk and hmac.compare_digest(rk, ak):
+                return f(*a, **kw)
+        else:
+            return f(*a, **kw)  # 未配置密钥：保持旧的开放行为
+        if _wants_json():
             return jsonify({"error": "Unauthorized"}), 401
-        return f(*a, **kw)
+        return redirect(url_for("login", next=request.path))
     return d
 
 
@@ -64,31 +92,89 @@ def rate_limit(f):
         if lim <= 0:
             return f(*a, **kw)
         ip = get_client_ip()
-        k = f"_rl_{f.__name__}_{ip}"
-        n = int(time.time())
-        w = g.__dict__.get(k)
-        if w is None:
-            g.__dict__[k] = {"start": n, "count": 1}
+        key = f.__name__ + "|" + ip
+        now = int(time.time())
+        w = _rl_store.get(key)
+        if w is None or now - w[0] > 60:
+            _rl_store[key] = (now, 1)
         else:
-            if n - w["start"] > 60:
-                w["start"] = n
-                w["count"] = 1
-            else:
-                w["count"] += 1
-                if w["count"] > lim:
-                    return jsonify({"error": "Too many requests"}), 429
+            c = w[1] + 1
+            _rl_store[key] = (w[0], c)
+            if c > lim:
+                return jsonify({"error": "Too many requests"}), 429
+        if len(_rl_store) > 10000:  # 轻量清理
+            for k in [k for k, v in _rl_store.items() if now - v[0] > 120]:
+                _rl_store.pop(k, None)
         return f(*a, **kw)
     return d
+
+
+def _ensure_secret(app):
+    """保证有持久化的 SECRET_KEY（会话签名用）：config > 环境变量 > instance/.secret_key"""
+    if app.secret_key:
+        return
+    sk = os.environ.get("SECRET_KEY", "")
+    if not sk:
+        p = os.path.join(app.instance_path, ".secret_key")
+        try:
+            os.makedirs(app.instance_path, exist_ok=True)
+            if os.path.exists(p):
+                with open(p, "r", encoding="utf-8") as fp:
+                    sk = fp.read().strip()
+            if not sk:
+                sk = secrets.token_hex(32)
+                with open(p, "w", encoding="utf-8") as fp:
+                    fp.write(sk)
+                try:
+                    os.chmod(p, 0o600)
+                except OSError:
+                    pass
+        except OSError:
+            sk = secrets.token_hex(32)  # 兜底：进程重启后会话失效而已
+    app.secret_key = sk
 
 
 def register_routes(app):
     app.template_filter("ts2date")(_ts2date)
     app.template_filter("fmtloc")(_fmt_loc)
 
+    # ---- 会话配置 ----
+    _ensure_secret(app)
+    app.config.setdefault("SESSION_COOKIE_SAMESITE", "Lax")
+    app.config.setdefault("SESSION_COOKIE_HTTPONLY", True)
+    app.permanent_session_lifetime = timedelta(days=int(app.config.get("SESSION_DAYS", 7)))
+
     @app.route("/health")
     @rate_limit
     def health():
         return jsonify({"status": "ok", "service": "read-receipt-tracker"})
+
+    @app.route("/login", methods=["GET", "POST"])
+    @rate_limit
+    def login():
+        pwd = _admin_pwd()
+        if not pwd:                       # 未配置密码：无需登录
+            return redirect(url_for("index"))
+        if session.get("authed"):
+            return redirect(url_for("index"))
+        err = None
+        if request.method == "POST":
+            pw = request.form.get("password", "")
+            if hmac.compare_digest(pw, pwd):
+                session.permanent = True
+                session["authed"] = True
+                nxt = request.args.get("next") or "/"
+                if not nxt.startswith("/") or nxt.startswith("//") or "\\" in nxt:
+                    nxt = "/"
+                return redirect(nxt)
+            err = "密码错误，请重试"
+            time.sleep(0.6)               # 简单抬高爆破成本
+        return render_template("login.html", error=err)
+
+    @app.route("/logout", methods=["POST"])
+    def logout():
+        session.clear()
+        return redirect(url_for("login"))
 
     @app.route("/register", methods=["POST"])
     @rate_limit
@@ -221,7 +307,7 @@ def register_routes(app):
         })
 
     @app.route("/")
-    @require_api_key
+    @require_admin
     @rate_limit
     def index():
         # 管理面板首页
@@ -251,7 +337,7 @@ def register_routes(app):
                                avg_reads=ar, geo_reads=gr, messages=ms)
 
     @app.route("/message/<mid>")
-    @require_api_key
+    @require_admin
     @rate_limit
     def detail(mid):
         # 消息详情（支持 ?json=1 返回 JSON）
@@ -288,7 +374,7 @@ def register_routes(app):
     @app.route("/api/reads/<mid>")
     @rate_limit
     def api_reads(mid):
-        # 客户端专用：JSON 已读记录（含省市定位）
+        # 客户端专用：JSON 已读记录（含省市定位）—— 仍保持公开
         db = get_db(readonly=True)
         m = db.execute("SELECT * FROM messages WHERE id=?", (mid,)).fetchone()
         if not m:
@@ -317,7 +403,7 @@ def register_routes(app):
     @app.route("/api/messages")
     @rate_limit
     def api_messages():
-        # 客户端专用：JSON 消息列表
+        # 客户端专用：JSON 消息列表 —— 仍保持公开
         db = get_db(readonly=True)
         rows = db.execute(
             "SELECT m.*,(SELECT COUNT(DISTINCT ip_address) FROM reads r "
@@ -331,7 +417,7 @@ def register_routes(app):
         } for r in rows]})
 
     @app.route("/api/delete/<mid>", methods=["POST"])
-    @require_api_key
+    @require_admin
     @rate_limit
     def del_msg(mid):
         db = get_db()
@@ -340,7 +426,7 @@ def register_routes(app):
         return jsonify({"success": True})
 
     @app.route("/api/delete-all", methods=["POST"])
-    @require_api_key
+    @require_admin
     @rate_limit
     def del_all():
         db = get_db()
@@ -349,7 +435,7 @@ def register_routes(app):
         return jsonify({"success": True})
 
     @app.route("/batch-status")
-    @require_api_key
+    @require_admin
     @rate_limit
     def batch_status():
         # 批量查询已读状态
@@ -370,3 +456,37 @@ def register_routes(app):
             if mid not in rv:
                 rv[mid] = 0
         return jsonify({"statuses": rv})
+
+        # ================= 新增：字体文件静态服务 =================
+    @app.route('/static/fonts/<path:filename>')
+    def serve_font(filename):
+        """
+        将 /static/fonts/ 请求映射到 templates/fonts/ 目录
+        """
+        # 基础安全检查，防止路径穿越（虽然 send_from_directory 内部也有保护）
+        if '..' in filename or filename.startswith(('/', '\\')):
+            abort(404)
+
+        # 拼接真实物理路径：templates/fonts/
+        font_dir = os.path.join(app.template_folder, 'fonts')
+        
+        # 检查文件是否存在，不存在直接 404
+        if not os.path.exists(os.path.join(font_dir, filename)):
+            abort(404)
+
+        # 发送文件
+        response = make_response(send_from_directory(font_dir, filename))
+        
+        # 性能优化：字体文件是不变的，设置 1 年强缓存 (immutable)
+        response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        
+        # 确保返回正确的 MIME 类型（部分旧版 Flask 可能无法自动识别 woff2）
+        if filename.endswith('.woff2'):
+            response.headers['Content-Type'] = 'font/woff2'
+        elif filename.endswith('.woff'):
+            response.headers['Content-Type'] = 'font/woff'
+        elif filename.endswith('.ttf'):
+            response.headers['Content-Type'] = 'font/ttf'
+            
+        return response
+    # =======================================================

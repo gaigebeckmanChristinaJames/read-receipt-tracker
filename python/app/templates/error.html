@@ -1,4 +1,100 @@
 <!DOCTYPE html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{message}}</title>
-<style>:root{--primary:#6366f1;--bg:#f0f2f5;--text:#1f2937;--t2:#6b7280}*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);font-family:system-ui;color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh}.ec{background:#fff;padding:48px;border-radius:16px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:480px}.ec .icon{font-size:64px;margin-bottom:16px}.ec h1{font-size:24px;margin-bottom:8px}.ec p{color:var(--t2);margin-bottom:24px}.ec a{color:var(--primary);text-decoration:none;font-weight:600}</style></head>
-<body><div class="ec"><div class="icon">🔍</div><h1>{{message}}</h1><p>页面不存在或已被删除</p><a href="/">← 返回管理后台</a></div></body></html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1310">
+<title>{{message}} · 消息已读追踪</title>
+<style>
+/* ============ 本地字体 ============ */
+@font-face{font-family:"Roboto";font-style:normal;font-weight:400;font-display:swap;
+  src:local("Roboto"),local("Roboto-Regular"),url("/static/fonts/roboto-400.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215}
+@font-face{font-family:"Roboto";font-style:normal;font-weight:500;font-display:swap;
+  src:local("Roboto Medium"),local("Roboto-Medium"),url("/static/fonts/roboto-500.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215}
+@font-face{font-family:"Roboto";font-style:normal;font-weight:700;font-display:swap;
+  src:local("Roboto Bold"),local("Roboto-Bold"),url("/static/fonts/roboto-700.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2212,U+2215}
+
+/* ============ MD3 Tokens ============ */
+:root{
+  --bg:#0f1310;
+  --surface-1:#161c16;--surface-4:#2e362e;--outline-var:#3c453c;
+  --text:#e4e8e1;--text-2:#a8b1a6;--text-3:#7e877d;
+  --primary:#7ddb8c;--on-primary:#06381a;
+  --primary-c:#145127;--on-primary-c:#a9f3b5;
+  --error:#ffb4ab;--error-c:#93000a;--on-error-c:#ffdad6;
+  --sh3:0 4px 8px 3px rgba(0,0,0,.20),0 1px 3px rgba(0,0,0,.30);
+  --ease:cubic-bezier(.2,0,0,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{color-scheme:dark}
+body{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;
+  font-family:Roboto,"Noto Sans SC","HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--text);
+  background:radial-gradient(1100px 480px at 50% -120px,rgba(125,219,140,.08),transparent 70%),var(--bg);
+}
+::selection{background:rgba(125,219,140,.30)}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.ic{width:24px;height:24px;fill:currentColor;flex:none}
+.ic-xl{width:42px;height:42px}
+
+/* 错误卡片 */
+.card{
+  width:min(460px,100%);background:var(--surface-1);border:1px solid var(--outline-var);
+  border-radius:28px;padding:40px 32px;box-shadow:var(--sh3);
+  text-align:center;animation:rise .55s var(--ease) both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+.ic-wrap{
+  width:84px;height:84px;border-radius:28px;
+  background:var(--surface-4);color:var(--text-3);
+  display:grid;place-items:center;margin:0 auto 24px;
+  animation:pulse-bg 4s infinite alternate ease-in-out;
+}
+@keyframes pulse-bg{from{background:var(--surface-4)}to{background:#343d34}}
+
+h1{font-size:42px;font-weight:800;letter-spacing:-1px;margin-bottom:8px;color:var(--primary)}
+.sub{font-size:15px;color:var(--text-2);margin-bottom:32px;line-height:1.6}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:48px;padding:0 28px;border:none;border-radius:999px;
+  background:var(--primary);color:var(--on-primary);
+  font-size:15px;font-weight:700;letter-spacing:.5px;cursor:pointer;
+  text-decoration:none;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.3);
+}
+.btn:hover{background:#8ee49c;box-shadow:var(--sh3)}
+.btn:active{transform:scale(.985)}
+
+.foot{margin-top:28px;font-size:12px;color:var(--text-3);letter-spacing:.5px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-error" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></symbol>
+</svg>
+
+<div class="card">
+  <div class="ic-wrap">
+    <svg class="ic ic-xl"><use href="#i-error"/></svg>
+  </div>
+  <h1>{{message}}</h1>
+  <p class="sub">页面不存在或已被删除，请检查您访问的链接。</p>
+  <a class="btn" href="/">
+    <svg class="ic"><use href="#i-home"/></svg>返回管理后台
+  </a>
+</div>
+<p class="foot">Read-Receipt Console</p>
+
+</body>
+</html>
