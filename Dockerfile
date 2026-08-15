@@ -12,6 +12,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 # 复制项目配置
 COPY pyproject.toml .
 COPY python/ python/
+COPY run.py .
 
 # 安装依赖
 RUN uv pip install --system flask && mkdir -p /app/data && chown -R appuser:appuser /app
