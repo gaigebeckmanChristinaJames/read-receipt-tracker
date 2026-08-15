@@ -10,6 +10,7 @@ services:
     volumes:
       - ./data:/app/data
     environment:
+      - TZ=${TZ:-Asia/Shanghai}
       - DATABASE_PATH=/app/data/receipts.db
       - API_KEY=${API_KEY:-}
       - ENABLE_GEO=${ENABLE_GEO:-1}
