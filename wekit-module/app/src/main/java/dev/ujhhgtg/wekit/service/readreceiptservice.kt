@@ -202,6 +202,26 @@ class ReadReceiptService : Service() {
         }
     }
 
+    /** 确保二进制文件可执行：Java API + chmod 双重保障。 */
+    private fun ensureExecutable(file: File): Boolean {
+        var ok = file.setExecutable(true, false)
+        if (!ok) {
+            try {
+                val p = Runtime.getRuntime().exec(arrayOf("chmod", "755", file.absolutePath))
+                p.waitFor()
+                ok = file.canExecute()
+            } catch (_: Exception) {}
+        }
+        if (!ok) {
+            try {
+                val p = Runtime.getRuntime().exec(arrayOf("sh", "-c", "chmod 755 '${file.absolutePath}'"))
+                p.waitFor()
+                ok = file.canExecute()
+            } catch (_: Exception) {}
+        }
+        return ok
+    }
+
     /** 定位 jniLibs 中的 libcloudflared.so（Android 解压到可执行目录）。 */
     private fun locateCloudflared(): File? {
         // 1) 优先使用 applicationInfo.nativeLibraryDir（最可靠，该目录下的 .so 有执行权限）
@@ -210,7 +230,7 @@ class ReadReceiptService : Service() {
             if (dir != null) {
                 val so = File(dir, "libcloudflared.so")
                 if (so.exists() && so.length() > 0L) {
-                    so.setExecutable(true)
+                    ensureExecutable(so)
                     return so
                 }
             }
@@ -224,11 +244,14 @@ class ReadReceiptService : Service() {
             val dirs = field.get(null) as? Array<*>
             if (dirs != null && dirs.isNotEmpty()) {
                 val so = File(dirs[0].toString(), "libcloudflared.so")
-                if (so.exists()) return so
+                if (so.exists()) {
+                    ensureExecutable(so)
+                    return so
+                }
             }
         } catch (_: Exception) {}
 
-        // 2) 回退：从 assets 释放到 filesDir（nativeLibraryDir 是只读的，不能写入）
+        // 3) 回退：从 assets 释放到 filesDir/bin/cloudflared
         try {
             val dir = File(filesDir, "bin")
             if (!dir.exists()) dir.mkdirs()
@@ -238,7 +261,7 @@ class ReadReceiptService : Service() {
                     FileOutputStream(exe).use { output -> input.copyTo(output) }
                 }
             }
-            exe.setExecutable(true)
+            ensureExecutable(exe)
             return exe
         } catch (e: Exception) {
             writeLog("cloudflared 定位失败: ${e.message}")
@@ -248,14 +271,35 @@ class ReadReceiptService : Service() {
 
     private fun startBuiltInTunnel() {
         if (!running.get()) return
-        val cloudflared = locateCloudflared()
+        var cloudflared = locateCloudflared()
         if (cloudflared == null) {
             writeLog("未找到 libcloudflared.so（仅支持 arm64-v8a）")
             tunnelRunning.set(false)
             return
         }
-        cloudflared.setExecutable(true)
-        writeLog("cloudflared 就绪: ${cloudflared.absolutePath} (${cloudflared.length()} 字节)")
+        ensureExecutable(cloudflared)
+        var canExec = cloudflared.canExecute()
+        writeLog("cloudflared 就绪: ${cloudflared.absolutePath} (${cloudflared.length()} 字节, 可执行=$canExec)")
+        if (!canExec) {
+            writeLog("警告: cloudflared 无法设置可执行权限，尝试复制到 cache 目录重试")
+            try {
+                val cacheExe = File(cacheDir, "cloudflared")
+                cloudflared.copyTo(cacheExe, overwrite = true)
+                ensureExecutable(cacheExe)
+                if (cacheExe.canExecute()) {
+                    cloudflared = cacheExe
+                    canExec = true
+                    writeLog("已切换到 cache 目录: ${cloudflared.absolutePath}")
+                }
+            } catch (e: Exception) {
+                writeLog("cache 目录回退失败: ${e.message}")
+            }
+        }
+        if (!canExec) {
+            writeLog("错误: cloudflared 仍然不可执行，隧道启动失败")
+            tunnelRunning.set(false)
+            return
+        }
 
         val cmd = listOf(
             cloudflared.absolutePath,
