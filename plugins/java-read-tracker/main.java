@@ -324,26 +324,92 @@ void startTunnel() {
 boolean startCloudflaredTunnel() {
     try {
         Context ctx = getTopActivitySafe();
-        File cfDir = new File(ctx.getFilesDir(), "rrt_bin");
-        if (!cfDir.exists()) cfDir.mkdirs();
-        File cfFile = new File(cfDir, "cf");
-        if (!cfFile.exists() || cfFile.length() < 1000000) {
+        File cfFile = null;
+        String locateErr = null;
+        // 策略1：插件目录 lib/libcloudflared.so
+        try {
             File src = new File(PLUGIN_DIR + "/lib/libcloudflared.so");
-            if (!src.exists()) {
-                writeLog("未找到libcloudflared.so: " + src.getAbsolutePath());
-                return false;
+            if (src.exists() && src.canRead()) {
+                cfFile = src;
+                writeLog("cloudflared定位(插件目录): " + src.getAbsolutePath());
             }
-            writeLog("复制cloudflared: " + (src.length()/1024/1024) + "MB -> " + cfFile.getAbsolutePath());
-            FileInputStream fis = new FileInputStream(src);
-            FileOutputStream fos = new FileOutputStream(cfFile);
-            byte[] buf = new byte[65536];
-            int n;
-            while ((n = fis.read(buf)) > 0) fos.write(buf, 0, n);
-            fis.close();
-            fos.close();
-            cfFile.setReadable(true);
-            writeLog("复制完成");
+        } catch (Exception e) { locateErr = "插件目录: " + e.getMessage(); }
+        // 策略2：宿主 App nativeLibraryDir
+        if (cfFile == null && ctx != null) {
+            try {
+                File dir = new File(ctx.getApplicationInfo().nativeLibraryDir);
+                File so = new File(dir, "libcloudflared.so");
+                if (so.exists() && so.canRead()) {
+                    cfFile = so;
+                    writeLog("cloudflared定位(nativeLibraryDir): " + so.getAbsolutePath());
+                }
+            } catch (Exception e) { locateErr = (locateErr != null ? locateErr + "; " : "") + "nativeLibraryDir: " + e.getMessage(); }
         }
+        // 策略3：反射 VMRuntime
+        if (cfFile == null) {
+            try {
+                java.lang.reflect.Field field = Class.forName("dalvik.system.VMRuntime")
+                    .getDeclaredField("nativeLibraryDirectories");
+                field.setAccessible(true);
+                Object[] dirs = (Object[]) field.get(null);
+                if (dirs != null) {
+                    for (Object d : dirs) {
+                        File dir = new File(d.toString());
+                        File so = new File(dir, "libcloudflared.so");
+                        if (so.exists() && so.canRead()) { cfFile = so; break; }
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        // 策略4：从插件 assets/resources 复制到 filesDir
+        if (cfFile == null && ctx != null) {
+            try {
+                File binDir = new File(ctx.getFilesDir(), "rrt_bin");
+                if (!binDir.exists()) binDir.mkdirs();
+                File extracted = new File(binDir, "cf");
+                // 尝试从插件目录复制
+                File[] candidates = {
+                    new File(PLUGIN_DIR + "/lib/libcloudflared.so"),
+                    new File(PLUGIN_DIR + "/cloudflared"),
+                    new File(PLUGIN_DIR + "/bin/cloudflared"),
+                };
+                for (File cand : candidates) {
+                    if (cand.exists() && cand.canRead() && cand.length() > 1000000) {
+                        FileInputStream fis = new FileInputStream(cand);
+                        FileOutputStream fos = new FileOutputStream(extracted);
+                        byte[] buf = new byte[65536]; int n;
+                        while ((n = fis.read(buf)) > 0) fos.write(buf, 0, n);
+                        fis.close(); fos.close();
+                        cfFile = extracted;
+                        writeLog("cloudflared已复制到: " + extracted.getAbsolutePath());
+                        break;
+                    }
+                }
+            } catch (Exception e) { locateErr = (locateErr != null ? locateErr + "; " : "") + "复制失败: " + e.getMessage(); }
+        }
+        // 全部失败：只打日志，隧道不可用但HTTP服务正常
+        if (cfFile == null) {
+            writeLog("cloudflared未找到（隧道功能不可用，本地HTTP服务正常）: " + (locateErr != null ? locateErr : "搜索路径均无二进制"));
+            return false;
+        }
+        // 复制到可执行目录（如果源文件不可执行）
+        if (ctx != null) {
+            File cfDir = new File(ctx.getFilesDir(), "rrt_bin");
+            if (!cfDir.exists()) cfDir.mkdirs();
+            File execFile = new File(cfDir, "cf");
+            if (!execFile.exists() || execFile.length() != cfFile.length()) {
+                FileInputStream fis = new FileInputStream(cfFile);
+                FileOutputStream fos = new FileOutputStream(execFile);
+                byte[] buf = new byte[65536]; int n;
+                while ((n = fis.read(buf)) > 0) fos.write(buf, 0, n);
+                fis.close(); fos.close();
+                writeLog("复制cloudflared到可执行目录: " + (execFile.length()/1024/1024) + "MB");
+            }
+            execFile.setReadable(true);
+            execFile.setExecutable(true);
+            cfFile = execFile;
+        }
+        // 写 resolv.conf
         try {
             File dnsDir = new File(ctx.getFilesDir(), "xx");
             if (!dnsDir.exists()) dnsDir.mkdirs();
@@ -351,9 +417,7 @@ boolean startCloudflaredTunnel() {
             dnsDir.setReadable(true, false);
             File resolv = new File(dnsDir, "resolv.conf");
             java.io.FileWriter rw = new java.io.FileWriter(resolv);
-            rw.write("nameserver 223.5.5.5\n");
-            rw.write("nameserver 1.1.1.1\n");
-            rw.write("nameserver 8.8.8.8\n");
+            rw.write("nameserver 223.5.5.5\nnameserver 1.1.1.1\nnameserver 8.8.8.8\n");
             rw.close();
             resolv.setReadable(true, false);
         } catch (Throwable dnsE) {
@@ -440,7 +504,7 @@ boolean startCloudflaredTunnel() {
         writeLog("等待隧道URL超时");
         return false;
     } catch (Throwable t) {
-        writeLog("cloudflared启动失败: " + t.toString());
+        writeLog("cloudflared启动失败（不影响HTTP服务）: " + t.toString());
         return false;
     }
 }

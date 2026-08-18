@@ -182,99 +182,76 @@ public class TrackerService extends Service {
     /** App 内置 cloudflared（新版 serve 命令 + DNS 参数） */
     private void startBuiltInTunnel() {
         if (!running.get()) return;
-
-        // cloudflared 放到 jniLibs 作为 .so 加载，Android 会把原生库解压到可执行目录
-        // 解决 /data/data/... 目录 noexec 导致 Permission denied 的问题
         File cloudflaredFile = null;
+        String locateError = null;
+        // 策略1：从 nativeLibraryDir 读取（如果打包到 jniLibs）
         try {
-            java.lang.reflect.Field field = Class.forName("dalvik.system.VMRuntime")
-                    .getDeclaredField("nativeLibraryDirectories");
-            field.setAccessible(true);
-            Object[] dirs = (Object[]) field.get(null);
-            if (dirs != null && dirs.length > 0) {
-                File dir = new File(dirs[0].toString());
-                File so = new File(dir, "libcloudflared.so");
-                if (so.exists()) {
-                    cloudflaredFile = so;
-                }
+            File dir = new File(getApplicationInfo().nativeLibraryDir);
+            File so = new File(dir, "libcloudflared.so");
+            if (so.exists() && so.canRead()) {
+                cloudflaredFile = so;
+                writeLog("cloudflared 定位(nativeLibraryDir): " + so.getAbsolutePath());
             }
-        } catch (Exception ignored) {}
-
+        } catch (Exception e) {
+            locateError = "nativeLibraryDir失败: " + e.getMessage();
+        }
+        // 策略2：反射 VMRuntime 获取原生库目录
         if (cloudflaredFile == null) {
-            // 回退：从 assets 解压到 nativeLibraryDir
             try {
-                File dir = new File(getApplicationInfo().nativeLibraryDir);
-                File so = new File(dir, "libcloudflared.so");
-                if (!so.exists()) {
+                java.lang.reflect.Field field = Class.forName("dalvik.system.VMRuntime")
+                        .getDeclaredField("nativeLibraryDirectories");
+                field.setAccessible(true);
+                Object[] dirs = (Object[]) field.get(null);
+                if (dirs != null) {
+                    for (Object d : dirs) {
+                        File dir = new File(d.toString());
+                        File so = new File(dir, "libcloudflared.so");
+                        if (so.exists() && so.canRead()) {
+                            cloudflaredFile = so;
+                            writeLog("cloudflared 定位(VMRuntime): " + so.getAbsolutePath());
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        // 策略3：从 assets 解压到 filesDir（可写目录，避免 nativeLibraryDir 只读问题）
+        if (cloudflaredFile == null) {
+            try {
+                File binDir = new File(getFilesDir(), "bin");
+                if (!binDir.exists()) binDir.mkdirs();
+                File extracted = new File(binDir, "libcloudflared.so");
+                if (!extracted.exists() || extracted.length() < 1000000) {
                     try (java.io.InputStream in = getAssets().open("cloudflared");
-                         FileOutputStream out = new FileOutputStream(so)) {
+                         FileOutputStream out = new FileOutputStream(extracted)) {
                         byte[] buf = new byte[65536];
                         int n;
                         while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
                     }
+                    writeLog("cloudflared 已从 assets 解压到: " + extracted.getAbsolutePath()
+                            + " (" + extracted.length() + " 字节)");
                 }
-                cloudflaredFile = so;
+                if (extracted.exists() && extracted.canRead()) {
+                    cloudflaredFile = extracted;
+                } else {
+                    locateError = (locateError != null ? locateError + "; " : "") + "assets解压后文件不可读";
+                }
             } catch (Exception e) {
-                writeLog("cloudflared 定位失败: " + e.getMessage());
-                tunnelRunning.set(false);
-                return;
+                locateError = (locateError != null ? locateError + "; " : "") + "assets解压失败: " + e.getMessage();
             }
         }
-        cloudflaredFile.setExecutable(true);
-        writeLog("cloudflared 就绪: " + cloudflaredFile.getAbsolutePath() + " (" + cloudflaredFile.length() + " 字节)");
-
-        // 隧道命令：只使用二进制里验证存在的参数
-        // --no-happy-eyeballs 验证存在 ✅：禁用 IPv6 优先尝试，避免 [::1]:53 拒绝
-        java.util.List<String> cmd = new java.util.ArrayList<>();
-        cmd.add(cloudflaredFile.getAbsolutePath());
-        cmd.add("tunnel");
-        cmd.add("--url");
-        cmd.add("http://127.0.0.1:" + PORT);
-
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.directory(getFilesDir());
-        // 核心 DNS 修复（GODEBUG 是 Go 运行时标准环境变量，必定生效）：
-        // netdns=go 强制纯 Go DNS 解析器（不读系统 [::1]:53）
-        // ipv6=0 禁用 IPv6
-        // 动态编译版用 Android 系统 DNS，无需特殊环境变量
-        pb.redirectErrorStream(true);
-
-        final File logFile = new File(getFilesDir(), "cloudflared.log");
-        writeLog("启动隧道: " + String.join(" ", cmd));
-        try {
-            pb.redirectOutput(logFile);
-            tunnelProcess = pb.start();
-        } catch (Exception e) {
-            writeLog("隧道进程启动失败: " + e.getMessage());
+        // 全部策略失败：只打日志，不抛出异常，不影响 HTTP 服务
+        if (cloudflaredFile == null) {
+            writeLog("cloudflared 定位失败（隧道功能不可用，HTTP服务正常）: "
+                    + (locateError != null ? locateError : "未找到二进制"));
             tunnelRunning.set(false);
             return;
         }
-
-        new Thread(() -> {
-            Pattern pattern = Pattern.compile("https://[a-z0-9][a-z0-9-]*\\.trycloudflare\\.com");
-            while (tunnelRunning.get()) {
-                try {
-                    if (logFile.exists() && logFile.length() > 0) {
-                        StringBuilder sb = new StringBuilder();
-                        try (BufferedReader br = new BufferedReader(
-                                new java.io.FileReader(logFile))) {
-                            String line;
-                            while ((line = br.readLine()) != null) sb.append(line).append("\n");
-                        }
-                        Matcher m = pattern.matcher(sb.toString());
-                        if (m.find()) {
-                            String url = m.group();
-                            if (!url.equals(tunnelUrl)) {
-                                tunnelUrl = url;
-                                broadcastStatus(true, url);
-                            }
-                        }
-                    }
-                } catch (Exception ignored) {}
-                try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
-            }
-        }, "rrt-tunnel-monitor").start();
-    }
+        try {
+            cloudflaredFile.setExecutable(true);
+        } catch (Exception ignored) {}
+        writeLog("cloudflared 就绪: " + cloudflaredFile.getAbsolutePath()
+                + " (" + cloudflaredFile.length() + " 字节)");
 
     // ─────────────────────────────────────────────────────────────
     // HTTP 服务器
