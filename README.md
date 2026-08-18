@@ -27,11 +27,9 @@
 ## 下载安装
 
 ### CI 自动构建 (推荐)
-每次推送到主分支都会自动构建 APK 并发布到 Releases。
+每次推送到主分支都会自动构建 APK 和 Java 插件，并发布到 [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) 页面，可直接下载。
 
-> **首次启用 CI**：将 [`ci/build.yml`](ci/build.yml) 移动到 `.github/workflows/build.yml` 并推送，即可启用 GitHub Actions 自动构建。启用后，Releases 页面会出现 `CI Build` 发行版，包含 APK 和 Java 插件两个附件，可直接下载。
-
-也可以在 [Actions](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions) 页面手动触发构建。
+也可以在 [Actions](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions) 页面手动触发构建或下载历史构建产物。
 
 ### 环境要求
 - Android 9.0 (API 28) 及以上
