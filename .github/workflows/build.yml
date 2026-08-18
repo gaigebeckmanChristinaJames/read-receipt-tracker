@@ -86,7 +86,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wekit-standard-debug
+          name: wekit-apk
           path: wekit-module/app/build/outputs/apk/**/*.apk
           retention-days: 30
 
@@ -125,7 +125,7 @@ jobs:
       - name: Download APK
         uses: actions/download-artifact@v4
         with:
-          name: wekit-standard-debug
+          name: wekit-apk
           path: artifacts
 
       - name: Download Java plugins

@@ -60,6 +60,10 @@ CI 自动构建，每次推送主分支即发布最新版本。
 
 基于 [WeKit](https://github.com/Ujhhgtg/WeKit) 的微信 Xposed 模块，已修复 DEX 缓存更新问题，**内置已读追踪服务端**，无需额外部署服务器，开箱即用。
 
+<p align="center">
+  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases"><img src="https://img.shields.io/badge/📦%20下载-WeKit%20APK-2ea44f?style=for-the-badge" alt="下载"></a>
+</p>
+
 - **上游仓库**: https://github.com/Ujhhgtg/WeKit
 - **特点**: 模块内直接启用已读追踪，消息注册、已读统计、访客信息一体化
 - **环境要求**: Android 9.0+ / Root + LSPosed（或 Zygisk）/ 微信 8.0.65 - 8.0.76
@@ -84,8 +88,12 @@ CI 自动构建，每次推送主分支即发布最新版本。
 
 | 插件 | 作用 | 下载 |
 |------|------|------|
-| 已读服务器（服务端） | 内置 HTTP 服务 + cloudflared 公网隧道 + Web 控制台 | `read-tracker-java-server.zip` |
-| 已读追踪（客户端） | `#消息` 发送追踪卡片，`/已读` 查询人数，已读统计在浏览器控制台查看 | `read-tracker-java-client.zip` |
+| 已读服务器（服务端） | 内置 HTTP 服务 + cloudflared 公网隧道 + Web 控制台 | [read-tracker-java-server.zip](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
+| 已读追踪（客户端） | `#消息` 发送追踪卡片，`/已读` 查询人数，已读统计在浏览器控制台查看 | [read-tracker-java-client.zip](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
+
+<p align="center">
+  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases"><img src="https://img.shields.io/badge/📦%20下载-Java插件包-2ea44f?style=for-the-badge" alt="下载"></a>
+</p>
 
 - **兼容模块**: WeKit、WAuxiliary (WA)、WuYu、HChat 等
 - **使用**: 先装服务端并启动隧道，再装客户端并配置服务器地址
@@ -163,7 +171,12 @@ cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
 
 无需单独部署服务器，直接在微信模块中加载「已读服务器」Java 插件即可，内置 HTTP 服务和 cloudflared 公网隧道。
 
-- 下载: [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) → `read-tracker-java-server.zip`
+<p align="center">
+  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases"><img src="https://img.shields.io/badge/📦%20下载-Java服务端插件-2ea44f?style=for-the-badge" alt="下载"></a>
+</p>
+
+- 文件名: `read-tracker-java-server.zip`
+- 支持模块: WeKit / WAuxiliary / WuYu / HChat
 
 </details>
 
