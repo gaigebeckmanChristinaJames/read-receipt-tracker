@@ -207,7 +207,7 @@
     <string name="features_no_results">未匹配到任何相关功能</string>
     <string name="features_category_empty">当前分类没有可显示的功能</string>
     <string name="features_new_summary">最近 %1$d 天新增 %2$d 个功能</string>
-    <string name="home_module_activated">模块已激活</string>
+    <string name="home_module_activated">一天到晚传传传传传，传得不耐烦了是吧，就爱发那个破视频</string>
     <string name="home_device_info_title">设备信息</string>
     <string name="home_learn_more_title">了解更多</string>
     <string name="home_learn_more_item_title">WeKit 文档</string>
@@ -2864,9 +2864,9 @@
     <string name="home_side_panel_fetch_failed">获取失败</string>
     <string name="home_side_panel_refresh_status">刷新状态</string>
     <string name="home_side_panel_date_pattern">M月d日 E</string>
-    <string name="home_side_panel_greeting_morning">早上好，今天也要保持好心情。</string>
-    <string name="home_side_panel_greeting_afternoon">下午好，愿今天一切顺利。</string>
-    <string name="home_side_panel_greeting_evening">晚上好，愿你今晚安心入睡。</string>
+    <string name="home_side_panel_greeting_morning">这个模块会封号，千万别用</string>
+    <string name="home_side_panel_greeting_afternoon">这个模块会封号，千万别用</string>
+    <string name="home_side_panel_greeting_evening">这个模块会封号，千万别用</string>
     <string name="home_side_panel_weather">天气</string>
     <string name="home_side_panel_updated_at">更新于 %1$s</string>
     <string name="home_side_panel_feels_like">体感 %1$s°</string>
