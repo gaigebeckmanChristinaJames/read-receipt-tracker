@@ -30,7 +30,8 @@
 
 | 方案 | 适用模块 | 特点 | 下载 |
 |------|----------|------|------|
-| [WeKit APK](#wekit-版apk推荐) | WeKit | 内置已读追踪，开箱即用 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
+| [WeKit 无服务器版（修改版 APK）](#wekit-无服务器版修改版apk推荐) | WeKit | 内置已读追踪，无需额外服务器 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
+| [WeKit 有服务器版（原版）](#wekit-有服务器版原版) | WeKit | 原版 WeKit + 自建服务器（Java/Termux/Linux） | [上游仓库](https://github.com/Ujhhgtg/WeKit) |
 | [Java 插件版](#java-插件版支持-wekit--wauxiliary--wuyu--hchat) | WeKit / WA / WuYu / HChat | 无需编译 APK，服务端+客户端双插件 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
 
 ### 🖥️ 服务器
@@ -65,15 +66,27 @@
 ## 📱 客户端
 
 <details>
-<summary>**WeKit 版（APK，推荐）**</summary>
+<summary>**WeKit 无服务器版（修改版 APK，推荐）**</summary>
 
-基于 [WeKit](https://github.com/Ujhhgtg/WeKit) 的微信 Xposed 模块，已修复 DEX 缓存更新问题，内置已读追踪功能，开箱即用。
+基于 [WeKit](https://github.com/Ujhhgtg/WeKit) 的微信 Xposed 模块，已修复 DEX 缓存更新问题，**内置已读追踪服务端**，无需额外部署服务器，开箱即用。
 
 - **上游仓库**: https://github.com/Ujhhgtg/WeKit
-- **特性**: 微信内直接启用已读追踪，消息注册、已读统计、访客信息一体化
+- **特点**: 模块内直接启用已读追踪，消息注册、已读统计、访客信息一体化，不需要自己搭服务器
 - **环境要求**: Android 9.0+ / Root + LSPosed（或 Zygisk）/ 微信 8.0.65 - 8.0.76
 - **下载**: [Releases 页面](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) 下载 `wekit-*.apk`，CI 自动构建
 - **源码**: [`wekit-module/`](wekit-module/)
+
+</details>
+
+<details>
+<summary>**WeKit 有服务器版（原版）**</summary>
+
+使用原版 [WeKit](https://github.com/Ujhhgtg/WeKit)，配合本项目提供的自建服务器使用。适合已有服务器或想在 Termux/Java 插件中运行服务端的用户。
+
+- **上游仓库**: https://github.com/Ujhhgtg/WeKit
+- **特点**: 原版 WeKit 不变，服务端独立部署，可选择 Linux / Windows / Termux / Java 插件等多种部署方式
+- **服务端部署**: 见下方 [服务器部署](#-服务器部署) 章节
+- **下载**: [WeKit 原版 Release](https://github.com/Ujhhgtg/WeKit/releases)
 
 </details>
 
