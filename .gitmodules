@@ -7,3 +7,4 @@
 [submodule "wekit-module/third_party/cloudflared"]
 	path = wekit-module/third_party/cloudflared
 	url = https://github.com/cloudflare/cloudflared.git
+	shallow = true
