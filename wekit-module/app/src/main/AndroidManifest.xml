@@ -4,11 +4,12 @@
 
     <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />
 
-    <!-- 已读追踪服务权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <queries>
+        <package android:name="com.tencent.mm" />
+    </queries>
 
     <application
         android:name=".application.ModuleApplication"
@@ -47,27 +48,6 @@
         </activity-alias>
 
         <activity
-            android:name=".activity.ReadReceiptActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Material3.DynamicColors.DayNight.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <service
-            android:name=".service.ReadReceiptService"
-            android:exported="true"
-            android:foregroundServiceType="dataSync">
-            <intent-filter>
-                <action android:name="dev.ujhhgtg.wekit.READ_RECEIPT_START" />
-                <action android:name="dev.ujhhgtg.wekit.READ_RECEIPT_STOP" />
-                <action android:name="dev.ujhhgtg.wekit.READ_RECEIPT_STATUS" />
-            </intent-filter>
-        </service>
-
-        <activity
             android:name=".activity.TransparentActivity"
             android:exported="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
@@ -97,6 +77,15 @@
             android:exported="true"
             android:theme="@style/Theme.Material3.DynamicColors.DayNight.NoActionBar" />
 
+        <activity
+            android:name=".features.items.chat.ReadReceiptsSettingsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Material3.DynamicColors.DayNight.NoActionBar" />
+
+        <activity
+            android:name=".activity.settings.ExtensionsSettingsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Material3.DynamicColors.DayNight.NoActionBar" />
 
         <meta-data
             android:name="xposedmodule"
@@ -110,10 +99,5 @@
         <meta-data
             android:name="xposedscope"
             android:resource="@array/xposed_scope" />
-
-        <!-- 已读追踪模块元数据 -->
-        <meta-data
-            android:name="read_receipt_enabled"
-            android:value="true" />
     </application>
 </manifest>

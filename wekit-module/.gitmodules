@@ -1,0 +1,10 @@
+[submodule "libs/common/bsh"]
+	path = libs/common/bsh
+	url = https://github.com/Ujhhgtg/bsh
+[submodule "libs/common/reflekt"]
+	path = libs/common/reflekt
+	url = https://github.com/Ujhhgtg/reflekt
+[submodule "third_party/cloudflared"]
+	path = third_party/cloudflared
+	url = https://github.com/cloudflare/cloudflared.git
+	shallow = true

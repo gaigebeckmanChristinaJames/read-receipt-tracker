@@ -5,10 +5,10 @@ import android.content.Context
 import android.os.Build
 import android.os.Process
 import com.tencent.mmkv.MMKV
-import dev.ujhhgtg.wekit.loader.startup.StartupInfo
+import dev.ujhhgtg.wekit.extensions.CloudflaredPack
+import dev.ujhhgtg.wekit.extensions.CloudflaredPackNotInstalledException
 import dev.ujhhgtg.wekit.loader.utils.NativeLoader.init
 import dev.ujhhgtg.wekit.preferences.WePrefs
-import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.fs.createDirsSafe
 import java.io.File
 import java.util.zip.ZipFile
@@ -16,8 +16,6 @@ import kotlin.io.path.div
 import kotlin.io.path.exists
 
 object NativeLoader {
-
-    private const val TAG = "NativeLoader"
 
     private data class ZygiskPayload(
         val apk: File,
@@ -27,7 +25,6 @@ object NativeLoader {
     private val nativeLoadLock = Any()
     private var zygiskPayload: ZygiskPayload? = null
     private var zygiskNativeLibraries: Map<String, File> = emptyMap()
-    private var xposedNativeLibraries: Map<String, File> = emptyMap()
     private var nativeLibrariesLoaded = false
 
     /**
@@ -46,17 +43,13 @@ object NativeLoader {
     }
 
     fun init(hostCtx: Context) {
-        ensureNativeLibrariesLoaded(hostCtx)
+        ensureNativeLibrariesLoaded()
         val mmkvDir = hostCtx.filesDir.toPath() / "mmkv"
         if (!mmkvDir.exists()) {
             mmkvDir.createDirsSafe()
         }
 
-        val libLoader = when {
-            zygiskPayload != null -> zygiskMmkvLibLoader()
-            xposedNativeLibraries.isNotEmpty() -> xposedMmkvLibLoader()
-            else -> null
-        }
+        val libLoader = zygiskPayload?.let { zygiskMmkvLibLoader() }
         if (libLoader == null) {
             MMKV.initialize(hostCtx, mmkvDir.toString())
         } else {
@@ -66,14 +59,16 @@ object NativeLoader {
         MMKV.mmkvWithID(WePrefs.PREFS_NAME, MMKV.MULTI_PROCESS_MODE)
     }
 
-    private fun ensureNativeLibrariesLoaded(hostCtx: Context) {
+    private fun ensureNativeLibrariesLoaded() {
         synchronized(nativeLoadLock) {
             if (nativeLibrariesLoaded) {
                 return@synchronized
             }
             val payload = zygiskPayload
             if (payload == null) {
-                loadXposedLibraries(hostCtx)
+                // Xposed/Frida paths use the normal installed-APK library lookup.
+                System.loadLibrary("dexkit")
+                System.loadLibrary("wekit_native")
             } else {
                 loadZygiskLibraries(payload)
             }
@@ -81,118 +76,33 @@ object NativeLoader {
         }
     }
 
-    // ── Xposed / LSPosed native loading ──────────────────────────────────────
+    @Volatile
+    private var cloudflaredLoaded = false
+
+    /** Whether the cloudflared bridge has been System.load-ed in this process. */
+    @JvmStatic
+    fun isCloudflaredLoaded(): Boolean = cloudflaredLoaded
 
     /**
-     * In LSPosed/Traditional Xposed, System.loadLibrary may fail because the
-     * module classloader's native library path is not always set up correctly.
-     * We try the standard path first, then fall back to locating the .so next
-     * to the module APK, and finally extract from the APK itself.
+     * Lazily loads the Go cloudflared bridge from the cloudflared extension pack
+     * when the built-in read-receipts backend is first used. Throws
+     * [dev.ujhhgtg.wekit.extensions.CloudflaredPackNotInstalledException] when the
+     * pack has not been downloaded — callers surface the install dialog.
      */
-    private fun loadXposedLibraries(hostCtx: Context) {
-        val libraries = listOf("dexkit", "wekit_native")
-        val resolved = mutableMapOf<String, File>()
-
-        for (libName in libraries) {
-            val loaded = runCatching {
-                System.loadLibrary(libName)
-                true
-            }.getOrElse { t ->
-                WeLogger.w(TAG, "System.loadLibrary($libName) failed: ${t.message}")
-                false
-            }
-
-            if (!loaded) {
-                val soFile = findOrExtractLibrary(hostCtx, libName)
-                    ?: error("could not locate native library lib$libName.so for Xposed module")
-                System.load(soFile.absolutePath)
-                resolved[libName] = soFile
-                WeLogger.i(TAG, "loaded $libName from ${soFile.absolutePath}")
-            }
-        }
-
-        // Also resolve mmkv for the custom LibLoader
-        if (resolved.isNotEmpty()) {
-            findOrExtractLibrary(hostCtx, "mmkv")?.let { resolved["mmkv"] = it }
-            findOrExtractLibrary(hostCtx, "androidx.graphics.path")?.let {
-                resolved["androidx.graphics.path"] = it
-            }
-        }
-
-        xposedNativeLibraries = resolved
-    }
-
-    /**
-     * Locate a native library for the current ABI:
-     * 1. In the module APK's sibling lib/ directory (standard install layout).
-     * 2. Extracted from the module APK into hostCtx.filesDir.
-     */
-    private fun findOrExtractLibrary(hostCtx: Context, libName: String): File? {
-        val fileName = "lib$libName.so"
-        val abi = currentProcessAbi()
-
-        // 1) Try the module APK's native library directory
-        runCatching {
-            val moduleApk = File(StartupInfo.modulePath)
-            if (moduleApk.exists()) {
-                // Typical layout: /data/app/~~xxx/base.apk → /data/app/~~xxx/lib/arm64/
-                val apkDir = moduleApk.parentFile
-                val candidates = listOf(
-                    File(apkDir, "lib/$abi/$fileName"),
-                    File(apkDir, "lib/${abi.replace("-v", "/")}/$fileName"),
-                    File(apkDir.parentFile, "lib/$abi/$fileName"),
+    @JvmStatic
+    fun ensureCloudflaredLoaded() {
+        if (cloudflaredLoaded) return
+        synchronized(nativeLoadLock) {
+            if (cloudflaredLoaded) return
+            val library = CloudflaredPack.libraryFile()
+                ?: throw CloudflaredPackNotInstalledException(
+                    "cloudflared extension pack is not installed"
                 )
-                for (c in candidates) {
-                    if (c.exists() && c.length() > 0) {
-                        c.setExecutable(true, false)
-                        return c
-                    }
-                }
-
-                // 2) Extract from the APK
-                ZipFile(moduleApk).use { zip ->
-                    val entry = zip.getEntry("lib/$abi/$fileName")
-                    if (entry != null) {
-                        val libDir = File(hostCtx.filesDir, ".wekit-native/$abi").apply { mkdirs() }
-                        val outFile = File(libDir, fileName)
-                        if (!outFile.exists() || outFile.length() != entry.size) {
-                            zip.getInputStream(entry).use { input ->
-                                outFile.outputStream().use { output -> input.copyTo(output) }
-                            }
-                        }
-                        outFile.setReadable(true, false)
-                        outFile.setExecutable(true, false)
-                        return outFile
-                    }
-                }
-            }
-        }.onFailure { WeLogger.w(TAG, "findOrExtractLibrary($libName) failed: ${it.message}") }
-
-        return null
-    }
-
-    private fun currentProcessAbi(): String {
-        val supported = if (Process.is64Bit()) {
-            Build.SUPPORTED_64_BIT_ABIS
-        } else {
-            Build.SUPPORTED_32_BIT_ABIS
-        }
-        // Prefer the ABIs we ship
-        val shipped = listOf("arm64-v8a", "armeabi-v7a")
-        return supported.firstOrNull { it in shipped } ?: supported.firstOrNull() ?: "arm64-v8a"
-    }
-
-    @SuppressLint("UnsafeDynamicallyLoadedCode")
-    private fun xposedMmkvLibLoader(): MMKV.LibLoader = MMKV.LibLoader { libraryName ->
-        val library = xposedNativeLibraries[libraryName]
-        if (library != null) {
+            @SuppressLint("UnsafeDynamicallyLoadedCode")
             System.load(library.absolutePath)
-        } else {
-            System.loadLibrary(libraryName)
+            cloudflaredLoaded = true
         }
     }
-
-    // ── Zygisk native loading ────────────────────────────────────────────────
 
     /**
      * InMemoryDexClassLoader has no native-library directory on API 28. Match
