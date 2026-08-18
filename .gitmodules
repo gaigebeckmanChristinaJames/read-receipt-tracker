@@ -1,0 +1,9 @@
+[submodule "wekit-module/libs/common/bsh"]
+	path = wekit-module/libs/common/bsh
+	url = https://github.com/Ujhhgtg/bsh
+[submodule "wekit-module/libs/common/reflekt"]
+	path = wekit-module/libs/common/reflekt
+	url = https://github.com/Ujhhgtg/reflekt
+[submodule "wekit-module/third_party/cloudflared"]
+	path = wekit-module/third_party/cloudflared
+	url = https://github.com/cloudflare/cloudflared.git
