@@ -1,0 +1,78 @@
+# WeKit — Agent Guide
+
+## Build
+
+```bash
+./x build           # debug (uses same signing as release)
+./x build --release # release (with optimization on)
+./x zygisk build    # standard universal APK + arm64/arm32 Zygisk module ZIP
+# (./x is alias to `cargo xtask` which orchestrates the build process)
+```
+
+- JDK 21
+- **Gradle does NOT build the Rust native lib.** `./gradlew assemble*` only packages whatever
+  prebuilt `libwekit_native.so` already sits in `app/src/main/jniLibs/<abi>/`. Compiling
+  `app/src/main/rust/wekit-native` and refreshing those `.so` files is xtask's job
+  (`task_build_native`), so **always go through `./x`** — running Gradle directly will silently ship
+  a stale native lib. Requires a Rust toolchain + the Android NDK and its Rust targets;
+  `./x configure` regenerates `wekit-native/.cargo/config.toml` from the local NDK and is invoked
+  automatically by the build tasks.
+- `./x build --native-only` rebuilds just the native lib into `jniLibs/`
+- AGP 9, Gradle version catalog in `gradle/libs.versions.toml`
+
+## Project Structure
+
+- `app/` — main Android module, entrypoints, hooks, UI, native Rust lib
+- `libs/common/annotation-scanner/` — KSP annotation processor (`@Feature` scanner)
+- `libs/common/libxposed-api/` — compileOnly LibXposed API interface stubs (compileOnly since they are provided by user's Xposed framework)
+- `libs/common/bsh/` — submodule: forked BeanShell interpreter with snapshot serialization (`BshSnapshot`, `BshSnapshotHelper`); snapshots are encrypted AST byte representations used by the WAuxiliary Xposed module; `app/src/main/java/dev/ujhhgtg/wekit/utils/BshSnapshotDecompiler.kt` — decompiles encrypted BeanShell snapshot files back into Java-like source code; the AES key was recovered from WAuxiliary's decompiled source
+- `libs/common/reflekt/` — submodule: reflection utility library (`dev.ujhhgtg.reflekt`)
+- `libs/common/stubs/` — compileOnly stubs for WeChat and Android hidden classes
+- `buildSrc/` — custom Gradle tasks: `GenerateMethodHashesTask` (`IResolveDex` `resolveDex` method MD5 cache), `GenerateNewFeaturesTask` (features whose source file was added within 30 days of the HEAD commit → `NewFeatures.ADDED_AT_BY_NAME`, backing the 新功能 pseudo-category)
+- `xtask/` — build orchestration behind `./x`: native-lib compilation + NDK linker config, APK
+  assembly via Gradle, and Zygisk module packaging/flashing
+
+## Entry Points & Architecture
+
+- Xposed entry: `dev.ujhhgtg.wekit.loader.entry.lsp10x.Lsp10xUnifiedHookEntry` (libxposed 101 & 100) and legacy Xposed API (51+) entry: `dev.ujhhgtg.wekit.loader.entry.xp51.Xp51HookEntry`
+- Unified flow: `UnifiedEntryPoint.entry()` → `StartupAgent.startup()` → `WeLauncher.init()`
+- Hook items annotated with `@Feature(path, description)`, auto-discovered by KSP annotation scanner at compile time
+- Base classes: `SwitchFeature` (toggle on/off), `ClickableFeature` (toggle on/off with onClick event), `ApiFeature` (always-on), `BaseFeature` (abstract base, do not use directly)
+- DEX analysis via DexKit with `IResolveDex` interface; method resolve body MD5-hashed for cache (
+  `GenerateMethodHashesTask`)
+- DEX-resolved targets DSL: `val methodTarget by dexMethod()` `val classTarget by dexClass()` delegate → `methodTarget.hookBefore { ... }`, `val method: Method = methodTarget.method`, `val clazz = classTarget.clazz`
+- UI: Jetpack Compose + Material 3, dialogs written using `showComposeDialog` and `AlertDialogContent`
+- Config: MMKV via `WePrefs`
+- Logging: via `WeLogger`
+
+## Key Conventions
+
+- Package namespace: `dev.ujhhgtg.wekit`
+- Min SDK 28, target SDK 37, compile SDK 37
+- Target: WeChat `com.tencent.mm`, versions 8.0.65–8.0.76. Current host info in `HostInfo`
+- Process targeting via `TargetProcesses`: override `startup()` to check
+  `TargetProcesses.isInMain` / `TargetProcesses.currentType`. Default: main process only.
+- No unit tests — manual testing on real WeChat only
+- If `JsApiExposer` (`hooks/items/scripting_js/JsApiExposer.kt`) is modified, keep `globals.d.ts` in
+  the same directory in sync — it's the TypeScript type declaration for the JS scripting API
+- NEVER wrap `hookBefore` and `hookAfter` in a `try-catch`/`runCatching` block. They should NOT fail. If they fail, then it's the module developer's problem.
+- Use `WePrefs.Companion.prefOption` delegates to declare & use preference items easily.
+- Teardown/revert on `onDisable` is **best-effort by design**, not a requirement. Many features
+  irreversibly modify the host view tree; fully reverting them would need complex state management
+  and syncing for little gain, so having the user restart WeChat is the accepted approach. Do NOT
+  report "feature does not undo its changes in `onDisable`" as a bug.
+
+## Naming Conventions
+
+- 群聊: WeChat: chatroom; WeKit: group/群组
+- 朋友圈: WeChat: sns; WeKit: moment
+
+## Context you need
+
+- WeChat decompiled sources: ~/coding/wechat_80{65,67,69,74,76}
+- Decrypted WeChat main database: ./decrypted_wechat.db
+
+## CI
+
+- GitHub Actions: builds on push/PR to `master`/`dev` (skips non-code changes)
+- Artifacts automatically published to a release named "CI" + Telegram channel

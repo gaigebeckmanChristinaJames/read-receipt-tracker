@@ -1,0 +1,71 @@
+package dev.ujhhgtg.wekit.features.items.chat
+
+import android.view.View
+import android.widget.ImageButton
+import com.tencent.mm.pluginsdk.ui.chat.ChatFooter
+import dev.ujhhgtg.wekit.dexkit.abc.IResolveDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
+import dev.ujhhgtg.wekit.features.api.ui.WeChatInputBarMenuApi
+import dev.ujhhgtg.wekit.features.core.ApiFeature
+import dev.ujhhgtg.wekit.features.core.Feature
+import dev.ujhhgtg.wekit.ui.utils.findViewByChildIndexes
+import dev.ujhhgtg.wekit.ui.utils.findViewWhich
+import dev.ujhhgtg.wekit.ui.utils.findViewsWhich
+import android.widget.Button as AndroidButton
+
+@Feature(name = "聊天输入栏钩子", categories = ["API"], description = "集中提供聊天输入栏相关钩子")
+object ChatFooterHooks : ApiFeature(), IResolveDex {
+
+    private val methodInitSmileyBtn by dexMethod {
+        searchPackages("com.tencent.mm.pluginsdk.ui.chat")
+        matcher {
+            usingEqStrings("initSmileyBtn")
+        }
+    }
+
+    override fun onEnable() {
+        methodInitSmileyBtn.hookAfter {
+            val chatFooter = thisObject as ChatFooter
+            val searchedView = chatFooter.findViewByChildIndexes<View>(0)!!
+            val imgButtons = searchedView.findViewsWhich<ImageButton> { view ->
+                view.javaClass.simpleName == "WeImageButton"
+            }.toList()
+
+            if (VoicePanel.isEnabled) {
+                val voiceBtn = imgButtons.first()
+                voiceBtn.setOnLongClickListener { view ->
+                    VoicePanel.openPanel(view)
+                    true
+                }
+            }
+
+            if (StickerPanel.isEnabled) {
+                val emojiBtn = imgButtons[1]
+                emojiBtn.setOnLongClickListener { v ->
+                    StickerPanel.openPanel(v)
+                    true
+                }
+            }
+
+            val menuBtn = imgButtons.last()
+            val sendBtn = searchedView.findViewWhich<AndroidButton> { view ->
+                view.javaClass.name == "android.widget.Button" && run {
+                    val text = (view as AndroidButton).text?.toString()?.trim() ?: ""
+                    text == "发送" || text.equals("send", ignoreCase = true)
+                }
+            }!!
+
+            listOf(menuBtn, sendBtn).forEach {
+                it.setOnLongClickListener { view ->
+                    val context = view.context
+                    if (WeChatInputBarMenuApi.hasItems(context, chatFooter)) {
+                        WeChatInputBarMenuApi.showMenu(context, chatFooter)
+                        true
+                    } else {
+                        false
+                    }
+                }
+            }
+        }
+    }
+}
