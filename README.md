@@ -30,26 +30,14 @@
 
 ## 📂 快速导航
 
-### 📱 客户端
-选择适合你微信模块的客户端方案，发送追踪消息并查看已读统计。
-
-| 方案 | 适用模块 | 特点 | 下载 |
-|------|----------|------|------|
-| [WeKit 无服务器版（修改版 APK）](#wekit-无服务器版修改版apk推荐) | WeKit | 内置已读追踪，无需额外服务器 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
-| [WeKit 有服务器版（原版）](#wekit-有服务器版原版) | WeKit | 原版 WeKit + 自建服务器（Java/Termux/Linux） | [上游仓库](https://github.com/Ujhhgtg/WeKit) |
-| [Java 插件版](#java-插件版支持-wekit--wauxiliary--wuyu--hchat) | WeKit / WA / WuYu / HChat | 无需编译 APK，服务端+客户端双插件 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
-
-### 🖥️ 服务器
-选择一种方式部署已读追踪后端服务。
-
-| 方案 | 平台 | 特点 |
-|------|------|------|
-| [Linux 服务器](#linux-服务器) | Linux | Python / C++ 双后端，systemd 托管 |
-| [Windows](#windows) | Windows | Python 后端，简单易用 |
-| [Java 插件版服务器](#java-插件版服务器) | 微信模块内 | 内置 HTTP + 隧道，无需额外服务器 |
-| [WeKit 内置服务器](#wekit-内置服务器) | WeKit APK | 模块内直接启用 |
-| [Termux / Android](#termux--android手机本地部署) | Android 手机 | 一键脚本，零下载全内嵌 |
-| [Docker](#docker) | 跨平台 | 容器化部署 |
+| 📱 客户端 | 🖥️ 服务器部署 |
+|-----------|--------------|
+| [WeKit 无服务器版（修改版 APK）](#wekit-无服务器版修改版apk推荐) | [Linux 服务器](#linux-服务器) |
+| [WeKit 有服务器版（原版）](#wekit-有服务器版原版) | [Windows](#windows) |
+| [Java 插件版（WeKit/WA/WuYu/HChat）](#java-插件版支持-wekit--wauxiliary--wuyu--hchat) | [Java 插件版服务器](#java-插件版服务器) |
+| | [WeKit 内置服务器](#wekit-内置服务器) |
+| | [Termux / Android](#termux--android手机本地部署) |
+| | [Docker](#docker) |
 
 ---
 
