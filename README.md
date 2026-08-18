@@ -2,23 +2,50 @@
 
 # 📬 read-receipt-tracker
 
-**轻量级消息已读追踪服务**
+### 轻量级消息已读追踪服务
 
-像素埋点 · 管理后台 · 多端部署 · 可选 IP 定位
-
-[![Build](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml/badge.svg)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml)
-[![Downloads](https://img.shields.io/github/downloads/gaigebeckmanChristinaJames/read-receipt-tracker/total?color=green&label=Downloads)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
-[![Stars](https://img.shields.io/github/stars/gaigebeckmanChristinaJames/read-receipt-tracker?style=flat)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/stargazers)
-[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)]()
-[![C++](https://img.shields.io/badge/C++-17-00599C.svg)]()
-[![Docker](https://img.shields.io/badge/docker-ready-2496ED.svg)]()
-[![License](https://img.shields.io/badge/license-MIT-green.svg)]()
+**像素埋点 · 管理后台 · 多端部署 · 可选 IP 定位**
 
 <br>
 
-[**📦 立即下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) · [**💖 爱发电赞助**](https://www.ifdian.net/a/zuomeng13)
+[![Build Status](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml/badge.svg)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml)
+[![Downloads](https://img.shields.io/github/downloads/gaigebeckmanChristinaJames/read-receipt-tracker/total?color=green&label=Downloads)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+[![Stars](https://img.shields.io/github/stars/gaigebeckmanChristinaJames/read-receipt-tracker?style=flat&color=yellow)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/stargazers)
+[![Forks](https://img.shields.io/github/forks/gaigebeckmanChristinaJames/read-receipt-tracker?style=flat&color=blue)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/network/members)
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)]()
+[![C++](https://img.shields.io/badge/C++-17-00599C?logo=cplusplus&logoColor=white)]()
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)]()
+[![License](https://img.shields.io/badge/License-MIT-green.svg)]()
+
+<br>
+
+[**📦 立即下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+&nbsp;&nbsp;·&nbsp;&nbsp;
+[**📖 查看文档**](#-简介)
+&nbsp;&nbsp;·&nbsp;&nbsp;
+[**💖 爱发电赞助**](https://www.ifdian.net/a/zuomeng13)
 
 </div>
+
+---
+
+## 📋 目录
+
+- [简介](#-简介)
+- [核心特性](#-核心特性)
+- [快速开始](#-快速开始)
+- [下载](#-下载)
+- [客户端方案](#-客户端方案)
+- [服务器部署](#️-服务器部署)
+- [公网访问](#-公网访问)
+- [API 文档](#-api-文档)
+- [管理后台](#-管理后台)
+- [项目结构](#-项目结构)
+- [配置](#-配置)
+- [技术栈](#-技术栈)
+- [常见问题](#-常见问题)
+- [贡献](#-贡献)
+- [许可证](#-许可证)
 
 ---
 
@@ -26,7 +53,11 @@
 
 一个极简的 **消息已读回执追踪服务**：注册消息后得到一个 URL，将该 URL 作为 1×1 透明像素嵌入消息，对方打开时自动记录已读。提供 Web 管理面板查看统计和每条消息的读取详情。
 
-> 🎯 **适用场景**：为微信模块 **WeKit / WuYu / WAuxiliary / HChat** 提供已读回执后端；也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
+> 🎯 **适用场景**
+> - 为微信模块 **WeKit / WuYu / WAuxiliary / HChat** 提供已读回执后端
+> - 邮件营销已读率分析
+> - 消息回执追踪
+> - 网页埋点统计
 
 ---
 
@@ -50,17 +81,46 @@
 
 ---
 
+## 🚀 快速开始
+
+### 方式一：WeKit APK（最简单，推荐）
+
+1. 下载 [最新版 WeKit APK](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+2. 在 LSPosed 中启用模块并作用于微信
+3. 重启微信，在 WeKit 设置中启用已读追踪
+4. 发送消息时自动生成追踪链接
+
+### 方式二：Java 插件版
+
+1. 下载 [Java 服务端插件 + 客户端插件](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+2. 在微信模块中加载服务端插件，启动隧道获取公网地址
+3. 加载客户端插件，配置服务器地址
+4. 发送 `#消息内容` 即可追踪已读
+
+### 方式三：自建服务器
+
+```bash
+git clone https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker.git
+cd read-receipt-tracker
+pip install flask
+python run.py
+```
+
+访问 `http://localhost:5000` 打开管理面板。
+
+---
+
 ## 📦 下载
 
-> CI 自动构建，每次推送主分支即发布最新版本。
+> 🔄 **CI 自动构建**：每次推送主分支即发布最新版本
 
 <div align="center">
 
 | 产物 | 说明 | 下载 |
 |:---:|:---|:---:|
-| **📱 WeKit APK** | 微信 Xposed 模块（已修复 DEX 缓存更新问题，内置已读追踪） | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
-| **🖥️ Java 服务端插件** | 内置 HTTP + cloudflared 隧道 + Web 控制台 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
-| **🔌 Java 客户端插件** | `#消息` 发送追踪，`/已读` 查询人数 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
+| 📱 **WeKit APK** | 微信 Xposed 模块（已修复 DEX 缓存更新问题，内置已读追踪） | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
+| 🖥️ **Java 服务端插件** | 内置 HTTP + cloudflared 隧道 + Web 控制台 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
+| 🔌 **Java 客户端插件** | `#消息` 发送追踪，`/已读` 查询人数 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
 
 </div>
 
@@ -71,13 +131,15 @@
 ### 🟢 WeKit 无服务器版（修改版 APK，推荐）
 
 <details>
-<summary><b>点击展开详情</b></summary>
+<summary><b>📖 点击展开详情</b></summary>
+
+<br>
 
 基于 [WeKit](https://github.com/Ujhhgtg/WeKit) 的微信 Xposed 模块，已修复 DEX 缓存更新问题，**内置已读追踪服务端**，无需额外部署服务器，开箱即用。
 
 <div align="center">
 
-[**📦 下载 WeKit APK**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+[![📦 下载 WeKit APK](https://img.shields.io/badge/📦%20下载-WeKit%20APK-2ea44f?style=for-the-badge)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
 
 </div>
 
@@ -93,7 +155,9 @@
 ### 🔵 WeKit 有服务器版（原版）
 
 <details>
-<summary><b>点击展开详情</b></summary>
+<summary><b>📖 点击展开详情</b></summary>
+
+<br>
 
 使用原版 [WeKit](https://github.com/Ujhhgtg/WeKit)，配合本项目提供的自建服务器使用。适合已有服务器或想在 Termux/Java 插件中运行服务端的用户。
 
@@ -105,7 +169,9 @@
 ### 🟣 Java 插件版（支持 WeKit / WAuxiliary / WuYu / HChat）
 
 <details>
-<summary><b>点击展开详情</b></summary>
+<summary><b>📖 点击展开详情</b></summary>
+
+<br>
 
 轻量级 Java 插件，无需编译 APK，在支持 Java 脚本的微信模块中加载即可使用。包含**服务端**和**客户端**两个配套插件：
 
@@ -116,7 +182,7 @@
 
 <div align="center">
 
-[**📦 下载 Java 插件包**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+[![📦 下载 Java 插件包](https://img.shields.io/badge/📦%20下载-Java插件包-2ea44f?style=for-the-badge)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
 
 </div>
 
@@ -135,7 +201,9 @@
 ### 🐧 Linux 服务器
 
 <details>
-<summary><b>点击展开详情</b></summary>
+<summary><b>📖 点击展开详情</b></summary>
+
+<br>
 
 **Python 后端（推荐）：**
 ```bash
@@ -165,7 +233,9 @@ bash scripts/setup-linux.sh --tunnel       # 自动隧道保活
 ### 🪟 Windows
 
 <details>
-<summary><b>点击展开详情</b></summary>
+<summary><b>📖 点击展开详情</b></summary>
+
+<br>
 
 ```powershell
 pip install flask
@@ -179,7 +249,9 @@ python run.py
 ### 📱 Termux / Android（手机本地部署）
 
 <details>
-<summary><b>点击展开详情</b></summary>
+<summary><b>📖 点击展开详情</b></summary>
+
+<br>
 
 **标准版（含 IP 定位）：**
 ```bash
@@ -203,13 +275,15 @@ cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
 ### ☕ Java 插件版服务器
 
 <details>
-<summary><b>点击展开详情</b></summary>
+<summary><b>📖 点击展开详情</b></summary>
+
+<br>
 
 无需单独部署服务器，直接在微信模块中加载「已读服务器」Java 插件即可，内置 HTTP 服务和 cloudflared 公网隧道。
 
 <div align="center">
 
-[**📦 下载 Java 服务端插件**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+[![📦 下载 Java 服务端插件](https://img.shields.io/badge/📦%20下载-Java服务端插件-2ea44f?style=for-the-badge)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
 
 </div>
 
@@ -221,7 +295,9 @@ cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
 ### 🐳 Docker
 
 <details>
-<summary><b>点击展开详情</b></summary>
+<summary><b>📖 点击展开详情</b></summary>
+
+<br>
 
 ```bash
 docker compose up -d
@@ -258,6 +334,8 @@ cat .tunnel_url.txt   # 查看公网地址
 <details>
 <summary><b>📝 注册消息</b></summary>
 
+<br>
+
 ```http
 POST /register
 Content-Type: application/json
@@ -272,6 +350,8 @@ Content-Type: application/json
 <details>
 <summary><b>👁 已读追踪像素</b></summary>
 
+<br>
+
 ```http
 GET /pixel?wxId=user123&id=xxx
 ```
@@ -282,6 +362,8 @@ GET /pixel?wxId=user123&id=xxx
 
 <details>
 <summary><b>🔢 查询已读数</b></summary>
+
+<br>
 
 ```http
 GET /count?wxId=user123&id=xxx
@@ -295,6 +377,8 @@ GET /count?wxId=user123&id=xxx
 
 <details>
 <summary><b>📋 批量查询 / 健康检查</b></summary>
+
+<br>
 
 ```http
 GET /batch-status?ids=id1,id2,id3
@@ -356,19 +440,74 @@ read-receipt-tracker/
 
 ---
 
+## ❓ 常见问题
+
+<details>
+<summary><b>WeKit 启动后一直提示"115个功能需要更新"怎么办？</b></summary>
+
+<br>
+
+这是 WeKit 的 DEX 缓存问题。本项目提供的修改版 APK 已修复此问题，直接下载 [最新版](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) 安装即可。
+
+</details>
+
+<details>
+<summary><b>Java 插件版怎么查看已读数量？</b></summary>
+
+<br>
+
+Java 客户端插件的已读统计需要在**浏览器控制台**中查看。发送 `#消息` 后，打开管理面板的浏览器控制台即可看到已读人数。
+
+</details>
+
+<details>
+<summary><b>必须要有公网服务器吗？</b></summary>
+
+<br>
+
+不一定。有三种选择：
+1. **WeKit 修改版 APK**：内置服务端，完全不需要服务器
+2. **Java 插件版**：内置 cloudflared 隧道，自动获取公网地址
+3. **自建服务器**：Linux/Windows/Termux/Docker 均可
+
+</details>
+
+<details>
+<summary><b>IP 定位不准确怎么办？</b></summary>
+
+<br>
+
+IP 定位使用三级接口自动备份（ip-api.com → ipwho.is → ipinfo.io），如果都不准确可以用 `ENABLE_GEO=0` 关闭定位功能。
+
+</details>
+
+---
+
 ## 🤝 贡献
 
-欢迎提交 Issue 和 Pull Request。开发计划见 [ROADMAP.md](ROADMAP.md)。
+欢迎提交 Issue 和 Pull Request！
+
+- 📋 开发计划见 [ROADMAP.md](ROADMAP.md)
+- 🐛 发现问题请提 [Issue](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/issues)
+- 💡 有新想法欢迎 [讨论](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/discussions)
 
 ---
 
 <div align="center">
 
-**如果这个项目对你有帮助，欢迎点个 ⭐ Star 支持一下！**
+### 如果这个项目对你有帮助
 
-[💖 爱发电赞助](https://www.ifdian.net/a/zuomeng13) · [📦 下载最新版](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+**请点个 ⭐ Star 支持一下！**
+
+<br>
+
+[![💖 爱发电赞助](https://img.shields.io/badge/💖%20爱发电-支持作者-ff69b4?style=for-the-badge)](https://www.ifdian.net/a/zuomeng13)
+&nbsp;&nbsp;
+[![📦 下载最新版](https://img.shields.io/badge/📦%20下载-最新版本-2ea44f?style=for-the-badge)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
 
 </div>
+
+---
 
 ## 📄 License
 
