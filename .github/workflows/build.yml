@@ -135,7 +135,11 @@ jobs:
           path: artifacts
 
       - name: List artifacts
-        run: ls -la artifacts/
+        run: |
+          ls -laR artifacts/
+          # Flatten: move all files to artifacts/ root
+          find artifacts/ -type f -exec mv {} artifacts/ \; 2>/dev/null || true
+          ls -la artifacts/
 
       - name: Get current date
         id: date
@@ -166,6 +170,8 @@ jobs:
             - 构建分支: ${{ github.ref_name }}
             - 提交: ${{ github.sha }}
             - 构建时间: ${{ steps.date.outputs.date }}
-          files: artifacts/*
+          files: |
+            artifacts/*.apk
+            artifacts/*.zip
           draft: false
           prerelease: true
