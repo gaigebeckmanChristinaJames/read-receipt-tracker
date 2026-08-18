@@ -123,6 +123,7 @@ python run.py
 | 产物 | 说明 | 下载 |
 |:---:|:---|:---:|
 | 📱 **WeKit APK** | 微信 Xposed 模块（已修复 DEX 缓存更新问题，内置已读追踪） | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
+| 📱 **已读服务器 APP** | 独立 Android 应用，无需 Root/Xposed，内置服务器+隧道 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
 | 🖥️ **Java 服务端插件** | 内置 HTTP + cloudflared 隧道 + Web 控制台 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
 | 🔌 **Java 客户端插件** | `#消息` 发送追踪，`/已读` 查询人数 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
 
@@ -278,6 +279,29 @@ cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
 
 </details>
 
+### 📱 APP 版（独立 Android 应用，推荐）
+
+<details>
+<summary><b>📖 点击展开详情</b></summary>
+
+<br>
+
+独立的 Android APP，**无需 Root / Xposed**，安装后直接运行已读追踪服务器，内置 cloudflared 公网隧道和 Web 控制台。零第三方依赖，纯 Android 框架 API。
+
+<div align="center">
+
+[![📦 下载已读服务器 APP](https://img.shields.io/badge/📦%20下载-已读服务器APP-2ea44f?style=for-the-badge)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+
+</div>
+
+| 项目 | 说明 |
+|:---|:---|
+| **特点** | 零依赖、后台服务、通知栏常驻、内置 cloudflared 隧道、Web 控制台 |
+| **环境要求** | Android 5.0+ (minSdk 21)，无需 Root |
+| **源码** | [`app-server/`](app-server/) |
+
+</details>
+
 ### ☕ Java 插件版服务器
 
 <details>
@@ -414,6 +438,7 @@ GET /health
 read-receipt-tracker/
 ├── python/                    # Python 后端 (Flask)
 ├── cpp/                       # C++ 后端 (meson + ninja)
+├── app-server/                # 独立 Android APP 版已读服务器
 ├── scripts/                   # 部署脚本 (Termux / Linux)
 ├── plugins/
 │   ├── java-read-tracker/     # Java 服务端插件

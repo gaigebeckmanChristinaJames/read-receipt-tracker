@@ -115,8 +115,43 @@ jobs:
           path: read-tracker-java-*.zip
           retention-days: 30
 
+  build-app-server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app-server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+          cache-read-only: false
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - name: Find APK
+        run: find app/build/outputs/apk -name "*.apk" -type f
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-server-apk
+          path: app-server/app/build/outputs/apk/**/*.apk
+          retention-days: 30
+
   release:
-    needs: [build-apk, package-java-plugins]
+    needs: [build-apk, package-java-plugins, build-app-server]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     permissions:
@@ -132,6 +167,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: java-plugins
+          path: artifacts
+      - name: Download App Server APK
+        uses: actions/download-artifact@v4
+        with:
+          name: app-server-apk
           path: artifacts
 
       - name: List artifacts
@@ -159,6 +199,11 @@ jobs:
             微信 Xposed 增强模块，内置已读追踪功能。下载安装即可使用。
             - 上游仓库: https://github.com/Ujhhgtg/WeKit
             - 源码: `wekit-module/`
+
+            ### 📱 已读服务器 APP（独立 Android 应用）
+            独立的 Android APP，无需 Root / Xposed，安装后直接运行已读追踪服务器，内置 cloudflared 公网隧道和 Web 控制台。
+            - 特点: 零依赖、后台服务、通知栏常驻、内置隧道
+            - 源码: `app-server/`
 
             ### 🔌 Java 插件版已读服务器（服务端 + 客户端）
             独立的已读追踪服务器，支持以 HChat / WeKit / WAuxiliary / WuYu 插件或脚本形式运行。

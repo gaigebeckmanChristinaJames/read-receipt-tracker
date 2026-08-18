@@ -1,0 +1,7 @@
+<resources>
+    <!-- 与原始 APK (v2.2) 完全一致的父主题 -->
+    <style name="Theme.RRT" parent="android:Theme.DeviceDefault">
+        <item name="android:windowBackground">#0d1117</item>
+        <item name="android:colorPrimary">#3fb950</item>
+    </style>
+</resources>
