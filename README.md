@@ -1,25 +1,30 @@
 # 📬 read-receipt-tracker
 
 <p align="center">
-  <b>轻量级消息已读追踪服务</b> — 像素埋点 · 管理后台 · 多端部署 · 可选 IP 定位
+  <b>轻量级消息已读追踪服务</b><br>
+  <sub>像素埋点 · 管理后台 · 多端部署 · 可选 IP 定位</sub>
 </p>
 
 <p align="center">
+  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml"><img src="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
+  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases"><img src="https://img.shields.io/github/downloads/gaigebeckmanChristinaJames/read-receipt-tracker/total?color=green&label=Downloads" alt="Downloads"></a>
+  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/stargazers"><img src="https://img.shields.io/github/stars/gaigebeckmanChristinaJames/read-receipt-tracker?style=flat" alt="Stars"></a>
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/C++-17-00599C.svg" alt="C++">
-  <img src="https://img.shields.io/badge/flask-2.3+-green.svg" alt="Flask">
-  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
   <img src="https://img.shields.io/badge/docker-ready-2496ED.svg" alt="Docker">
-  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml"><img src="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
 </p>
 
 <p align="center">
+  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases"><img src="https://img.shields.io/badge/📦%20下载-APK%20%26%20插件-2ea44f?style=for-the-badge" alt="下载"></a>
   <a href="https://www.ifdian.net/a/zuomeng13"><img src="https://img.shields.io/badge/💖%20爱发电-支持作者-ff69b4?style=for-the-badge" alt="爱发电赞助"></a>
 </p>
 
-一个极简的 **消息已读回执追踪服务**：注册消息后得到一个 URL，将该 URL 作为 1×1 透明像素嵌入消息，对方打开时自动记录已读。提供 Web 管理面板查看统计和读取详情。
+---
 
-> 🎯 **定位**：为微信模块 **WeKit / WuYu / WAuxiliary / HChat** 提供已读回执后端服务。也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
+一个极简的 **消息已读回执追踪服务**：注册消息后得到一个 URL，将该 URL 作为 1×1 透明像素嵌入消息，对方打开时自动记录已读。提供 Web 管理面板查看统计和每条消息的读取详情。
+
+> 🎯 **适用场景**：为微信模块 **WeKit / WuYu / WAuxiliary / HChat** 提供已读回执后端；也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
 
 ---
 
