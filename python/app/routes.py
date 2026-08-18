@@ -457,7 +457,7 @@ def register_routes(app):
                 rv[mid] = 0
         return jsonify({"statuses": rv})
 
-        # ================= 新增：字体文件静态服务 =================
+    # ================= 字体文件静态服务 =================
     @app.route('/static/fonts/<path:filename>')
     def serve_font(filename):
         """
