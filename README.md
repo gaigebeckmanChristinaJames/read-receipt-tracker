@@ -60,7 +60,7 @@
 | 插件 | 作用 | 下载 | 源码 |
 |------|------|------|------|
 | 已读服务器（服务端） | 内置 HTTP 服务 + cloudflared 公网隧道 + Web 控制台 | `read-tracker-java-server.zip` | [`plugins/java-read-tracker/`](plugins/java-read-tracker/) |
-| 已读追踪（客户端） | `#消息` 发送追踪卡片，气泡旁实时显示「已读 N 人」 | `read-tracker-java-client.zip` | [`plugins/read-tracker-client/`](plugins/read-tracker-client/) |
+| 已读追踪（客户端） | `#消息` 发送追踪卡片，`/已读` 查询人数，已读统计在浏览器控制台查看 | `read-tracker-java-client.zip` | [`plugins/read-tracker-client/`](plugins/read-tracker-client/) |
 
 - **兼容模块**: WeKit、WAuxiliary (WA)、WuYu、HChat 等
 - **使用**: 先装服务端并启动隧道，再装客户端并配置服务器地址
