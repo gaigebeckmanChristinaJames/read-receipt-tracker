@@ -1,12 +1,13 @@
-# 📬 read-receipt-tracker
-
 <p align="center">
-  <b>轻量级消息已读追踪服务</b><br>
-  <sub>像素埋点 · 管理后台 · 多端部署 · 可选 IP 定位</sub>
+  <h1 align="center">📬 read-receipt-tracker</h1>
 </p>
 
 <p align="center">
-  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml"><img src="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
+  轻量级消息已读追踪服务 — 像素埋点 · 管理后台 · 多端部署 · 可选 IP 定位
+</p>
+
+<p align="center">
+  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml"><img src="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases"><img src="https://img.shields.io/github/downloads/gaigebeckmanChristinaJames/read-receipt-tracker/total?color=green&label=Downloads" alt="Downloads"></a>
   <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/stargazers"><img src="https://img.shields.io/github/stars/gaigebeckmanChristinaJames/read-receipt-tracker?style=flat" alt="Stars"></a>
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python">
@@ -17,85 +18,78 @@
 
 <p align="center">
   <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases"><img src="https://img.shields.io/badge/📦%20下载-APK%20%26%20插件-2ea44f?style=for-the-badge" alt="下载"></a>
-  <a href="https://www.ifdian.net/a/zuomeng13"><img src="https://img.shields.io/badge/💖%20爱发电-支持作者-ff69b4?style=for-the-badge" alt="爱发电赞助"></a>
+  <a href="https://www.ifdian.net/a/zuomeng13"><img src="https://img.shields.io/badge/💖%20爱发电-支持作者-ff69b4?style=for-the-badge" alt="爱发电"></a>
 </p>
 
 ---
 
+## 简介
+
 一个极简的 **消息已读回执追踪服务**：注册消息后得到一个 URL，将该 URL 作为 1×1 透明像素嵌入消息，对方打开时自动记录已读。提供 Web 管理面板查看统计和每条消息的读取详情。
 
-> 🎯 **适用场景**：为微信模块 **WeKit / WuYu / WAuxiliary / HChat** 提供已读回执后端；也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
+为微信模块 **WeKit / WuYu / WAuxiliary / HChat** 提供已读回执后端；也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
 
 ---
 
-## 📂 快速导航
+## ✨ 功能特性
 
-| 📱 客户端 | 🖥️ 服务器部署 |
-|-----------|--------------|
-| [WeKit 无服务器版（修改版 APK）](#wekit-无服务器版修改版apk推荐) | [Linux 服务器](#linux-服务器) |
-| [WeKit 有服务器版（原版）](#wekit-有服务器版原版) | [Windows](#windows) |
-| [Java 插件版（WeKit/WA/WuYu/HChat）](#java-插件版支持-wekit--wauxiliary--wuyu--hchat) | [Java 插件版服务器](#java-插件版服务器) |
-| | [WeKit 内置服务器](#wekit-内置服务器) |
-| | [Termux / Android](#termux--android手机本地部署) |
-| | [Docker](#docker) |
+| | | |
+|---|---|---|
+| 🔌 **一行注册**<br>`POST /register` 传入消息内容，返回追踪链接 | 👁 **透明无感**<br>1×1 透明 GIF，用户完全感知不到 | 📊 **管理后台**<br>Web 界面查看统计、消息列表、搜索、导出 CSV |
+| 🌍 **IP 定位**<br>自动获取读取者国家/省份/城市/运营商 | ⚡ **请求限流**<br>IP 级频率限制，防止滥用 | 🔐 **API 认证**<br>管理接口支持 API Key 保护 |
+| 🔒 **智能去重**<br>同一消息 + 同一 IP 只计一次已读 | 📦 **双语言后端**<br>Python (Flask) + C++ (原生 HTTP) | 🐳 **多端部署**<br>Docker / Linux / Termux / Java 插件 |
 
 ---
 
-## ✨ 核心特性
+## 📦 下载
 
-| 特性 | 说明 |
-|------|------|
-| 🔌 **一行注册** | `POST /register` 传入消息内容，返回追踪链接 |
-| 👁 **透明无感** | 1×1 透明 GIF，用户完全感知不到 |
-| 📊 **管理后台** | Web 界面查看统计、消息列表、搜索、导出 CSV |
-| 🌍 **IP 定位** | 自动获取读取者国家/省份/城市/运营商（三接口备份） |
-| ⚡ **请求限流** | IP 级频率限制，防止滥用 |
-| 🔐 **API 认证** | 管理接口支持 API Key 保护 |
-| 🔒 **智能去重** | 同一消息 + 同一 IP 只计一次已读 |
-| 📦 **双语言后端** | Python (Flask) + C++ (原生 HTTP) |
+CI 自动构建，每次推送主分支即发布最新版本。
+
+| 产物 | 说明 | 下载 |
+|------|------|------|
+| **WeKit APK** | 微信 Xposed 模块（已修复 DEX 缓存更新问题，内置已读追踪） | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
+| **Java 服务端插件** | 内置 HTTP + cloudflared 隧道 + Web 控制台 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
+| **Java 客户端插件** | `#消息` 发送追踪，`/已读` 查询人数 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
 
 ---
 
-## 📱 客户端
+## 📱 客户端方案
 
 <details>
-<summary>**WeKit 无服务器版（修改版 APK，推荐）**</summary>
+<summary><b>WeKit 无服务器版（修改版 APK，推荐）</b></summary>
 
 基于 [WeKit](https://github.com/Ujhhgtg/WeKit) 的微信 Xposed 模块，已修复 DEX 缓存更新问题，**内置已读追踪服务端**，无需额外部署服务器，开箱即用。
 
 - **上游仓库**: https://github.com/Ujhhgtg/WeKit
-- **特点**: 模块内直接启用已读追踪，消息注册、已读统计、访客信息一体化，不需要自己搭服务器
+- **特点**: 模块内直接启用已读追踪，消息注册、已读统计、访客信息一体化
 - **环境要求**: Android 9.0+ / Root + LSPosed（或 Zygisk）/ 微信 8.0.65 - 8.0.76
-- **下载**: [Releases 页面](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) 下载 `wekit-*.apk`，CI 自动构建
 - **源码**: [`wekit-module/`](wekit-module/)
 
 </details>
 
 <details>
-<summary>**WeKit 有服务器版（原版）**</summary>
+<summary><b>WeKit 有服务器版（原版）</b></summary>
 
 使用原版 [WeKit](https://github.com/Ujhhgtg/WeKit)，配合本项目提供的自建服务器使用。适合已有服务器或想在 Termux/Java 插件中运行服务端的用户。
 
-- **上游仓库**: https://github.com/Ujhhgtg/WeKit
-- **特点**: 原版 WeKit 不变，服务端独立部署，可选择 Linux / Windows / Termux / Java 插件等多种部署方式
-- **服务端部署**: 见下方 [服务器部署](#-服务器部署) 章节
+- **特点**: 原版 WeKit 不变，服务端独立部署，可选择 Linux / Windows / Termux / Java 插件等多种方式
 - **下载**: [WeKit 原版 Release](https://github.com/Ujhhgtg/WeKit/releases)
 
 </details>
 
 <details>
-<summary>**Java 插件版（支持 WeKit / WAuxiliary / WuYu / HChat）**</summary>
+<summary><b>Java 插件版（支持 WeKit / WAuxiliary / WuYu / HChat）</b></summary>
 
 轻量级 Java 插件，无需编译 APK，在支持 Java 脚本的微信模块中加载即可使用。包含**服务端**和**客户端**两个配套插件：
 
-| 插件 | 作用 | 下载 | 源码 |
-|------|------|------|------|
-| 已读服务器（服务端） | 内置 HTTP 服务 + cloudflared 公网隧道 + Web 控制台 | `read-tracker-java-server.zip` | [`plugins/java-read-tracker/`](plugins/java-read-tracker/) |
-| 已读追踪（客户端） | `#消息` 发送追踪卡片，`/已读` 查询人数，已读统计在浏览器控制台查看 | `read-tracker-java-client.zip` | [`plugins/read-tracker-client/`](plugins/read-tracker-client/) |
+| 插件 | 作用 | 下载 |
+|------|------|------|
+| 已读服务器（服务端） | 内置 HTTP 服务 + cloudflared 公网隧道 + Web 控制台 | `read-tracker-java-server.zip` |
+| 已读追踪（客户端） | `#消息` 发送追踪卡片，`/已读` 查询人数，已读统计在浏览器控制台查看 | `read-tracker-java-client.zip` |
 
 - **兼容模块**: WeKit、WAuxiliary (WA)、WuYu、HChat 等
 - **使用**: 先装服务端并启动隧道，再装客户端并配置服务器地址
-- **下载**: [Releases 页面](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases)
+- **源码**: [`plugins/java-read-tracker/`](plugins/java-read-tracker/) · [`plugins/read-tracker-client/`](plugins/read-tracker-client/)
 
 </details>
 
@@ -104,9 +98,7 @@
 ## 🖥️ 服务器部署
 
 <details>
-<summary>**Linux 服务器**</summary>
-
-支持 Python 和 C++ 两种后端实现。
+<summary><b>Linux 服务器</b></summary>
 
 **Python 后端（推荐）：**
 ```bash
@@ -134,36 +126,18 @@ bash scripts/setup-linux.sh --tunnel       # 自动隧道保活
 </details>
 
 <details>
-<summary>**Windows**</summary>
+<summary><b>Windows</b></summary>
 
-使用 Python 后端，安装 Python 3.9+ 后运行：
 ```powershell
 pip install flask
 python run.py
 ```
-打开 `http://localhost:5000` 即可访问管理面板。需要公网访问时配合 cloudflared 或内网穿透工具。
+打开 `http://localhost:5000` 即可访问管理面板。
 
 </details>
 
 <details>
-<summary>**Java 插件版服务器**</summary>
-
-无需单独部署服务器，直接在微信模块中加载「已读服务器」Java 插件即可，内置 HTTP 服务和 cloudflared 公网隧道，启动后自动获取公网地址。适合不想额外准备服务器的用户。
-
-- 下载: [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) → `read-tracker-java-server.zip`
-- 支持模块: WeKit / WAuxiliary / WuYu / HChat
-
-</details>
-
-<details>
-<summary>**WeKit 内置服务器**</summary>
-
-使用 WeKit APK 的用户，模块内已内置已读追踪服务端能力，在 WeKit 设置中启用即可，无需额外部署。
-
-</details>
-
-<details>
-<summary>**Termux / Android（手机本地部署）**</summary>
+<summary><b>Termux / Android（手机本地部署）</b></summary>
 
 **标准版（含 IP 定位）：**
 ```bash
@@ -171,12 +145,10 @@ pkg update -y && pkg install curl -y
 bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup.sh")
 ```
 
-**Lite 版（无 IP 定位，零外部请求）：**
+**Lite 版（无 IP 定位）：**
 ```bash
 bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup-lite.sh")
 ```
-
-一条命令完成：配置清华源 → 安装 Python + Flask → 落地代码 → 前台运行，屏幕显示日志与控制台地址 `http://127.0.0.1:5000`。
 
 需要公网地址时另开会话：
 ```bash
@@ -187,7 +159,16 @@ cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
 </details>
 
 <details>
-<summary>**Docker**</summary>
+<summary><b>Java 插件版服务器</b></summary>
+
+无需单独部署服务器，直接在微信模块中加载「已读服务器」Java 插件即可，内置 HTTP 服务和 cloudflared 公网隧道。
+
+- 下载: [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) → `read-tracker-java-server.zip`
+
+</details>
+
+<details>
+<summary><b>Docker</b></summary>
 
 ```bash
 docker compose up -d
@@ -202,86 +183,62 @@ docker run -d -p 5000:5000 -v $(pwd)/data:/app/data read-receipt-tracker
 
 ---
 
-## 🌐 公网访问 & Cloudflare Tunnel
-
-<details>
-<summary>**我是否需要 Tunnel？**</summary>
+## 🌐 公网访问
 
 | 部署场景 | 需要 Tunnel？ | 说明 |
 |----------|:---:|------|
-| **VPS / 云服务器** | ❌ | 服务器自带公网 IP，直接访问 |
-| **本地电脑** | ❌ | 本地测试用 `localhost:5000` |
-| **树莓派 / 内网服务器** | ✅ | 没有公网 IP，需要 Tunnel |
-| **Termux (Android)** | ✅ | 手机网络没有公网 IP |
+| VPS / 云服务器 | ❌ | 自带公网 IP，直接访问 |
+| 本地电脑 | ❌ | `localhost:5000` 即可 |
+| 树莓派 / 内网服务器 | ✅ | 需要 Tunnel |
+| Termux (Android) | ✅ | 脚本默认自动配置 |
 
-</details>
-
-<details>
-<summary>**启用 Tunnel (Linux)**</summary>
-
+**Linux 一键启用 Tunnel：**
 ```bash
-bash scripts/setup-linux.sh --tunnel   # 一键部署 + Tunnel
-cat .tunnel_url.txt                    # 查看实时公网地址
+bash scripts/setup-linux.sh --tunnel
+cat .tunnel_url.txt   # 查看公网地址
 ```
-
-Tunnel 脚本自动：安装 cloudflared → 启动保活 → 网络切换重建 → 写入 `.tunnel_url.txt`
-
-</details>
 
 ---
 
-## 📡 API 文档
+## 📡 API
 
 <details>
-<summary>**注册消息**</summary>
+<summary><b>注册消息</b></summary>
 
 ```http
 POST /register
 Content-Type: application/json
 
-{
-    "wxId": "user123",
-    "content": "你好，这是一条测试消息",
-    "createTime": 1700000000000
-}
+{ "wxId": "user123", "content": "你好", "createTime": 1700000000000 }
 ```
-
-**响应：**
-```json
-{
-    "success": true,
-    "id": "a1b2c3d4e5f6...",
-    "wxId": "user123",
-    "pixel_url": "http://your-server:5000/pixel?wxId=user123&id=a1b2c3d4..."
-}
-```
+返回 `pixel_url`，嵌入消息即可追踪。
 
 </details>
 
 <details>
-<summary>**已读追踪像素**</summary>
+<summary><b>已读追踪像素</b></summary>
 
 ```http
-GET /pixel?wxId=user123&id=a1b2c3d4...
+GET /pixel?wxId=user123&id=xxx
 ```
-返回 1×1 透明 GIF，可嵌入 HTML 邮件或网页。
+返回 1×1 透明 GIF。
 
 </details>
 
 <details>
-<summary>**查询已读数**</summary>
+<summary><b>查询已读数</b></summary>
 
 ```http
-GET /count?wxId=user123&id=a1b2c3d4...
+GET /count?wxId=user123&id=xxx
 ```
 ```json
-{ "count": 5, "msg_id": "a1b2c3d4..." }
+{ "count": 5, "msg_id": "xxx" }
 ```
 
 </details>
 
 <details>
-<summary>**批量查询 / 健康检查**</summary>
+<summary><b>批量查询 / 健康检查</b></summary>
 
 ```http
 GET /batch-status?ids=id1,id2,id3
@@ -298,9 +255,6 @@ GET /health
 |------|------|------|
 | 仪表盘 | `/` | 统计 + 消息列表 + 搜索 + CSV 导出 |
 | 消息详情 | `/message/<id>` | 消息内容 + IP/地理位置/UA/时间 |
-| 健康检查 | `/health` | 服务健康状态 |
-
-管理接口（需 API Key）：`POST /api/delete/<id>`、`POST /api/delete-all`
 
 ---
 
@@ -313,20 +267,17 @@ read-receipt-tracker/
 ├── scripts/                   # 部署脚本 (Termux / Linux)
 ├── plugins/
 │   ├── java-read-tracker/     # Java 服务端插件
-│   └── read-tracker-client/   # Java 客户端插件 (HChat/WA/WuYu)
-├── wekit-module/              # WeKit 模块源码 (用于 CI 构建 APK)
+│   └── read-tracker-client/   # Java 客户端插件
+├── wekit-module/              # WeKit 模块源码 (CI 构建 APK)
 ├── docs/                      # 文档
 ├── .github/workflows/         # CI 自动构建 & 发布
-├── run.py                     # Python 启动入口
-├── Dockerfile / docker-compose.yml
-└── README.md
+├── ROADMAP.md                 # 开发路线图
+└── run.py                     # Python 启动入口
 ```
 
 ---
 
 ## 🔧 配置
-
-复制配置模板：`cp .env.example .env`
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
@@ -334,7 +285,6 @@ read-receipt-tracker/
 | `API_KEY` | (空) | 管理后台认证密钥 |
 | `ENABLE_GEO` | `1` | IP 定位开关 |
 | `RATE_LIMIT_PER_MINUTE` | 60 | 请求频率限制 |
-| `HOST` | `0.0.0.0` | 监听地址 |
 | `PORT` | 5000 | 监听端口 |
 
 ---
@@ -350,13 +300,9 @@ read-receipt-tracker/
 
 ---
 
-## 🌍 IP 定位（默认开启）
+## 🤝 贡献
 
-无需配置和 Key，已读记录自动附带中文定位：国家 / 省份 / 城市 / 运营商。
-
-三级接口自动备份：ip-api.com → ipwho.is → ipinfo.io，超时静默降级。
-
-关闭定位：`ENABLE_GEO=0 python app.py`
+欢迎提交 Issue 和 Pull Request。开发计划见 [ROADMAP.md](ROADMAP.md)。
 
 ---
 
