@@ -39,136 +39,121 @@
 
 ---
 
-## 📱 客户端可选方案
+## 📱 客户端
 
-除了自行部署服务端，本项目还提供两种开箱即用的客户端方案，均已内置已读追踪能力，可直接下载使用。
+选择适合你微信模块的客户端方案，发送追踪消息并查看已读统计。
 
-### 方案一：WeKit 微信增强模块 APK (推荐)
+### WeKit 版（APK，推荐）
 
-基于 [WeKit](https://github.com/Ujhhgtg/WeKit) 的微信 Xposed 模块，已修复 DEX 缓存更新问题，内置已读追踪功能。
+基于 [WeKit](https://github.com/Ujhhgtg/WeKit) 的微信 Xposed 模块，已修复 DEX 缓存更新问题，内置已读追踪功能，开箱即用。
 
 - **上游仓库**: https://github.com/Ujhhgtg/WeKit
-- **特性**: 微信内直接启用已读追踪，支持消息注册、已读统计、访客信息查看
-- **环境要求**: Android 9.0+ / Root + LSPosed (或 Zygisk) / 微信 8.0.65 - 8.0.76
+- **特性**: 微信内直接启用已读追踪，消息注册、已读统计、访客信息一体化
+- **环境要求**: Android 9.0+ / Root + LSPosed（或 Zygisk）/ 微信 8.0.65 - 8.0.76
 - **下载**: [Releases 页面](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) 下载 `wekit-*.apk`，CI 自动构建
+- **源码**: [`wekit-module/`](wekit-module/)
 
-> 源码位于 [`wekit-module/`](wekit-module/) 目录，CI 每次推送自动构建并发布。
+### Java 插件版（支持 WeKit / WAuxiliary / WuYu / HChat）
 
-### 方案二：Java 插件版（服务端 + 客户端）
+轻量级 Java 插件，无需编译 APK，在支持 Java 脚本的微信模块中加载即可使用。包含**服务端**和**客户端**两个配套插件：
 
-轻量级 Java 插件，可在 **WeKit / WAuxiliary (WA) / WuYu / HChat** 等支持 Java 脚本的微信模块中运行，无需编译 APK。包含服务端和客户端两个插件：
+| 插件 | 作用 | 下载 | 源码 |
+|------|------|------|------|
+| 已读服务器（服务端） | 内置 HTTP 服务 + cloudflared 公网隧道 + Web 控制台 | `read-tracker-java-server.zip` | [`plugins/java-read-tracker/`](plugins/java-read-tracker/) |
+| 已读追踪（客户端） | `#消息` 发送追踪卡片，气泡旁实时显示「已读 N 人」 | `read-tracker-java-client.zip` | [`plugins/read-tracker-client/`](plugins/read-tracker-client/) |
 
-**服务端插件** (`plugins/java-read-tracker/`)：
-- 内置 HTTP 服务 + cloudflared 公网隧道，启动后自动获取公网地址
-- Web 控制台：消息列表、已读统计、访客 IP 地理位置
-- 微信内悬浮仪表盘：实时状态、快捷操作、运行日志
+- **兼容模块**: WeKit、WAuxiliary (WA)、WuYu、HChat 等
+- **使用**: 先装服务端并启动隧道，再装客户端并配置服务器地址
+- **下载**: [Releases 页面](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases)
 
-**客户端插件** (`plugins/read-tracker-client/`)：
-- 让不内置已读功能的模块（如 WA、HChat）也能发送追踪消息
-- `#消息` 发送追踪卡片，气泡旁实时显示「已读 N 人」
-- `/已读` 查询最近一条消息已读数，`/已读面板` 打开浏览器控制台
-- 需配合服务端插件使用，填写服务端隧道地址即可
+### WuYu 版
 
-- **下载**: [Releases 页面](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) 分别下载服务端和客户端 zip
-- **源码**: [`plugins/java-read-tracker/`](plugins/java-read-tracker/)（服务端）、[`plugins/read-tracker-client/`](plugins/read-tracker-client/)（客户端）
+WuYu 模块用户请直接使用上方 **Java 插件版**，将插件放入 WuYu 的脚本目录即可，服务端和客户端插件均兼容 WuYu。
 
 ---
 
-## 👀 30 秒体验
+## 🖥️ 服务器部署
 
-### 1. Termux 一键部署 (推荐，零下载全内嵌)
+选择一种方式部署已读追踪后端服务。
 
-**标准版（含 IP 定位）：**
+### Linux 服务器
 
-```bash
-bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup.sh")
-```
+支持 Python 和 C++ 两种后端实现。
 
-**Lite 版（无 IP 定位）：**
-
-```bash
-bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup-lite.sh")
-```
-
-> 💡 全新 Termux 首次使用先装 curl：
->
-> ```bash
-> pkg update -y && pkg install curl -y
-> ```
-
-**一条命令搞定**：自动配置清华源 → 安装 Python + Flask → 内嵌代码落地 → 服务前台运行（屏幕实时显示日志与控制台地址 `http://127.0.0.1:5000`）。
-
-> 💡 全部代码内嵌在脚本中，不下载任何仓库文件、不依赖 GitHub 直连（走 jsDelivr CDN）、不写 /tmp，彻底避免网络超时和权限报错。
->
-> 🌍 **标准版** 内置 IP 定位（中文省市 + 运营商 + 经纬度，三接口自动备份，超时静默降级）；**Lite 版** 无定位功能，零外部请求、零延迟，纯追踪。
->
-> 📊 **管理后台表格**：已读人ID → IP地址 → 定位 → 经纬度 → 已读时间（五列，读取时间降序，最新置顶）。
->
-> 其他部署形态（Linux / Docker）也可用环境变量开关：
->
-> ```bash
-> ENABLE_GEO=0 python app.py     # 关闭定位 = Lite 模式
-> ```
->
-> 🔗 脚本与隧道**完全分离**。需要公网地址时，另开一个 Termux 会话：
->
-> ```bash
-> pkg install cloudflared
-> ```
->
-> ```bash
-> cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
-> ```
-> 隧道日志会显示 `https://xxx.trycloudflare.com` 公网地址。
-
-### 2. Python 后端 (Linux 服务器)
-
+**Python 后端（推荐）：**
 ```bash
 git clone https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker.git
 cd read-receipt-tracker
-
-# 方式 A: uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uv pip install --system flask
-python run.py
-
-# 方式 B: pip
 pip install flask
 python run.py
 ```
 
-打开 `http://localhost:5000` 即可看到管理面板。
-
-### 3. C++ 后端
-
+**C++ 后端（高性能）：**
 ```bash
-pip install meson  # 或 apt install meson ninja-build
-apt install libsqlite3-dev libssl-dev
-
+apt install meson ninja-build libsqlite3-dev libssl-dev
 cd cpp
-meson setup builddir
-meson compile -C builddir
+meson setup builddir && meson compile -C builddir
 ./builddir/rrtracker-server 5000 receipts.db
 ```
 
-### 4. Docker
+**一键部署（systemd 托管）：**
+```bash
+bash scripts/setup-linux.sh                # 后台托管
+bash scripts/setup-linux.sh --foreground   # 前台运行
+bash scripts/setup-linux.sh --tunnel       # 自动隧道保活
+```
+
+### Windows
+
+使用 Python 后端，安装 Python 3.9+ 后运行：
+```powershell
+pip install flask
+python run.py
+```
+打开 `http://localhost:5000` 即可访问管理面板。需要公网访问时配合 cloudflared 或内网穿透工具。
+
+### Java 插件版服务器
+
+无需单独部署服务器，直接在微信模块中加载「已读服务器」Java 插件即可，内置 HTTP 服务和 cloudflared 公网隧道，启动后自动获取公网地址。适合不想额外准备服务器的用户。
+
+- 下载: [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) → `read-tracker-java-server.zip`
+- 支持模块: WeKit / WAuxiliary / WuYu / HChat
+
+### WeKit 内置服务器
+
+使用 WeKit APK 的用户，模块内已内置已读追踪服务端能力，在 WeKit 设置中启用即可，无需额外部署。
+
+### Termux / Android（手机本地部署）
+
+**标准版（含 IP 定位）：**
+```bash
+pkg update -y && pkg install curl -y
+bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup.sh")
+```
+
+**Lite 版（无 IP 定位，零外部请求）：**
+```bash
+bash <(curl -fL "https://cdn.jsdelivr.net/gh/gaigebeckmanChristinaJames/read-receipt-tracker@main/scripts/ultimate-setup-lite.sh")
+```
+
+一条命令完成：配置清华源 → 安装 Python + Flask → 落地代码 → 前台运行，屏幕显示日志与控制台地址 `http://127.0.0.1:5000`。
+
+需要公网地址时另开会话：
+```bash
+pkg install cloudflared
+cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
+```
+
+### Docker
 
 ```bash
-# 构建
 docker compose up -d
-
 # 或
 docker build -t read-receipt-tracker .
 docker run -d -p 5000:5000 -v $(pwd)/data:/app/data read-receipt-tracker
 ```
 
-### 5. Linux 服务器一键部署
-
-```bash
-bash scripts/setup-linux.sh                # systemd 托管（推荐）
-bash scripts/setup-linux.sh --foreground   # 前台运行 + cloudflared 日志直显
-bash scripts/setup-linux.sh --tunnel       # 无公网 IP 时的隧道保活模式
-```
+> 💡 所有部署形态均可用环境变量 `ENABLE_GEO=0` 关闭 IP 定位（Lite 模式）。
 
 ---
 
