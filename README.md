@@ -31,24 +31,25 @@
 
 ## 📋 目录
 
-- [简介](#-简介)
-- [核心特性](#-核心特性)
-- [快速开始](#-快速开始)
-- [下载](#-下载)
-- [客户端方案](#-客户端方案)
-- [服务器部署](#️-服务器部署)
-- [公网访问](#-公网访问)
-- [API 文档](#-api-文档)
-- [管理后台](#-管理后台)
-- [项目结构](#-项目结构)
-- [配置](#-配置)
-- [技术栈](#-技术栈)
-- [常见问题](#-常见问题)
-- [贡献](#-贡献)
-- [许可证](#-许可证)
+- [简介](#intro)
+- [核心特性](#features)
+- [快速开始](#quick-start)
+- [下载](#download)
+- [客户端方案](#clients)
+- [服务器部署](#server)
+- [公网访问](#tunnel)
+- [API 文档](#api)
+- [管理后台](#admin)
+- [项目结构](#structure)
+- [配置](#config)
+- [技术栈](#tech)
+- [常见问题](#faq)
+- [贡献](#contributing)
+- [许可证](#license)
 
 ---
 
+<a id="intro"></a>
 ## 📖 简介
 
 一个极简的 **消息已读回执追踪服务**：注册消息后得到一个 URL，将该 URL 作为 1×1 透明像素嵌入消息，对方打开时自动记录已读。提供 Web 管理面板查看统计和每条消息的读取详情。
@@ -61,6 +62,7 @@
 
 ---
 
+<a id="features"></a>
 ## ✨ 核心特性
 
 <div align="center">
@@ -81,6 +83,7 @@
 
 ---
 
+<a id="quick-start"></a>
 ## 🚀 快速开始
 
 ### 方式一：WeKit APK（最简单，推荐）
@@ -110,6 +113,7 @@ python run.py
 
 ---
 
+<a id="download"></a>
 ## 📦 下载
 
 > 🔄 **CI 自动构建**：每次推送主分支即发布最新版本
@@ -126,6 +130,7 @@ python run.py
 
 ---
 
+<a id="clients"></a>
 ## 📱 客户端方案
 
 ### 🟢 WeKit 无服务器版（修改版 APK，推荐）
@@ -196,6 +201,7 @@ python run.py
 
 ---
 
+<a id="server"></a>
 ## 🖥️ 服务器部署
 
 ### 🐧 Linux 服务器
@@ -312,6 +318,7 @@ docker run -d -p 5000:5000 -v $(pwd)/data:/app/data read-receipt-tracker
 
 ---
 
+<a id="tunnel"></a>
 ## 🌐 公网访问
 
 | 部署场景 | 需要 Tunnel？ | 说明 |
@@ -329,6 +336,7 @@ cat .tunnel_url.txt   # 查看公网地址
 
 ---
 
+<a id="api"></a>
 ## 📡 API 文档
 
 <details>
@@ -389,6 +397,7 @@ GET /health
 
 ---
 
+<a id="admin"></a>
 ## 📊 管理后台
 
 | 页面 | 路由 | 说明 |
@@ -398,6 +407,7 @@ GET /health
 
 ---
 
+<a id="structure"></a>
 ## 🗂 项目结构
 
 ```
@@ -417,6 +427,7 @@ read-receipt-tracker/
 
 ---
 
+<a id="config"></a>
 ## 🔧 配置
 
 | 变量 | 默认值 | 说明 |
@@ -429,6 +440,7 @@ read-receipt-tracker/
 
 ---
 
+<a id="tech"></a>
 ## 🛠 技术栈
 
 | 层级 | Python | C++ |
@@ -440,6 +452,7 @@ read-receipt-tracker/
 
 ---
 
+<a id="faq"></a>
 ## ❓ 常见问题
 
 <details>
@@ -483,6 +496,7 @@ IP 定位使用三级接口自动备份（ip-api.com → ipwho.is → ipinfo.io�
 
 ---
 
+<a id="contributing"></a>
 ## 🤝 贡献
 
 欢迎提交 Issue 和 Pull Request！
@@ -509,6 +523,7 @@ IP 定位使用三级接口自动备份（ip-api.com → ipwho.is → ipinfo.io�
 
 ---
 
+<a id="license"></a>
 ## 📄 License
 
 MIT © [gaigebeckmanChristinaJames](https://github.com/gaigebeckmanChristinaJames)
