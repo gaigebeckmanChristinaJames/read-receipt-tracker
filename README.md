@@ -39,6 +39,36 @@
 
 ---
 
+## 📱 客户端可选方案
+
+除了自行部署服务端，本项目还提供两种开箱即用的客户端方案，均已内置已读追踪能力，可直接下载使用。
+
+### 方案一：WeKit 微信增强模块 APK (推荐)
+
+基于 [WeKit](https://github.com/Ujhhgtg/WeKit) 的微信 Xposed 模块，已修复 DEX 缓存更新问题，内置已读追踪功能。
+
+- **上游仓库**: https://github.com/Ujhhgtg/WeKit
+- **特性**: 微信内直接启用已读追踪，支持消息注册、已读统计、访客信息查看
+- **环境要求**: Android 9.0+ / Root + LSPosed (或 Zygisk) / 微信 8.0.65 - 8.0.76
+- **下载**: [Releases 页面](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) 下载 `wekit-*.apk`，CI 自动构建
+
+> 源码位于 [`wekit-module/`](wekit-module/) 目录，CI 每次推送自动构建并发布。
+
+### 方案二：Java 插件版已读服务器
+
+轻量级 Java 插件，可作为 HChat 插件或 WeKit Java 脚本运行，无需编译 APK。
+
+- **特性**: 内置 cloudflared 公网隧道、Web 控制台、微信内悬浮仪表盘、IP 地理位置查询
+- **兼容**: 同时支持 WeKit 内置已读追踪和 HChat 已读追踪插件两种客户端
+- **安装**:
+  1. 将 `read_tracker.bsh` 放入 WeKit 的 `<模块数据>/scripts_java/` 目录
+  2. 在 WeKit 设置中启用「脚本引擎 (Java)」
+  3. 重启微信，发送 `#已读服务器` 打开仪表盘
+- **下载**: [Releases 页面](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) 下载 `read-tracker-java-plugin.zip`
+- **源码**: [`plugins/java-read-tracker/`](plugins/java-read-tracker/)，详见[插件文档](plugins/java-read-tracker/README.md)
+
+---
+
 ## 👀 30 秒体验
 
 ### 1. Termux 一键部署 (推荐，零下载全内嵌)

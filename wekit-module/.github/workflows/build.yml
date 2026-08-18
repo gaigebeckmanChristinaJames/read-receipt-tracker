@@ -1,0 +1,151 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '21'
+  NDK_VERSION: '30.0.14904198'
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-37.0 build-tools;37.0.0 ndk;${{ env.NDK_VERSION }}'
+
+      - name: Symlink android-37 platform
+        run: |
+          if [ -d "$ANDROID_SDK_ROOT/platforms/android-37.0" ] && [ ! -d "$ANDROID_SDK_ROOT/platforms/android-37" ]; then
+            ln -s "$ANDROID_SDK_ROOT/platforms/android-37.0" "$ANDROID_SDK_ROOT/platforms/android-37"
+            echo "Created symlink android-37 -> android-37.0"
+          fi
+          ls "$ANDROID_SDK_ROOT/platforms/"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache Rust
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build APK
+        run: |
+          chmod +x x gradlew
+          ./x build
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.NDK_VERSION }}
+
+      - name: Find APK
+        run: |
+          find app/build/outputs/apk -name "*.apk" -type f
+          echo "APK_PATH=$(find app/build/outputs/apk -name "*.apk" -type f | head -1)" >> $GITHUB_ENV
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wekit-standard-debug
+          path: app/build/outputs/apk/**/*.apk
+          retention-days: 30
+
+  package-java-plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Package Java plugin
+        run: |
+          cd server/read-tracker-java
+          zip -r ../../read-tracker-java-plugin.zip . -x "*.git*"
+          cd ../..
+          ls -la read-tracker-java-plugin.zip
+
+      - name: Upload Java plugin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: read-tracker-java-plugin
+          path: read-tracker-java-plugin.zip
+          retention-days: 30
+
+  release:
+    needs: [build-apk, package-java-plugin]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: wekit-standard-debug
+          path: artifacts
+
+      - name: Download Java plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: read-tracker-java-plugin
+          path: artifacts
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ci-${{ steps.date.outputs.date }}
+          name: CI Build ${{ steps.date.outputs.date }}
+          body: |
+            ## CI 自动构建
+
+            本发行版由 GitHub Actions 自动构建，包含以下内容：
+
+            ### 📱 WeKit APK (已修复 DEX 缓存更新问题)
+            微信 Xposed 模块，含已读追踪功能。下载安装即可使用。
+
+            ### 🔌 Java 版已读服务器插件
+            独立的已读追踪服务器，支持以 HChat 插件或 WeKit Java 脚本形式运行。
+            - 内置 cloudflared 公网隧道
+            - Web 控制台 + 悬浮仪表盘
+            - IP 地理位置查询
+
+            ---
+            - 构建分支: ${{ github.ref_name }}
+            - 提交: ${{ github.sha }}
+            - 构建时间: ${{ steps.date.outputs.date }}
+          files: artifacts/*
+          draft: false
+          prerelease: true

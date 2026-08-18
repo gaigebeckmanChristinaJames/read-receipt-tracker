@@ -1,0 +1,13 @@
+[package]
+name = "xtask"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+sha2 = "0.11"
+toml = "1.1"
+walkdir = "2"
+zip = { version = "2.4.2", default-features = false, features = ["deflate"] }

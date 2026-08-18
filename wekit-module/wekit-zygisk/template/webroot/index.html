@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>WeKit Zygisk</title>
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">WEKIT</p>
+          <h1>Zygisk 注入目标</h1>
+        </div>
+        <div class="target-count" aria-live="polite">
+          <span id="enabled-count">0</span>
+          <span>已启用</span>
+        </div>
+      </header>
+
+      <section class="toolbar" aria-label="目标操作">
+        <button
+          class="button button-secondary"
+          id="export-logcat"
+          type="button"
+        >
+          导出日志
+        </button>
+        <button
+          class="button button-primary"
+          id="refresh-targets"
+          type="button"
+        >
+          刷新列表
+        </button>
+      </section>
+
+      <section class="targets" aria-labelledby="targets-heading">
+        <div class="section-heading">
+          <h2 id="targets-heading">应用与 Android 用户</h2>
+        </div>
+        <div class="loading" id="targets-loading" role="status">
+          正在读取目标...
+        </div>
+        <div class="target-list" id="target-list" hidden></div>
+        <div class="empty-state" id="empty-state" hidden>
+          <h2>没有注入目标</h2>
+        </div>
+      </section>
+
+      <details class="diagnostics" id="diagnostics">
+        <summary>WebUI 日志</summary>
+        <div class="diagnostics-toolbar">
+          <code>/data/adb/wekit_zygisk/webui.log</code>
+          <button
+            class="button button-secondary"
+            id="refresh-log"
+            type="button"
+          >
+            重新加载
+          </button>
+        </div>
+        <pre class="log-output" id="device-log" aria-live="polite">
+尚未加载</pre
+        >
+      </details>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
