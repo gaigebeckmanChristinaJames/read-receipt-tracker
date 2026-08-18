@@ -56,10 +56,10 @@
 
 ### 方案二：Java 插件版已读服务器
 
-轻量级 Java 插件，可作为 HChat 插件或 WeKit Java 脚本运行，无需编译 APK。
+轻量级 Java 插件，可作为 HChat / WeKit / WA / WuYu 插件或脚本运行，无需编译 APK。
 
 - **特性**: 内置 cloudflared 公网隧道、Web 控制台、微信内悬浮仪表盘、IP 地理位置查询
-- **兼容**: 同时支持 WeKit 内置已读追踪和 HChat 已读追踪插件两种客户端
+- **兼容**: 同时支持 **WeKit**、**WA**、**WuYu** 和 HChat 已读追踪插件等多种客户端
 - **安装**:
   1. 将 `read_tracker.bsh` 放入 WeKit 的 `<模块数据>/scripts_java/` 目录
   2. 在 WeKit 设置中启用「脚本引擎 (Java)」
