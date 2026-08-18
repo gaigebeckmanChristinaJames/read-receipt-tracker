@@ -28,7 +28,6 @@
 |------|----------|------|------|
 | [WeKit APK](#wekit-版apk推荐) | WeKit | 内置已读追踪，开箱即用 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
 | [Java 插件版](#java-插件版支持-wekit--wauxiliary--wuyu--hchat) | WeKit / WA / WuYu / HChat | 无需编译 APK，服务端+客户端双插件 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
-| [WuYu 版](#wuyu-版) | WuYu | 使用 Java 插件版即可 | — |
 
 ### 🖥️ 服务器
 选择一种方式部署已读追踪后端服务。
@@ -62,7 +61,7 @@
 ## 📱 客户端
 
 <details>
-<summary><h3>WeKit 版（APK，推荐）</h3></summary>
+<summary>**WeKit 版（APK，推荐）**</summary>
 
 基于 [WeKit](https://github.com/Ujhhgtg/WeKit) 的微信 Xposed 模块，已修复 DEX 缓存更新问题，内置已读追踪功能，开箱即用。
 
@@ -75,7 +74,7 @@
 </details>
 
 <details>
-<summary><h3>Java 插件版（支持 WeKit / WAuxiliary / WuYu / HChat）</h3></summary>
+<summary>**Java 插件版（支持 WeKit / WAuxiliary / WuYu / HChat）**</summary>
 
 轻量级 Java 插件，无需编译 APK，在支持 Java 脚本的微信模块中加载即可使用。包含**服务端**和**客户端**两个配套插件：
 
@@ -90,19 +89,12 @@
 
 </details>
 
-<details>
-<summary><h3>WuYu 版</h3></summary>
-
-WuYu 模块用户请直接使用上方 **Java 插件版**，将插件放入 WuYu 的脚本目录即可，服务端和客户端插件均兼容 WuYu。
-
-</details>
-
 ---
 
 ## 🖥️ 服务器部署
 
 <details>
-<summary><h3>Linux 服务器</h3></summary>
+<summary>**Linux 服务器**</summary>
 
 支持 Python 和 C++ 两种后端实现。
 
@@ -132,7 +124,7 @@ bash scripts/setup-linux.sh --tunnel       # 自动隧道保活
 </details>
 
 <details>
-<summary><h3>Windows</h3></summary>
+<summary>**Windows**</summary>
 
 使用 Python 后端，安装 Python 3.9+ 后运行：
 ```powershell
@@ -144,7 +136,7 @@ python run.py
 </details>
 
 <details>
-<summary><h3>Java 插件版服务器</h3></summary>
+<summary>**Java 插件版服务器**</summary>
 
 无需单独部署服务器，直接在微信模块中加载「已读服务器」Java 插件即可，内置 HTTP 服务和 cloudflared 公网隧道，启动后自动获取公网地址。适合不想额外准备服务器的用户。
 
@@ -154,14 +146,14 @@ python run.py
 </details>
 
 <details>
-<summary><h3>WeKit 内置服务器</h3></summary>
+<summary>**WeKit 内置服务器**</summary>
 
 使用 WeKit APK 的用户，模块内已内置已读追踪服务端能力，在 WeKit 设置中启用即可，无需额外部署。
 
 </details>
 
 <details>
-<summary><h3>Termux / Android（手机本地部署）</h3></summary>
+<summary>**Termux / Android（手机本地部署）**</summary>
 
 **标准版（含 IP 定位）：**
 ```bash
@@ -185,7 +177,7 @@ cloudflared tunnel --protocol http2 --url http://127.0.0.1:5000
 </details>
 
 <details>
-<summary><h3>Docker</h3></summary>
+<summary>**Docker**</summary>
 
 ```bash
 docker compose up -d
@@ -203,7 +195,7 @@ docker run -d -p 5000:5000 -v $(pwd)/data:/app/data read-receipt-tracker
 ## 🌐 公网访问 & Cloudflare Tunnel
 
 <details>
-<summary><h3>我是否需要 Tunnel？</h3></summary>
+<summary>**我是否需要 Tunnel？**</summary>
 
 | 部署场景 | 需要 Tunnel？ | 说明 |
 |----------|:---:|------|
@@ -215,7 +207,7 @@ docker run -d -p 5000:5000 -v $(pwd)/data:/app/data read-receipt-tracker
 </details>
 
 <details>
-<summary><h3>启用 Tunnel (Linux)</h3></summary>
+<summary>**启用 Tunnel (Linux)**</summary>
 
 ```bash
 bash scripts/setup-linux.sh --tunnel   # 一键部署 + Tunnel
@@ -231,7 +223,7 @@ Tunnel 脚本自动：安装 cloudflared → 启动保活 → 网络切换重建
 ## 📡 API 文档
 
 <details>
-<summary><h3>注册消息</h3></summary>
+<summary>**注册消息**</summary>
 
 ```http
 POST /register
@@ -257,7 +249,7 @@ Content-Type: application/json
 </details>
 
 <details>
-<summary><h3>已读追踪像素</h3></summary>
+<summary>**已读追踪像素**</summary>
 
 ```http
 GET /pixel?wxId=user123&id=a1b2c3d4...
@@ -267,7 +259,7 @@ GET /pixel?wxId=user123&id=a1b2c3d4...
 </details>
 
 <details>
-<summary><h3>查询已读数</h3></summary>
+<summary>**查询已读数**</summary>
 
 ```http
 GET /count?wxId=user123&id=a1b2c3d4...
@@ -279,7 +271,7 @@ GET /count?wxId=user123&id=a1b2c3d4...
 </details>
 
 <details>
-<summary><h3>批量查询 / 健康检查</h3></summary>
+<summary>**批量查询 / 健康检查**</summary>
 
 ```http
 GET /batch-status?ids=id1,id2,id3
