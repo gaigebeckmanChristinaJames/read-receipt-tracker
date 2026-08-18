@@ -252,6 +252,50 @@ public class TrackerService extends Service {
         } catch (Exception ignored) {}
         writeLog("cloudflared 就绪: " + cloudflaredFile.getAbsolutePath()
                 + " (" + cloudflaredFile.length() + " 字节)");
+        // 启动隧道进程
+        java.util.List<String> cmd = new java.util.ArrayList<>();
+        cmd.add(cloudflaredFile.getAbsolutePath());
+        cmd.add("tunnel");
+        cmd.add("--url");
+        cmd.add("http://127.0.0.1:" + PORT);
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        pb.directory(getFilesDir());
+        pb.redirectErrorStream(true);
+        final File logFile = new File(getFilesDir(), "cloudflared.log");
+        writeLog("启动隧道: " + String.join(" ", cmd));
+        try {
+            pb.redirectOutput(logFile);
+            tunnelProcess = pb.start();
+        } catch (Exception e) {
+            writeLog("隧道进程启动失败: " + e.getMessage());
+            tunnelRunning.set(false);
+            return;
+        }
+        new Thread(() -> {
+            Pattern pattern = Pattern.compile("https://[a-z0-9][a-z0-9-]*\\.trycloudflare\\.com");
+            while (tunnelRunning.get()) {
+                try {
+                    if (logFile.exists() && logFile.length() > 0) {
+                        StringBuilder sb = new StringBuilder();
+                        try (BufferedReader br = new BufferedReader(
+                                new java.io.FileReader(logFile))) {
+                            String line;
+                            while ((line = br.readLine()) != null) sb.append(line).append("\n");
+                        }
+                        Matcher m = pattern.matcher(sb.toString());
+                        if (m.find()) {
+                            String url = m.group();
+                            if (!url.equals(tunnelUrl)) {
+                                tunnelUrl = url;
+                                broadcastStatus(true, url);
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+                try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
+            }
+        }, "rrt-tunnel-monitor").start();
+    }
 
     // ─────────────────────────────────────────────────────────────
     // HTTP 服务器
