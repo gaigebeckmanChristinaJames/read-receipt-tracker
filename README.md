@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases"><img src="https://img.shields.io/badge/📦%20下载-APK%20%26%20插件-2ea44f?style=for-the-badge" alt="下载"></a>
+  <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest"><img src="https://img.shields.io/badge/📦%20下载-APK%20%26%20插件-2ea44f?style=for-the-badge" alt="下载"></a>
   <a href="https://www.ifdian.net/a/zuomeng13"><img src="https://img.shields.io/badge/💖%20爱发电-支持作者-ff69b4?style=for-the-badge" alt="爱发电"></a>
 </p>
 
@@ -47,9 +47,9 @@ CI 自动构建，每次推送主分支即发布最新版本。
 
 | 产物 | 说明 | 下载 |
 |------|------|------|
-| **WeKit APK** | 微信 Xposed 模块（已修复 DEX 缓存更新问题，内置已读追踪） | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
-| **Java 服务端插件** | 内置 HTTP + cloudflared 隧道 + Web 控制台 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
-| **Java 客户端插件** | `#消息` 发送追踪，`/已读` 查询人数 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
+| **WeKit APK** | 微信 Xposed 模块（已修复 DEX 缓存更新问题，内置已读追踪） | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
+| **Java 服务端插件** | 内置 HTTP + cloudflared 隧道 + Web 控制台 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
+| **Java 客户端插件** | `#消息` 发送追踪，`/已读` 查询人数 | [Releases](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
 
 ---
 
@@ -88,8 +88,8 @@ CI 自动构建，每次推送主分支即发布最新版本。
 
 | 插件 | 作用 | 下载 |
 |------|------|------|
-| 已读服务器（服务端） | 内置 HTTP 服务 + cloudflared 公网隧道 + Web 控制台 | [read-tracker-java-server.zip](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
-| 已读追踪（客户端） | `#消息` 发送追踪卡片，`/已读` 查询人数，已读统计在浏览器控制台查看 | [read-tracker-java-client.zip](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) |
+| 已读服务器（服务端） | 内置 HTTP 服务 + cloudflared 公网隧道 + Web 控制台 | [read-tracker-java-server.zip](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
+| 已读追踪（客户端） | `#消息` 发送追踪卡片，`/已读` 查询人数，已读统计在浏览器控制台查看 | [read-tracker-java-client.zip](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
 
 <p align="center">
   <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases"><img src="https://img.shields.io/badge/📦%20下载-Java插件包-2ea44f?style=for-the-badge" alt="下载"></a>
