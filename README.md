@@ -13,6 +13,10 @@
   <a href="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml"><img src="https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml/badge.svg" alt="Build"></a>
 </p>
 
+<p align="center">
+  <a href="https://www.ifdian.net/a/zuomeng13"><img src="https://img.shields.io/badge/💖%20爱发电-支持作者-ff69b4?style=for-the-badge" alt="爱发电赞助"></a>
+</p>
+
 一个极简的 **消息已读回执追踪服务**：注册消息后得到一个 URL，将该 URL 作为 1×1 透明像素嵌入消息，对方打开时自动记录已读。提供 Web 管理面板查看统计和读取详情。
 
 > 🎯 **定位**：为微信模块 **WeKit / WuYu / WAuxiliary / HChat** 提供已读回执后端服务。也适用于邮件营销已读率分析、消息回执追踪、网页埋点等场景。
