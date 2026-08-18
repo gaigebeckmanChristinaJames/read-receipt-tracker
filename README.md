@@ -54,18 +54,23 @@
 
 > 源码位于 [`wekit-module/`](wekit-module/) 目录，CI 每次推送自动构建并发布。
 
-### 方案二：Java 插件版已读服务器
+### 方案二：Java 插件版（服务端 + 客户端）
 
-轻量级 Java 插件，可作为 HChat / WeKit / WA / WuYu 插件或脚本运行，无需编译 APK。
+轻量级 Java 插件，可在 **WeKit / WAuxiliary (WA) / WuYu / HChat** 等支持 Java 脚本的微信模块中运行，无需编译 APK。包含服务端和客户端两个插件：
 
-- **特性**: 内置 cloudflared 公网隧道、Web 控制台、微信内悬浮仪表盘、IP 地理位置查询
-- **兼容**: 支持 **WeKit**、**WAuxiliary (WA)**、**WuYu**、**HChat** 等多种微信模块客户端
-- **安装**:
-  1. 将 `read_tracker.bsh` 放入 WeKit 的 `<模块数据>/scripts_java/` 目录
-  2. 在 WeKit 设置中启用「脚本引擎 (Java)」
-  3. 重启微信，发送 `#已读服务器` 打开仪表盘
-- **下载**: [Releases 页面](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) 下载 `read-tracker-java-plugin.zip`
-- **源码**: [`plugins/java-read-tracker/`](plugins/java-read-tracker/)，详见[插件文档](plugins/java-read-tracker/README.md)
+**服务端插件** (`plugins/java-read-tracker/`)：
+- 内置 HTTP 服务 + cloudflared 公网隧道，启动后自动获取公网地址
+- Web 控制台：消息列表、已读统计、访客 IP 地理位置
+- 微信内悬浮仪表盘：实时状态、快捷操作、运行日志
+
+**客户端插件** (`plugins/read-tracker-client/`)：
+- 让不内置已读功能的模块（如 WA、HChat）也能发送追踪消息
+- `#消息` 发送追踪卡片，气泡旁实时显示「已读 N 人」
+- `/已读` 查询最近一条消息已读数，`/已读面板` 打开浏览器控制台
+- 需配合服务端插件使用，填写服务端隧道地址即可
+
+- **下载**: [Releases 页面](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases) 分别下载服务端和客户端 zip
+- **源码**: [`plugins/java-read-tracker/`](plugins/java-read-tracker/)（服务端）、[`plugins/read-tracker-client/`](plugins/read-tracker-client/)（客户端）
 
 ---
 

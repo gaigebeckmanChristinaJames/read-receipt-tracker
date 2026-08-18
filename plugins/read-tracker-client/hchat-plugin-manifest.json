@@ -1,0 +1,12 @@
+{
+  "format": "hchat-script-plugins",
+  "version": 1,
+  "plugins": [
+    {
+      "id": "已读追踪",
+      "path": "plugins/已读追踪",
+      "pinned": false,
+      "order": 0
+    }
+  ]
+}

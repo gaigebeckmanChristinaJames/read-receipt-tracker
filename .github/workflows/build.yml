@@ -84,28 +84,33 @@ jobs:
           path: wekit-module/app/build/outputs/apk/**/*.apk
           retention-days: 30
 
-  package-java-plugin:
+  package-java-plugins:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Package Java plugin
+      - name: Package Java plugins
         run: |
+          # Server plugin
           cd plugins/java-read-tracker
-          zip -r ../../read-tracker-java-plugin.zip . -x "*.git*"
+          zip -r ../../read-tracker-java-server.zip . -x "*.git*"
           cd ../..
-          ls -la read-tracker-java-plugin.zip
+          # Client plugin (HChat/WA)
+          cd plugins/read-tracker-client
+          zip -r ../../read-tracker-java-client.zip . -x "*.git*"
+          cd ../..
+          ls -la read-tracker-java-*.zip
 
-      - name: Upload Java plugin artifact
+      - name: Upload Java plugins artifact
         uses: actions/upload-artifact@v4
         with:
-          name: read-tracker-java-plugin
-          path: read-tracker-java-plugin.zip
+          name: java-plugins
+          path: read-tracker-java-*.zip
           retention-days: 30
 
   release:
-    needs: [build-apk, package-java-plugin]
+    needs: [build-apk, package-java-plugins]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     permissions:
@@ -117,10 +122,10 @@ jobs:
           name: wekit-standard-debug
           path: artifacts
 
-      - name: Download Java plugin
+      - name: Download Java plugins
         uses: actions/download-artifact@v4
         with:
-          name: read-tracker-java-plugin
+          name: java-plugins
           path: artifacts
 
       - name: List artifacts
@@ -145,12 +150,11 @@ jobs:
             - 上游仓库: https://github.com/Ujhhgtg/WeKit
             - 源码: `wekit-module/`
 
-            ### 🔌 Java 版已读服务器插件
-            独立的已读追踪服务器，支持以 HChat 插件或 WeKit Java 脚本形式运行。
-            - 内置 cloudflared 公网隧道
-            - Web 控制台 + 微信内悬浮仪表盘
-            - IP 地理位置查询
-            - 源码: `plugins/java-read-tracker/`
+            ### 🔌 Java 插件版已读服务器（服务端 + 客户端）
+            独立的已读追踪服务器，支持以 HChat / WeKit / WAuxiliary / WuYu 插件或脚本形式运行。
+            - **服务端插件**: 内置 cloudflared 公网隧道、Web 控制台、IP 地理位置查询
+            - **客户端插件**: 让支持 Java 的模块（HChat/WA 等）也能发送追踪消息、查询已读人数
+            - 源码: `plugins/java-read-tracker/` (服务端) · `plugins/read-tracker-client/` (客户端)
 
             ---
             - 构建分支: ${{ github.ref_name }}
