@@ -2046,7 +2046,7 @@ private fun HomeSidePanelCalendarCard() {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "$year年${month}月",
+                "${year}年${month}月",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )

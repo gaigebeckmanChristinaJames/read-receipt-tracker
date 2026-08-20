@@ -8,7 +8,7 @@ import com.composables.icons.materialsymbols.outlined.Clock
 import com.composables.icons.materialsymbols.outlined.Cloud
 import com.composables.icons.materialsymbols.outlined.Edit_note
 import com.composables.icons.materialsymbols.outlined.Format_quote
-import com.composables.icons.materialsymbols.outlined.Image
+import com.composables.icons.materialsymbols.outlined.Photo_library
 import com.composables.icons.materialsymbols.outlined.List_alt
 import com.composables.icons.materialsymbols.outlined.Schedule
 import com.composables.icons.materialsymbols.outlined.Wallet
