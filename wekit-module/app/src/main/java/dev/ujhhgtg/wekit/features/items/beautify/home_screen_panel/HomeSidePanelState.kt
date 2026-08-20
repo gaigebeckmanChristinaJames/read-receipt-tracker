@@ -43,6 +43,7 @@ internal data class HomeSidePanelUiState(
     val wallet: HomeSidePanelWalletUiState,
     val showToolbarProfile: Boolean,
     val hideWeChatTitle: Boolean,
+    val widgetConfigs: Map<HomeSidePanelWidget, HomeSidePanelWidgetConfig> = HomeSidePanelWidget.defaultConfigs(),
 )
 
 internal class HomeSidePanelState(
@@ -287,6 +288,78 @@ internal class HomeSidePanelState(
     fun setHideWeChatTitle(hide: Boolean) {
         HomeSidePanelPreferences.hideWeChatTitle = hide
         _uiState.update { it.copy(hideWeChatTitle = hide) }
+    }
+
+    // ===== 组件配置管理 =====
+
+    fun updateWidgetConfigs(configs: Map<HomeSidePanelWidget, HomeSidePanelWidgetConfig>) {
+        HomeSidePanelPreferences.widgetConfigs = configs
+        _uiState.update { it.copy(widgetConfigs = configs) }
+    }
+
+    fun toggleWidget(widget: HomeSidePanelWidget) {
+        val current = _uiState.value.widgetConfigs
+        val config = current[widget] ?: return
+        val newConfigs = current.toMutableMap().apply {
+            this[widget] = config.withEnabled(!config.enabled)
+        }
+        updateWidgetConfigs(newConfigs)
+    }
+
+    fun moveWidget(widget: HomeSidePanelWidget, targetIndex: Int) {
+        val current = _uiState.value.widgetConfigs
+        val newConfigs = current.moveWidget(widget, targetIndex)
+        updateWidgetConfigs(newConfigs)
+    }
+
+    fun setWidgetTintColor(widget: HomeSidePanelWidget, color: Long?) {
+        val current = _uiState.value.widgetConfigs
+        val config = current[widget] ?: return
+        val newConfigs = current.toMutableMap().apply {
+            this[widget] = config.withTintColor(color)
+        }
+        updateWidgetConfigs(newConfigs)
+    }
+
+    fun setWidgetCustomImage(widget: HomeSidePanelWidget, path: String?) {
+        val current = _uiState.value.widgetConfigs
+        val config = current[widget] ?: return
+        val newConfigs = current.toMutableMap().apply {
+            this[widget] = config.withCustomImagePath(path)
+        }
+        updateWidgetConfigs(newConfigs)
+    }
+
+    fun setWidgetCustomText(widget: HomeSidePanelWidget, text: String?) {
+        val current = _uiState.value.widgetConfigs
+        val config = current[widget] ?: return
+        val newConfigs = current.toMutableMap().apply {
+            this[widget] = config.withCustomText(text)
+        }
+        updateWidgetConfigs(newConfigs)
+    }
+
+    fun resetWidgetConfigs() {
+        val defaults = HomeSidePanelWidget.defaultConfigs()
+        updateWidgetConfigs(defaults)
+    }
+
+    // ===== 组件编辑入口（打开设置页面对应组件） =====
+
+    fun openImagePicker(widget: HomeSidePanelWidget) {
+        // 打开设置页面，用户可以在设置页面中管理图片
+        openPanelSettings()
+        publishMessage("请在侧栏设置中点击图片图标上传自定义图片")
+    }
+
+    fun openNoteEditor(widget: HomeSidePanelWidget) {
+        openPanelSettings()
+        publishMessage("请在侧栏设置中点击编辑图标修改便签内容")
+    }
+
+    fun openCountdownEditor(widget: HomeSidePanelWidget) {
+        openPanelSettings()
+        publishMessage("请在侧栏设置中点击编辑图标设置倒计时日期（格式：YYYY-MM-DD）")
     }
 
     fun openPersonalProfile() {

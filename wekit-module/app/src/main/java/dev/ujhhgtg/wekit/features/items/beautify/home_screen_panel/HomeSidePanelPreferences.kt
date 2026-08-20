@@ -16,6 +16,7 @@ internal object HomeSidePanelPreferenceKeys {
     const val SHOW_TOOLBAR_PROFILE = "home_side_panel_show_toolbar_profile"
     const val HIDE_WECHAT_TITLE = "home_side_panel_hide_wechat_title"
     const val HIDE_WALLET_BALANCE = "home_side_panel_hide_wallet_balance"
+    const val WIDGET_CONFIGS = "home_side_panel_widget_configs"
 }
 
 internal object HomeSidePanelPreferences {
@@ -57,6 +58,29 @@ internal object HomeSidePanelPreferences {
     var hitokotoLastSuccess: HitokotoSnapshot?
         get() = decode(HomeSidePanelPreferenceKeys.HITOKOTO_LAST_SUCCESS)
         set(value) = setNullable(HomeSidePanelPreferenceKeys.HITOKOTO_LAST_SUCCESS, value)
+
+    /**
+     * 组件配置存储，使用 Map<String, HomeSidePanelWidgetConfig> 序列化
+     */
+    var widgetConfigs: Map<HomeSidePanelWidget, HomeSidePanelWidgetConfig>
+        get() {
+            val raw = WePrefs.getString(HomeSidePanelPreferenceKeys.WIDGET_CONFIGS) ?: return HomeSidePanelWidget.defaultConfigs()
+            return runCatching {
+                val stringMap = DefaultJson.decodeFromString<Map<String, HomeSidePanelWidgetConfig>>(raw)
+                val result = mutableMapOf<HomeSidePanelWidget, HomeSidePanelWidgetConfig>()
+                HomeSidePanelWidget.entries.forEach { widget ->
+                    result[widget] = stringMap[widget.name] ?: HomeSidePanelWidget.defaultConfigs()[widget]!!
+                }
+                result
+            }.onFailure { WeLogger.w(TAG, "failed to decode widget configs", it) }
+                .getOrNull() ?: HomeSidePanelWidget.defaultConfigs()
+        }
+        set(value) {
+            val stringMap = value.mapKeys { it.key.name }
+            runCatching { DefaultJson.encodeToString(stringMap) }
+                .onSuccess { WePrefs.putString(HomeSidePanelPreferenceKeys.WIDGET_CONFIGS, it) }
+                .onFailure { WeLogger.w(TAG, "failed to encode widget configs", it) }
+        }
 
     private inline fun <reified T> decode(key: String): T? {
         val raw = WePrefs.getString(key) ?: return null

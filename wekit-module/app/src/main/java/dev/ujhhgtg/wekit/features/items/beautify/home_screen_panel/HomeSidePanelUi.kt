@@ -6,6 +6,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,7 +47,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,6 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -193,6 +197,9 @@ private fun HomeSidePanelHome(
     state: HomeSidePanelUiState,
     panelState: HomeSidePanelState,
 ) {
+    // 获取按顺序排列的已启用组件（关闭的组件自动跳过，后面的补位）
+    val enabledWidgets = state.widgetConfigs.sortedEnabled()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -201,12 +208,42 @@ private fun HomeSidePanelHome(
             .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        HomeSidePanelProfileHeader(state.profile, panelState)
-        HomeSidePanelDateTimeCard()
-        HomeSidePanelWeatherCard(state.weather, panelState)
-        HomeSidePanelWalletCard(state.wallet, panelState)
-        HomeSidePanelShortcutList(panelState)
-        HomeSidePanelHitokotoCard(state.hitokoto, state.hitokotoSettings, panelState)
+        enabledWidgets.forEach { widget ->
+            key(widget) {
+                HomeSidePanelWidgetRenderer(
+                    widget = widget,
+                    config = state.widgetConfigs[widget] ?: HomeSidePanelWidgetConfig(),
+                    state = state,
+                    panelState = panelState,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 根据组件类型动态渲染对应的UI组件
+ */
+@Composable
+private fun HomeSidePanelWidgetRenderer(
+    widget: HomeSidePanelWidget,
+    config: HomeSidePanelWidgetConfig,
+    state: HomeSidePanelUiState,
+    panelState: HomeSidePanelState,
+) {
+    when (widget) {
+        HomeSidePanelWidget.PROFILE_HEADER -> HomeSidePanelProfileHeader(state.profile, panelState)
+        HomeSidePanelWidget.DATE_TIME -> HomeSidePanelDateTimeCard()
+        HomeSidePanelWidget.WEATHER -> HomeSidePanelWeatherCard(state.weather, panelState)
+        HomeSidePanelWidget.WALLET -> HomeSidePanelWalletCard(state.wallet, panelState)
+        HomeSidePanelWidget.SHORTCUTS -> HomeSidePanelShortcutList(panelState)
+        HomeSidePanelWidget.FUNCTION_LIST -> HomeSidePanelFunctionList(panelState)
+        HomeSidePanelWidget.HITOKOTO -> HomeSidePanelHitokotoCard(state.hitokoto, state.hitokotoSettings, panelState)
+        HomeSidePanelWidget.CUSTOM_IMAGE -> HomeSidePanelCustomImageCard(config, panelState)
+        HomeSidePanelWidget.NOTE -> HomeSidePanelNoteCard(config, panelState)
+        HomeSidePanelWidget.COUNTDOWN -> HomeSidePanelCountdownCard(config, panelState)
+        HomeSidePanelWidget.CALENDAR -> HomeSidePanelCalendarCard()
+        HomeSidePanelWidget.STEPS -> HomeSidePanelStepsCard()
     }
 }
 
@@ -674,7 +711,6 @@ private fun rememberHomeSidePanelNow(): LocalDateTime {
 @Composable
 private fun HomeSidePanelShortcutList(panelState: HomeSidePanelState) {
     val tiles = HomeSidePanelShortcut.entries.filter { shortcutSpec(it).placement == HomeSidePanelShortcutPlacement.TILE }
-    val listItems = HomeSidePanelShortcut.entries.filter { shortcutSpec(it).placement == HomeSidePanelShortcutPlacement.LIST_ITEM }
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
         tiles.forEach { shortcut ->
             val spec = shortcutSpec(shortcut)
@@ -698,6 +734,11 @@ private fun HomeSidePanelShortcutList(panelState: HomeSidePanelState) {
             }
         }
     }
+}
+
+@Composable
+private fun HomeSidePanelFunctionList(panelState: HomeSidePanelState) {
+    val listItems = HomeSidePanelShortcut.entries.filter { shortcutSpec(it).placement == HomeSidePanelShortcutPlacement.LIST_ITEM }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
@@ -1107,14 +1148,77 @@ private fun HomeSidePanelPanelSettings(
     state: HomeSidePanelUiState,
     panelState: HomeSidePanelState,
 ) {
+    var showColorPickerFor by remember { mutableStateOf<HomeSidePanelWidget?>(null) }
+    var showTextEditorFor by remember { mutableStateOf<HomeSidePanelWidget?>(null) }
+    var showImagePickerFor by remember { mutableStateOf<HomeSidePanelWidget?>(null) }
+    var textEditorValue by remember { mutableStateOf("") }
+
+    val allWidgets = state.widgetConfigs.sortedAll()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Bottom).asPaddingValues())
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         SettingsHeader(stringResource(R.string.home_side_panel_settings), panelState::closeCardSettings)
+
+        // 提示文字
+        Text(
+            stringResource(R.string.home_side_panel_widget_drag_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 4.dp),
+        )
+
+        // 组件管理列表
+        Text(
+            stringResource(R.string.home_side_panel_widget_manage),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+
+        allWidgets.forEachIndexed { index, widget ->
+            val config = state.widgetConfigs[widget] ?: HomeSidePanelWidgetConfig()
+            WidgetSettingItem(
+                widget = widget,
+                config = config,
+                index = index,
+                total = allWidgets.size,
+                onToggle = { panelState.toggleWidget(widget) },
+                onMoveUp = { if (index > 0) panelState.moveWidget(widget, index - 1) },
+                onMoveDown = { if (index < allWidgets.size - 1) panelState.moveWidget(widget, index + 1) },
+                onColorClick = { showColorPickerFor = widget },
+                onImageClick = { showImagePickerFor = widget },
+                onTextClick = {
+                    textEditorValue = config.customText ?: ""
+                    showTextEditorFor = widget
+                },
+            )
+        }
+
+        // 恢复默认布局按钮
+        OutlinedButton(
+            onClick = { panelState.resetWidgetConfigs() },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        ) {
+            Icon(MaterialSymbols.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(stringResource(R.string.home_side_panel_widget_reset_default))
+        }
+
+        // 分隔线
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+        // 原有设置项
+        Text(
+            stringResource(R.string.home_side_panel_widget_manage_desc),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+
         SegmentedColumn(contentPadding = PaddingValues(0.dp)) {
             item {
                 SwitchWidget(
@@ -1135,6 +1239,346 @@ private fun HomeSidePanelPanelSettings(
             }
         }
     }
+
+    // 颜色选择器对话框
+    showColorPickerFor?.let { widget ->
+        ColorPickerDialog(
+            currentColor = state.widgetConfigs[widget]?.tintColor,
+            onColorSelected = { color ->
+                panelState.setWidgetTintColor(widget, color)
+                showColorPickerFor = null
+            },
+            onReset = {
+                panelState.setWidgetTintColor(widget, null)
+                showColorPickerFor = null
+            },
+            onDismiss = { showColorPickerFor = null },
+        )
+    }
+
+    // 文字编辑对话框
+    showTextEditorFor?.let { widget ->
+        TextEditorDialog(
+            title = stringResource(widget.labelRes),
+            initialValue = textEditorValue,
+            onConfirm = { text ->
+                panelState.setWidgetCustomText(widget, text.ifBlank { null })
+                showTextEditorFor = null
+            },
+            onDismiss = { showTextEditorFor = null },
+        )
+    }
+
+    // 图片选择提示（实际图片选择需要系统 Intent，这里简化处理）
+    showImagePickerFor?.let { widget ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showImagePickerFor = null },
+            title = { Text(stringResource(R.string.home_side_panel_widget_custom_image)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.home_side_panel_widget_custom_image_desc))
+                    OutlinedTextField(
+                        value = state.widgetConfigs[widget]?.customImagePath ?: "",
+                        onValueChange = { },
+                        label = { Text("图片路径") },
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showImagePickerFor = null }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    panelState.setWidgetCustomImage(widget, null)
+                    showImagePickerFor = null
+                }) {
+                    Text(stringResource(R.string.home_side_panel_widget_remove_image))
+                }
+            },
+        )
+    }
+}
+
+/**
+ * 单个组件的设置项
+ */
+@Composable
+private fun WidgetSettingItem(
+    widget: HomeSidePanelWidget,
+    config: HomeSidePanelWidgetConfig,
+    index: Int,
+    total: Int,
+    onToggle: () -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    onColorClick: () -> Unit,
+    onImageClick: () -> Unit,
+    onTextClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (config.enabled) MaterialTheme.colorScheme.surfaceContainerLow
+                else MaterialTheme.colorScheme.surfaceContainer,
+        ),
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                // 图标
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            config.tintColor?.let { Color(it).copy(alpha = 0.15f) }
+                                ?: MaterialTheme.colorScheme.primaryContainer
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = widget.icon,
+                        contentDescription = null,
+                        tint = config.tintColor?.let { Color(it) }
+                            ?: MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+
+                // 名称和描述
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        stringResource(widget.labelRes),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (config.enabled) MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        stringResource(widget.descriptionRes),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+                // 开关
+                Switch(
+                    checked = config.enabled,
+                    onCheckedChange = { onToggle() },
+                )
+            }
+
+            // 操作按钮行（仅在启用时显示）
+            if (config.enabled) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // 上移
+                    IconButton(
+                        onClick = onMoveUp,
+                        enabled = index > 0,
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            imageVector = MaterialSymbols.Outlined.Arrow_back,
+                            contentDescription = "上移",
+                            modifier = Modifier.size(18.dp).rotate(-90f),
+                        )
+                    }
+                    // 下移
+                    IconButton(
+                        onClick = onMoveDown,
+                        enabled = index < total - 1,
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            imageVector = MaterialSymbols.Outlined.Arrow_back,
+                            contentDescription = "下移",
+                            modifier = Modifier.size(18.dp).rotate(90f),
+                        )
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp),
+                    )
+
+                    // 颜色选择
+                    if (widget.supportsTintColor) {
+                        IconButton(
+                            onClick = onColorClick,
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        config.tintColor?.let { Color(it) }
+                                            ?: MaterialTheme.colorScheme.primary
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        color = MaterialTheme.colorScheme.outline,
+                                        shape = CircleShape,
+                                    ),
+                            )
+                        }
+                    }
+
+                    // 图片上传
+                    if (widget.supportsCustomImage) {
+                        IconButton(
+                            onClick = onImageClick,
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                imageVector = MaterialSymbols.Outlined.Image,
+                                contentDescription = stringResource(R.string.home_side_panel_widget_custom_image),
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+
+                    // 文字编辑
+                    if (widget.supportsCustomText) {
+                        IconButton(
+                            onClick = onTextClick,
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                imageVector = MaterialSymbols.Outlined.Edit_note,
+                                contentDescription = stringResource(R.string.home_side_panel_widget_edit_text),
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 颜色选择器对话框
+ */
+@Composable
+private fun ColorPickerDialog(
+    currentColor: Long?,
+    onColorSelected: (Long?) -> Unit,
+    onReset: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val presetColors = listOf(
+        0xFF4CAF50L to "绿色",
+        0xFF2196F3L to "蓝色",
+        0xFFFF9800L to "橙色",
+        0xFFE91E63L to "粉色",
+        0xFF9C27B0L to "紫色",
+        0xFFF44336L to "红色",
+        0xFF00BCD4L to "青色",
+        0xFFFFC107L to "黄色",
+        0xFF795548L to "棕色",
+        0xFF607D8BL to "灰蓝",
+        0xFF009688L to "青绿",
+        0xFFCDDC39L to "黄绿",
+    )
+
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.home_side_panel_widget_tint_color)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    stringResource(R.string.home_side_panel_widget_tint_color_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                // 颜色网格
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    presetColors.forEach { (color, _) ->
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color(color))
+                                .clickable { onColorSelected(color) }
+                                .border(
+                                    width = if (currentColor == color) 3.dp else 0.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = CircleShape,
+                                ),
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onReset) {
+                Text(stringResource(R.string.home_side_panel_widget_reset_color))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+    )
+}
+
+/**
+ * 文字编辑对话框
+ */
+@Composable
+private fun TextEditorDialog(
+    title: String,
+    initialValue: String,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var text by remember { mutableStateOf(initialValue) }
+
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = { Text(stringResource(R.string.home_side_panel_widget_custom_text)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp),
+                maxLines = 5,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(text) }) {
+                Text(stringResource(R.string.home_side_panel_widget_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -1371,3 +1815,368 @@ private val hitokotoCategoryLabels = linkedMapOf(
     "k" to R.string.home_side_panel_hitokoto_philosophy,
     "l" to R.string.home_side_panel_hitokoto_witty,
 )
+
+// ===== 新增组件实现 =====
+
+/**
+ * 自定义图片卡片组件
+ */
+@Composable
+private fun HomeSidePanelCustomImageCard(
+    config: HomeSidePanelWidgetConfig,
+    panelState: HomeSidePanelState,
+) {
+    val context = LocalContext.current
+    val shape = RoundedCornerShape(22.dp)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .clickable {
+                // 点击打开图片选择
+                panelState.openImagePicker(HomeSidePanelWidget.CUSTOM_IMAGE)
+            },
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+    ) {
+        if (config.customImagePath != null) {
+            AsyncImage(
+                model = config.customImagePath,
+                contentDescription = stringResource(R.string.home_side_panel_widget_custom_image),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = MaterialSymbols.Outlined.Image,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        stringResource(R.string.home_side_panel_widget_select_image),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 便签卡片组件
+ */
+@Composable
+private fun HomeSidePanelNoteCard(
+    config: HomeSidePanelWidgetConfig,
+    panelState: HomeSidePanelState,
+) {
+    val shape = RoundedCornerShape(22.dp)
+    val noteText = config.customText ?: ""
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .clickable {
+                panelState.openNoteEditor(HomeSidePanelWidget.NOTE)
+            },
+        shape = shape,
+        colors = CardDefaults.cardColors(
+            containerColor = config.tintColor?.let { Color(it) }
+                ?: MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.home_side_panel_note_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Icon(
+                    imageVector = MaterialSymbols.Outlined.Edit_note,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            if (noteText.isBlank()) {
+                Text(
+                    stringResource(R.string.home_side_panel_note_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Text(
+                    noteText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 5,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 倒计时卡片组件
+ */
+@Composable
+private fun HomeSidePanelCountdownCard(
+    config: HomeSidePanelWidgetConfig,
+    panelState: HomeSidePanelState,
+) {
+    val shape = RoundedCornerShape(22.dp)
+    val targetDateStr = config.customText
+    val now = java.time.LocalDate.now()
+    val daysLeft = remember(targetDateStr) {
+        targetDateStr?.let {
+            runCatching {
+                val target = java.time.LocalDate.parse(it)
+                java.time.temporal.ChronoUnit.DAYS.between(now, target).toInt()
+            }.getOrNull()
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .clickable {
+                panelState.openCountdownEditor(HomeSidePanelWidget.COUNTDOWN)
+            },
+        shape = shape,
+        colors = CardDefaults.cardColors(
+            containerColor = config.tintColor?.let { Color(it) }
+                ?: MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                stringResource(R.string.home_side_panel_countdown_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            if (daysLeft != null) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    Text(
+                        if (daysLeft >= 0) daysLeft.toString() else (-daysLeft).toString(),
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        stringResource(R.string.home_side_panel_countdown_days),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                }
+                if (daysLeft < 0) {
+                    Text(
+                        stringResource(R.string.home_side_panel_countdown_passed, -daysLeft),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            } else {
+                Text(
+                    stringResource(R.string.home_side_panel_countdown_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 日历卡片组件
+ */
+@Composable
+private fun HomeSidePanelCalendarCard() {
+    val shape = RoundedCornerShape(22.dp)
+    val now = java.time.LocalDate.now()
+    val year = now.year
+    val month = now.monthValue
+    val day = now.dayOfMonth
+    val firstDayOfMonth = java.time.LocalDate.of(year, month, 1)
+    val daysInMonth = now.lengthOfMonth()
+    val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value % 7 // 0=Sunday
+
+    val weekDays = listOf("日", "一", "二", "三", "四", "五", "六")
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                "$year年${month}月",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            // 星期标题
+            Row(modifier = Modifier.fillMaxWidth()) {
+                weekDays.forEach { day ->
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            day,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+            // 日期网格
+            Column(modifier = Modifier.fillMaxWidth()) {
+                var dayCounter = 1
+                for (week in 0 until 6) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        for (weekday in 0 until 7) {
+                            val isDay = week == 0 && weekday < firstDayOfWeek || dayCounter > daysInMonth
+                            val currentDay = if (!isDay) dayCounter else null
+                            if (!isDay) dayCounter++
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(vertical = 4.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                if (currentDay != null) {
+                                    val isToday = currentDay == day
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                if (isToday) MaterialTheme.colorScheme.primary
+                                                else Color.Transparent
+                                            ),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            currentDay.toString(),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (isToday) MaterialTheme.colorScheme.onPrimary
+                                                else MaterialTheme.colorScheme.onSurface,
+                                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (dayCounter > daysInMonth) break
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 步数卡片组件
+ */
+@Composable
+private fun HomeSidePanelStepsCard() {
+    val shape = RoundedCornerShape(22.dp)
+    // 模拟步数数据（实际需要从系统健康服务获取）
+    val steps = remember { (5000..15000).random() }
+    val goal = 10000
+    val progress = (steps.toFloat() / goal).coerceIn(0f, 1f)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.home_side_panel_steps_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Icon(
+                    imageVector = MaterialSymbols.Outlined.Directions_run,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Text(
+                "$steps",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            // 进度条
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(progress)
+                        .height(8.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                )
+            }
+            Text(
+                stringResource(R.string.home_side_panel_steps_goal, goal),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
