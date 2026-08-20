@@ -3586,4 +3586,60 @@
     <string name="settings_page_transition_animation_title">Page transition animation</string>
     <string name="settings_page_transition_animation_aosp">AOSP</string>
     <string name="settings_page_transition_animation_miuix">Miuix</string>
+
+    <!-- Home side panel widget management -->
+    <string name="home_side_panel_widget_manage">Widget Management</string>
+    <string name="home_side_panel_widget_manage_desc">Customize widgets, order and colors</string>
+    <string name="home_side_panel_widget_enabled">Enabled</string>
+    <string name="home_side_panel_widget_disabled">Disabled</string>
+    <string name="home_side_panel_widget_drag_hint">Long press to drag, disabled widgets auto-collapse</string>
+    <string name="home_side_panel_widget_tint_color">Theme Color</string>
+    <string name="home_side_panel_widget_tint_color_desc">Customize widget theme color</string>
+    <string name="home_side_panel_widget_reset_color">Reset Color</string>
+    <string name="home_side_panel_widget_custom_image">Custom Image</string>
+    <string name="home_side_panel_widget_custom_image_desc">Tap to upload custom image</string>
+    <string name="home_side_panel_widget_select_image">Select Image</string>
+    <string name="home_side_panel_widget_remove_image">Remove Image</string>
+    <string name="home_side_panel_widget_custom_text">Custom Text</string>
+    <string name="home_side_panel_widget_edit_text">Edit Text</string>
+    <string name="home_side_panel_widget_save">Save</string>
+    <string name="home_side_panel_widget_cancel">Cancel</string>
+    <string name="home_side_panel_widget_reset_default">Reset Layout</string>
+    <string name="home_side_panel_widget_reset_confirm">Reset to default layout? Current customizations will be lost.</string>
+    <!-- Widget names and descriptions -->
+    <string name="home_side_panel_widget_profile">Profile</string>
+    <string name="home_side_panel_widget_profile_desc">Avatar, nickname and status</string>
+    <string name="home_side_panel_widget_datetime">Date &amp; Greeting</string>
+    <string name="home_side_panel_widget_datetime_desc">Current date and greeting</string>
+    <string name="home_side_panel_widget_weather">Weather</string>
+    <string name="home_side_panel_widget_weather_desc">Real-time weather details</string>
+    <string name="home_side_panel_widget_wallet">Wallet Balance</string>
+    <string name="home_side_panel_widget_wallet_desc">WeChat balance and quick pay</string>
+    <string name="home_side_panel_widget_shortcuts">Quick Actions</string>
+    <string name="home_side_panel_widget_shortcuts_desc">Scan, Pay, Favorites</string>
+    <string name="home_side_panel_widget_functions">Function List</string>
+    <string name="home_side_panel_widget_functions_desc">Moments, Channels and more</string>
+    <string name="home_side_panel_widget_hitokoto">Hitokoto</string>
+    <string name="home_side_panel_widget_hitokoto_desc">Daily inspirational quote</string>
+    <string name="home_side_panel_widget_note">Note</string>
+    <string name="home_side_panel_widget_note_desc">Quick notes and reminders</string>
+    <string name="home_side_panel_widget_countdown">Countdown</string>
+    <string name="home_side_panel_widget_countdown_desc">Important date countdown</string>
+    <string name="home_side_panel_widget_calendar">Calendar</string>
+    <string name="home_side_panel_widget_calendar_desc">Current month calendar view</string>
+    <string name="home_side_panel_widget_steps">Steps</string>
+    <string name="home_side_panel_widget_steps_desc">Today's step count</string>
+    <!-- New widget texts -->
+    <string name="home_side_panel_note_title">Note</string>
+    <string name="home_side_panel_note_hint">Tap to edit note...</string>
+    <string name="home_side_panel_countdown_title">Countdown</string>
+    <string name="home_side_panel_countdown_days">days</string>
+    <string name="home_side_panel_countdown_passed">%1 days passed</string>
+    <string name="home_side_panel_countdown_hint">Tap to set countdown date</string>
+    <string name="home_side_panel_calendar_title">Calendar</string>
+    <string name="home_side_panel_calendar_today">Today</string>
+    <string name="home_side_panel_steps_title">Today's Steps</string>
+    <string name="home_side_panel_steps_loading">Loading...</string>
+    <string name="home_side_panel_steps_unavailable">No data</string>
+    <string name="home_side_panel_steps_goal">Goal: %1 steps</string>
 </resources>
