@@ -79,7 +79,7 @@ jobs:
       - name: Build APK
         run: |
           chmod +x x gradlew
-          ./x build
+          ./x build --release
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.NDK_VERSION }}
 
