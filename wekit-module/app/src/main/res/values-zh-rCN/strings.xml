@@ -3015,8 +3015,6 @@
     <string name="home_side_panel_widget_functions_desc">朋友圈、视频号等功能入口</string>
     <string name="home_side_panel_widget_hitokoto">一言</string>
     <string name="home_side_panel_widget_hitokoto_desc">每日一句经典语录</string>
-    <string name="home_side_panel_widget_custom_image_name">自定义图片</string>
-    <string name="home_side_panel_widget_custom_image_desc">展示你上传的自定义图片</string>
     <string name="home_side_panel_widget_note">便签</string>
     <string name="home_side_panel_widget_note_desc">随手记录重要事项</string>
     <string name="home_side_panel_widget_countdown">倒计时</string>
