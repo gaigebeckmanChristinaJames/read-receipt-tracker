@@ -316,7 +316,7 @@ object ReadReceipts : ClickableFeature(),
     private const val MAX_CONTENT_BYTES = 16 * 1024
     private const val MAX_REGISTRATION_BODY_BYTES = 20 * 1024
     private const val ORIGIN_STOP_TIMEOUT_MILLIS = 10_000L
-    private const val TUNNEL_CANDIDATE_VERIFY_TIMEOUT_MILLIS = 30_000L
+    private const val TUNNEL_CANDIDATE_VERIFY_TIMEOUT_MILLIS = 120_000L
     private const val BROWSER_METADATA_RECONCILE_ATTEMPTS = 50
     private const val BROWSER_METADATA_RECONCILE_DELAY_MILLIS = 100L
 
