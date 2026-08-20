@@ -115,6 +115,9 @@ import com.composables.icons.materialsymbols.outlined.Sunny_snowing
 import com.composables.icons.materialsymbols.outlined.Thunderstorm
 import com.composables.icons.materialsymbols.outlined.Tornado
 import com.composables.icons.materialsymbols.outlined.Wallet
+import com.composables.icons.materialsymbols.outlined.Photo_library
+import com.composables.icons.materialsymbols.outlined.Edit_note
+import com.composables.icons.materialsymbols.outlined.Directions_run
 import com.composables.icons.materialsymbols.outlined.Weather_hail
 import com.composables.icons.materialsymbols.outlined.Weather_snowy
 import dev.ujhhgtg.wekit.features.api.core.TextStatus

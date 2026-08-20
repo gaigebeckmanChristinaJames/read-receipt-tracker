@@ -4,13 +4,12 @@ import androidx.annotation.StringRes
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Account_circle
 import com.composables.icons.materialsymbols.outlined.Calendar_month
-import com.composables.icons.materialsymbols.outlined.Clock
+import com.composables.icons.materialsymbols.outlined.Schedule
 import com.composables.icons.materialsymbols.outlined.Cloud
 import com.composables.icons.materialsymbols.outlined.Edit_note
 import com.composables.icons.materialsymbols.outlined.Format_quote
 import com.composables.icons.materialsymbols.outlined.Photo_library
 import com.composables.icons.materialsymbols.outlined.List_alt
-import com.composables.icons.materialsymbols.outlined.Schedule
 import com.composables.icons.materialsymbols.outlined.Wallet
 import com.composables.icons.materialsymbols.outlined.Directions_run
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -36,7 +35,7 @@ internal enum class HomeSidePanelWidget(
     DATE_TIME(
         labelRes = R.string.home_side_panel_widget_datetime,
         descriptionRes = R.string.home_side_panel_widget_datetime_desc,
-        icon = MaterialSymbols.Outlined.Clock,
+        icon = MaterialSymbols.Outlined.Schedule,
     ),
     WEATHER(
         labelRes = R.string.home_side_panel_widget_weather,
