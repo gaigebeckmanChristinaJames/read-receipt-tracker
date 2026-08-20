@@ -1288,7 +1288,7 @@ private fun HomeSidePanelPanelSettings(
             },
             confirmButton = {
                 TextButton(onClick = { showImagePickerFor = null }) {
-                    Text(stringResource(R.string.action_cancel))
+                    Text(stringResource(android.R.string.cancel))
                 }
             },
             dismissButton = {
@@ -1446,7 +1446,7 @@ private fun WidgetSettingItem(
                             modifier = Modifier.size(32.dp),
                         ) {
                             Icon(
-                                imageVector = MaterialSymbols.Outlined.Image,
+                                imageVector = MaterialSymbols.Outlined.Photo_library,
                                 contentDescription = stringResource(R.string.home_side_panel_widget_custom_image),
                                 modifier = Modifier.size(18.dp),
                             )
@@ -1536,7 +1536,7 @@ private fun ColorPickerDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
+                Text(stringResource(android.R.string.cancel))
             }
         },
     )
@@ -1575,7 +1575,7 @@ private fun TextEditorDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
+                Text(stringResource(android.R.string.cancel))
             }
         },
     )
@@ -1860,7 +1860,7 @@ private fun HomeSidePanelCustomImageCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Icon(
-                        imageVector = MaterialSymbols.Outlined.Image,
+                        imageVector = MaterialSymbols.Outlined.Photo_library,
                         contentDescription = null,
                         modifier = Modifier.size(48.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,

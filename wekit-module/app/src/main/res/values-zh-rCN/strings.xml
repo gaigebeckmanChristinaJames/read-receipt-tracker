@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_description">微信增强模块\nUjhhgtg@github</string>
     <string name="settings_title">设置</string>
@@ -8,7 +8,7 @@
     <string name="settings_language_summary">%1$s · %2$s</string>
     <string name="language_follow_system">跟随系统</string>
 
-    <!-- Shared module UI -->
+    
     <string name="dialog_cancel">取消</string>
     <string name="dialog_confirm">确定</string>
     <string name="dialog_close">关闭</string>
@@ -430,7 +430,7 @@
     <string name="licenses_version">版本 %1$s</string>
     <string name="licenses_license_names">许可：%1$s</string>
 
-    <!-- Feature categories -->
+    
     <string name="feature_category_chat_title">聊天</string>
     <string name="feature_category_contacts_groups_title">联系人与群组</string>
     <string name="feature_category_payment_title">红包与支付</string>
@@ -454,7 +454,7 @@
     <string name="feature_category_enabled_title">已启用功能</string>
     <string name="feature_category_enabled_summary">当前已启用 %1$d 个功能</string>
 
-    <!-- Feature metadata -->
+    
     <string name="feature_batch_add_label_name">批量打标签</string>
     <string name="feature_batch_add_label_description">为选中的多个好友追加同一个标签, 可选择已有标签或新建, 请求会自动间隔以规避服务器风控</string>
     <string name="feature_batch_delete_chat_history_name">批量删除聊天记录</string>
@@ -907,7 +907,7 @@
     <string name="feature_virtual_voip_video_name">虚拟视频通话</string>
     <string name="feature_virtual_voip_video_description">在微信视频通话相机预览中播放本地视频或网络直播流</string>
 
-    <!-- Feature API metadata -->
+    
     <string name="feature_we_app_msg_api_name">AppMsg 发送服务</string>
     <string name="feature_we_app_msg_api_description">提供 XML 卡片消息发送能力</string>
     <string name="feature_we_auth_api_name">授权与登录服务</string>
@@ -1259,7 +1259,7 @@
     <string name="fab_delete_description">删除 %1$s</string>
     <string name="agent_name_required">名称不能为空</string>
     <string name="agent_name_dot_invalid">名称不能为“.”或“..”</string>
-    <string name="agent_name_illegal_characters">名称不能包含 / \ : * ? &quot; &lt; &gt; | 等字符</string>
+    <string name="agent_name_illegal_characters">名称不能包含 / \ : * ? " &lt; &gt; | 等字符</string>
     <string name="panel_action_back">返回</string>
     <string name="panel_action_create">创建</string>
     <string name="panel_action_delete">删除</string>
@@ -1655,7 +1655,7 @@
     <plurals name="voice_panel_delete_selected_message">
         <item quantity="other">从本地语音包中删除选中的 %1$d 条语音？</item>
     </plurals>
-    <!-- 简体中文资源：较小的直属聊天功能文件。 -->
+    
     <string name="chat_batch_revoke_menu">撤回</string>
     <plurals name="chat_batch_revoke_result">
         <item quantity="other">已撤回 %1$d/%2$d 条消息</item>
@@ -1995,7 +1995,7 @@
     <string name="chat_conversation_pinned">已置顶</string><string name="chat_conversation_unpinned">已取消置顶</string><string name="chat_conversation_muted">已开启免打扰</string><string name="chat_conversation_unmuted">已关闭免打扰</string>
     <string name="chat_sticker_manager_select_all">全选</string><string name="chat_sticker_manager_select_none">全不选</string><string name="chat_sticker_manager_invert">反选</string><string name="chat_sticker_manager_export">导出</string><string name="chat_sticker_manager_exporting">正在导出…</string>
     <plurals name="chat_sticker_manager_exported"><item quantity="other">已保存 %1$d 张贴纸到 %2$s</item></plurals>
-    <!-- 聊天输入栏菜单与 API 核心简体中文资源。 -->
+    
     <string name="mention_members_settings_title">@所有人设置</string>
     <string name="mention_members_stealth_label">隐蔽@所有人</string>
     <string name="mention_members_stealth_description">开启时确认成员选择后以原生方式发送输入框文本（不附带@昵称前缀），接收方会收到“有人@我”提醒但消息内不显示@文本；群成员超过 200 人时仅提醒前 200 人。关闭时在消息头部附带@昵称文本</string>
@@ -2283,7 +2283,7 @@
     <string name="chat_voice_file_conversion_failed">转换失败，请查看日志了解错误详情</string>
     <string name="chat_voice_file_send_success">语音发送成功</string>
     <string name="chat_voice_file_send_failed">语音发送失败</string>
-    <!-- Task 4: non-Compose chat panel feedback. -->
+    
     <string name="chat_panel_recent">最近</string>
     <string name="chat_unknown_error">未知错误</string>
     <string name="chat_voice_shared_packs_load_failed">加载共享语音包失败</string>
@@ -2435,7 +2435,7 @@
     <string name="chat_voice_path_invalid">语音路径无效</string>
     <string name="chat_voice_file_empty">语音文件为空</string>
     <string name="chat_voice_pack_path_invalid">语音包路径无效</string>
-    <!-- Task 5 group 1: batch actions -->
+    
     <string name="batch_select_at_least_one_friend">请选择至少一个好友</string>
     <string name="batch_select_at_least_one_conversation">请选择至少一个对话</string>
     <string name="batch_add_label_select_friends">选择要打标签的好友</string>
@@ -2491,7 +2491,7 @@
     <plurals name="batch_mass_send_done"><item quantity="other">已群发到 %1$d 个对象</item></plurals>
     <plurals name="batch_mass_send_partial"><item quantity="other">已群发到 %1$d/%2$d 个对象</item></plurals>
 
-    <!-- Task 5 group 1: contacts -->
+    
     <string name="contacts_auto_add_nearby_menu">自动加好友</string>
     <string name="contacts_auto_remark_format">备注格式</string>
     <string name="contacts_auto_remark_insert_placeholder">点击插入占位符：</string>
@@ -2600,7 +2600,7 @@
     <plurals name="contacts_split_call_done_cleaned"><item quantity="other">任务结束：成功 %1$d 次，失败 %2$d 次，已自动清理 %3$d 个假群</item></plurals>
     <plurals name="contacts_split_call_done_cleanup_failed"><item quantity="other">任务结束：成功 %1$d 次，失败 %2$d 次，自动清理 %3$d 个假群失败</item></plurals>
 
-    <!-- Task 5 group 1: home-screen menu -->
+    
     <string name="home_menu_force_stop">强行停止</string>
     <string name="home_menu_mark_all_read">清空未读</string>
     <string name="home_menu_all_marked_read">已将全部未读消息标为已读</string>
@@ -2608,7 +2608,7 @@
     <string name="home_menu_show_conversations">显示对话</string>
     <string name="home_menu_hide_conversations">隐藏对话</string>
 
-    <!-- Task 5 group 2: 界面美化 -->
+    
     <string name="action_close">关闭</string>
     <string name="action_download">下载</string>
     <string name="action_import">导入</string>
@@ -2688,7 +2688,7 @@
     <string name="beautify_me_page_hide_cards_summary">取决于微信版本，可能为“卡包”“小店与卡包”</string>
     <string name="beautify_me_page_hide_stickers">隐藏表情标签</string>
 
-    <!-- Task 5 group 2: 朋友圈 -->
+    
     <string name="moments_auto_refresh_title">自动刷新</string>
     <string name="moments_auto_refresh_interval">刷新间隔（分钟）</string>
     <string name="moments_auto_refresh_interval_summary">每隔指定时间自动刷新一次朋友圈列表</string>
@@ -2819,7 +2819,7 @@
     <string name="moments_content_type_listen_audio">听歌</string>
     <string name="moments_content_type_live_photo">动态照片</string>
 
-    <!-- Task 5 group 2: 视频号 -->
+    
     <string name="shortvideos_copy_link">复制链接</string>
     <string name="shortvideos_duration">时长</string>
     <string name="shortvideos_size">大小</string>
@@ -2836,7 +2836,7 @@
     <string name="shortvideos_video_downloaded_to">已将视频下载到 /sdcard/Download/WeKit/%1$s</string>
     <string name="shortvideos_video_download_started">开始下载视频</string>
 
-    <!-- Task 5 group 2: themes and home side panel -->
+    
     <string name="action_back">返回</string>
     <string name="action_restore_defaults">恢复默认</string>
     <string name="loading">加载中…</string>
@@ -2981,66 +2981,9 @@
     <string name="home_side_panel_attribution_author_source">—— %1$s「%2$s」</string>
     <string name="home_side_panel_attribution_author">—— %1$s</string>
     <string name="home_side_panel_attribution_source">——「%1$s」</string>
-    <!-- 负一屏组件管理 -->
-    <string name="home_side_panel_widget_manage">组件管理</string>
-    <string name="home_side_panel_widget_manage_desc">自定义负一屏显示的组件、顺序和颜色</string>
-    <string name="home_side_panel_widget_enabled">已启用</string>
-    <string name="home_side_panel_widget_disabled">已禁用</string>
-    <string name="home_side_panel_widget_drag_hint">长按拖拽排序，关闭后下方组件自动补位</string>
-    <string name="home_side_panel_widget_tint_color">主题色</string>
-    <string name="home_side_panel_widget_tint_color_desc">自定义该组件的主题颜色</string>
-    <string name="home_side_panel_widget_reset_color">恢复默认颜色</string>
-    <string name="home_side_panel_widget_custom_image">自定义图片</string>
-    <string name="home_side_panel_widget_custom_image_desc">点击上传自定义图片</string>
-    <string name="home_side_panel_widget_select_image">选择图片</string>
-    <string name="home_side_panel_widget_remove_image">移除图片</string>
-    <string name="home_side_panel_widget_custom_text">自定义文字</string>
-    <string name="home_side_panel_widget_edit_text">编辑文字</string>
-    <string name="home_side_panel_widget_save">保存</string>
-    <string name="home_side_panel_widget_cancel">取消</string>
-    <string name="home_side_panel_widget_reset_default">恢复默认布局</string>
-    <string name="home_side_panel_widget_reset_confirm">确定要恢复默认布局吗？当前自定义将丢失。</string>
-    <!-- 组件名称和描述 -->
-    <string name="home_side_panel_widget_profile">个人资料</string>
-    <string name="home_side_panel_widget_profile_desc">头像、昵称和在线状态</string>
-    <string name="home_side_panel_widget_datetime">日期问候</string>
-    <string name="home_side_panel_widget_datetime_desc">当前日期和问候语</string>
-    <string name="home_side_panel_widget_weather">天气</string>
-    <string name="home_side_panel_widget_weather_desc">实时天气和详细信息</string>
-    <string name="home_side_panel_widget_wallet">钱包余额</string>
-    <string name="home_side_panel_widget_wallet_desc">微信余额和快捷付款</string>
-    <string name="home_side_panel_widget_shortcuts">快捷操作</string>
-    <string name="home_side_panel_widget_shortcuts_desc">扫一扫、收付款、收藏</string>
-    <string name="home_side_panel_widget_functions">功能列表</string>
-    <string name="home_side_panel_widget_functions_desc">朋友圈、视频号等功能入口</string>
-    <string name="home_side_panel_widget_hitokoto">一言</string>
-    <string name="home_side_panel_widget_hitokoto_desc">每日一句经典语录</string>
-    <string name="home_side_panel_widget_note">便签</string>
-    <string name="home_side_panel_widget_note_desc">随手记录重要事项</string>
-    <string name="home_side_panel_widget_countdown">倒计时</string>
-    <string name="home_side_panel_widget_countdown_desc">重要日子倒计时</string>
-    <string name="home_side_panel_widget_calendar">日历</string>
-    <string name="home_side_panel_widget_calendar_desc">当前月份日历视图</string>
-    <string name="home_side_panel_widget_steps">步数</string>
-    <string name="home_side_panel_widget_steps_desc">今日运动步数统计</string>
-    <!-- 便签组件 -->
-    <string name="home_side_panel_note_hint">点击编辑便签内容…</string>
-    <string name="home_side_panel_note_title">便签</string>
-    <!-- 倒计时组件 -->
-    <string name="home_side_panel_countdown_title">倒计时</string>
-    <string name="home_side_panel_countdown_days">天</string>
-    <string name="home_side_panel_countdown_hint">点击设置倒计时日期</string>
-    <string name="home_side_panel_countdown_passed">已过 %1$d 天</string>
-    <!-- 日历组件 -->
-    <string name="home_side_panel_calendar_title">日历</string>
-    <string name="home_side_panel_calendar_today">今天</string>
-    <!-- 步数组件 -->
-    <string name="home_side_panel_steps_title">今日步数</string>
-    <string name="home_side_panel_steps_loading">加载中…</string>
-    <string name="home_side_panel_steps_unavailable">暂无数据</string>
-    <string name="home_side_panel_steps_goal">目标 %1$d 步</string>
+    
     <string name="moments_interaction_idle">朋友的互动消息</string>
-    <!-- Task 5 group 3: shared automation, payment, profile, and VoIP surfaces. -->
+    
     <string name="action_settings">设置</string>
     <string name="warning">警告</string>
     <string name="error">错误</string>
@@ -3244,7 +3187,7 @@
     <string name="voip_virtual_video_orientation_auto">自动</string>
     <string name="voip_virtual_video_orientation_portrait">竖屏</string>
     <string name="voip_virtual_video_orientation_landscape">横屏</string>
-    <!-- Task 5 group 4: debug, entertain, notifications, scripting, and system -->
+    
     <string name="debug_copied">已复制</string>
     <string name="debug_crash_copy_full_log">复制完整日志</string>
     <string name="debug_crash_exception_information">异常信息</string>
@@ -3296,7 +3239,7 @@
     <string name="system_qr_code_record_empty">暂无记录</string><string name="system_qr_code_record_copy">复制 URL</string><string name="system_qr_code_record_open">打开</string><string name="system_qr_code_record_open_in_system">在系统中打开</string>
     <string name="system_safe_mode_enable_title">开启安全模式？</string><string name="system_safe_mode_enable_message">开启后，下次启动微信时普通功能不会被加载，只保留核心功能；普通功能仍会显示在设置页中，以便关闭安全模式后恢复使用。\n\n确认开启安全模式？</string><string name="system_safe_mode_enable">开启</string>
     <string name="system_api_server_mcp_started">MCP 服务器启动于 http://0.0.0.0:%1$d/mcp</string><string name="system_api_server_rest_started">REST API 服务器启动于 http://0.0.0.0:%1$d/api</string><string name="system_api_server_stopped">服务器已停止</string><string name="system_api_server_auth_token">认证令牌</string><string name="system_api_server_port">端口</string><string name="system_api_server_invalid_port">端口格式不正确！</string>
-    <!-- Non-Compose and injected-host messages -->
+    
     <string name="noncompose_features_loaded">WeKit 加载成功！</string>
     <string name="noncompose_restarting_host">正在重启…</string>
     <string name="noncompose_bsh_saved">已保存到 %1$s</string>
@@ -3317,7 +3260,7 @@
     <string name="noncompose_wekit_settings_entry">WeKit 设置</string>
     <string name="noncompose_wekit_settings_group">插件</string>
 
-    <!-- WeAgent live panel -->
+    
     <string name="agent_panel_collapse_sessions">收起会话侧栏</string>
     <string name="agent_panel_sessions">会话</string>
     <string name="agent_panel_new_session">新建会话</string>

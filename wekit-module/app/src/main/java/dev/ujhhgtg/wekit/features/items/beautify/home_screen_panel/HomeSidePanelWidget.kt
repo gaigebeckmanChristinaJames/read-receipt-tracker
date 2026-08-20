@@ -68,7 +68,7 @@ internal enum class HomeSidePanelWidget(
     CUSTOM_IMAGE(
         labelRes = R.string.home_side_panel_widget_custom_image,
         descriptionRes = R.string.home_side_panel_widget_custom_image_desc,
-        icon = MaterialSymbols.Outlined.Image,
+        icon = MaterialSymbols.Outlined.Photo_library,
         supportsTintColor = false,
         supportsCustomImage = true,
     ),
