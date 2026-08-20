@@ -3628,7 +3628,7 @@
     <string name="home_side_panel_widget_calendar">Calendar</string>
     <string name="home_side_panel_widget_calendar_desc">Current month calendar view</string>
     <string name="home_side_panel_widget_steps">Steps</string>
-    <string name="home_side_panel_widget_steps_desc">Today's step count</string>
+    <string name="home_side_panel_widget_steps_desc">Step count today</string>
     <!-- New widget texts -->
     <string name="home_side_panel_note_title">Note</string>
     <string name="home_side_panel_note_hint">Tap to edit note...</string>
@@ -3638,7 +3638,7 @@
     <string name="home_side_panel_countdown_hint">Tap to set countdown date</string>
     <string name="home_side_panel_calendar_title">Calendar</string>
     <string name="home_side_panel_calendar_today">Today</string>
-    <string name="home_side_panel_steps_title">Today's Steps</string>
+    <string name="home_side_panel_steps_title">Daily Steps</string>
     <string name="home_side_panel_steps_loading">Loading...</string>
     <string name="home_side_panel_steps_unavailable">No data</string>
     <string name="home_side_panel_steps_goal">Goal: %1 steps</string>
