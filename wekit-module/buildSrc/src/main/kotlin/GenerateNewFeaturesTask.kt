@@ -46,38 +46,14 @@ abstract class GenerateNewFeaturesTask : DefaultTask() {
 
     @TaskAction
     fun generate() {
-        val gitEntries = runCatching { collectEntries() }
+        val entries = runCatching { collectEntries() }
             .onFailure { logger.warn("Failed to collect new features from git: ${it.message}") }
             .getOrDefault(emptyList())
-
-        // 保底：当 git 历史检测不到新功能（如整体复制的仓库、浅克隆）时，
-        // 用固定列表确保"新功能"页面不为空。
-        val entries = if (gitEntries.isNotEmpty()) gitEntries else {
-            val headEpoch = git("log", "-1", "--format=%ct")?.trim()?.toLongOrNull()
-                ?: System.currentTimeMillis() / 1000L
-            val existingIds = gitEntries.mapTo(mutableSetOf()) { it.first }
-            val fallback = FALLBACK_NEW_FEATURE_IDS
-                .filter { it !in existingIds }
-                .map { it to headEpoch }
-            logger.warn("Git new-features list empty; using ${fallback.size} fallback entries.")
-            fallback
-        }
 
         val outputFile = outputDir.get().asFile
             .resolve("${namespace.get().replace(".", "/")}/features/core/NewFeatures.kt")
         outputFile.parentFile.mkdirs()
         outputFile.writeText(renderSource(entries))
-    }
-
-    companion object {
-        /** 保底新功能 ID 列表：当 git 历史无法检测时，这些功能会出现在"新功能"页。 */
-        private val FALLBACK_NEW_FEATURE_IDS = listOf(
-            "已读追踪",
-            "防撤回",
-            "消息转发",
-            "语音保存",
-            "自动原图",
-        )
     }
 
     // -----------------------------------------------------------------------

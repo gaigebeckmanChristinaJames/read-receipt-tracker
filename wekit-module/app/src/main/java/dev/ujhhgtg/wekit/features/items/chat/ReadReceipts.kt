@@ -460,13 +460,7 @@ object ReadReceipts : ClickableFeature(),
 
     private val registrationCalls = ConcurrentHashMap.newKeySet<Call>()
 
-    /**
-     * [HTTP层] 向已读追踪服务器注册消息明文。
-     * 兼容后端:
-     *   - read-receipt-tracker (Python/Flask): POST /register → {success,id,wxId,pixel_url}
-     *   - wekit-read-receipts-server (Rust):   POST /register → {id}
-     * 客户端仅校验 HTTP 状态码，不解析响应体（id 在本地 computeId() 计算）。
-     */
+    /** Registers plaintext before the intercepted send is emitted. The underlying call is cancellable. */
     private suspend fun registerMessage(
         endpoint: String,
         wxId: String,
@@ -479,15 +473,12 @@ object ReadReceipts : ClickableFeature(),
             put("createTime", createTime)
         }.toString()
         if (bodyJson.toByteArray(Charsets.UTF_8).size > MAX_REGISTRATION_BODY_BYTES) {
-            WeLogger.w(TAG, "register: body too large (${bodyJson.length} bytes)")
             return ReadReceiptRuntimeError.Resource(
                 R.string.read_receipts_registration_request_too_large,
             )
         }
         val body = bodyJson.toRequestBody(jsonMediaType)
-        val url = "$endpoint/register"
-        WeLogger.i(TAG, "register → POST $url (wxId=${wxId.take(8)}…, contentLen=${content.length})")
-        val request = Request.Builder().url(url).post(body).build()
+        val request = Request.Builder().url("$endpoint/register").post(body).build()
         return suspendCancellableCoroutine { continuation ->
             val call = httpClient.newCall(request)
             registrationCalls += call
@@ -495,8 +486,7 @@ object ReadReceipts : ClickableFeature(),
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     registrationCalls -= call
-                    val category = readReceiptNetworkFailureCategory(e)
-                    WeLogger.w(TAG, "register failed: $category — ${e.message}")
+                    WeLogger.w(TAG, "register request failed (${readReceiptNetworkFailureCategory(e)})")
                     continuation.resumeIfActive(
                         ReadReceiptRuntimeError.Resource(R.string.read_receipts_registration_failed),
                     )
@@ -506,7 +496,6 @@ object ReadReceipts : ClickableFeature(),
                     registrationCalls -= call
                     response.use {
                         if (it.isSuccessful) {
-                            WeLogger.i(TAG, "register OK: HTTP ${it.code}")
                             continuation.resumeIfActive(null)
                         } else {
                             WeLogger.w(TAG, "register failed: HTTP ${it.code}")
@@ -549,23 +538,15 @@ object ReadReceipts : ClickableFeature(),
         }
 
     /** Queries the distinct-IP read count for a persisted record. Returns null on any failure. */
-    /**
-     * [轮询层] 查询指定消息的去重IP已读人数。
-     * 兼容后端:
-     *   - read-receipt-tracker: GET /count?wxId=&id= → {count,msg_id,reads:[...]}
-     *   - wekit-read-receipts-server: GET /count?wxId=&id= → {count}
-     * 客户端仅读取 count 字段。
-     */
     private suspend fun fetchCount(record: ReadReceiptRecord): Int? {
-        val endpoint = pollingEndpoint(record) ?: run {
-            WeLogger.w(TAG, "fetchCount: no polling endpoint for id=${record.id.take(8)}")
-            return null
-        }
-        val url = "$endpoint/count?wxId=${record.wxId}&id=${record.id}"
+        val endpoint = pollingEndpoint(record) ?: return null
         val request = runCatching {
-            Request.Builder().url(url).get().build()
+            Request.Builder()
+                .url("$endpoint/count?wxId=${record.wxId}&id=${record.id}")
+                .get()
+                .build()
         }.getOrElse {
-            WeLogger.w(TAG, "fetchCount: invalid URL $url")
+            WeLogger.w(TAG, "invalid count endpoint (response)")
             return null
         }
         return suspendCancellableCoroutine { continuation ->
@@ -596,7 +577,6 @@ object ReadReceipts : ClickableFeature(),
                                 ?.content
                                 ?.toIntOrNull()
                         }.getOrNull()
-                        WeLogger.i(TAG, "fetchCount OK: id=${record.id.take(8)} count=$count")
                         continuation.resumeIfActive(count)
                     }
                 }
@@ -697,25 +677,14 @@ object ReadReceipts : ClickableFeature(),
     private fun verifiedTunnelEndpoint(): String? =
         ReadReceiptsTunnelController.verifiedEndpoint()
 
-    /**
-     * [配置层] 解析当前已读追踪后端配置，返回可用的请求端点。
-     * 两种模式:
-     *   - THIRD_PARTY: 用户自定义服务器地址 (如 read-receipt-tracker)
-     *   - BUILT_IN:    模块内置原生服务器 + 隧道 (需本地服务运行中)
-     */
     private fun resolveBackend(): Pair<ResolvedBackend?, ReadReceiptRuntimeError?> {
         val configuration = configuration()
-        WeLogger.i(TAG, "resolveBackend: mode=${configuration.mode}")
         return when (configuration.mode) {
             ReadReceiptsServerMode.THIRD_PARTY -> {
                 val endpoint = normalizedEndpoint(configuration.thirdPartyUrl)
-                if (endpoint == null) {
-                    WeLogger.w(TAG, "resolveBackend: third-party URL invalid or empty: '${configuration.thirdPartyUrl.take(60)}'")
-                    return null to ReadReceiptRuntimeError.Resource(
+                    ?: return null to ReadReceiptRuntimeError.Resource(
                         R.string.chat_read_receipts_server_missing,
                     )
-                }
-                WeLogger.i(TAG, "resolveBackend: THIRD_PARTY endpoint=$endpoint")
                 ResolvedBackend(
                     backend = ReadReceiptBackend.THIRD_PARTY,
                     requestEndpoint = endpoint,
@@ -727,19 +696,14 @@ object ReadReceipts : ClickableFeature(),
             ReadReceiptsServerMode.BUILT_IN -> {
                 val origin = originController.snapshot()
                 if (origin.state != ReadReceiptsRuntimeState.RUNNING || origin.port == null) {
-                    WeLogger.w(TAG, "resolveBackend: built-in server not running (state=${origin.state})")
                     return null to ReadReceiptRuntimeError.Resource(
                         R.string.read_receipts_built_in_not_running,
                     )
                 }
                 val publicEndpoint = verifiedTunnelEndpoint()
-                if (publicEndpoint == null) {
-                    WeLogger.w(TAG, "resolveBackend: tunnel endpoint not verified yet")
-                    return null to ReadReceiptRuntimeError.Resource(
+                    ?: return null to ReadReceiptRuntimeError.Resource(
                         R.string.read_receipts_public_health_check_pending,
                     )
-                }
-                WeLogger.i(TAG, "resolveBackend: BUILT_IN localPort=${origin.port} public=$publicEndpoint")
                 ResolvedBackend(
                     backend = ReadReceiptBackend.BUILT_IN,
                     requestEndpoint = "http://127.0.0.1:${origin.port}",
@@ -1887,17 +1851,28 @@ object ReadReceipts : ClickableFeature(),
                 endpoint = backend.recordEndpoint,
                 createdAtMillis = createTime,
             )
-            // ═══════════════════════════════════════════════════════════════════
-            // [修复] 已读追踪注册失败阻塞消息发送的问题
-            // 原逻辑: 同步调用 /register → 成功才发送消息 → 失败则提示"注册失败"且不发消息
-            // 问题: 服务器暂时不可达/超时/网络波动时，用户完全无法发送已读追踪消息
-            // 修复: 先发送消息（消息ID在本地computeId()计算，像素URL已嵌入XML），
-            //       再异步注册到服务器。注册仅用于服务器记录消息明文，
-            //       像素追踪(/pixel)和已读计数(/count)不依赖注册成功。
-            // 兼容后端: read-receipt-tracker (Python/C++) / wekit-read-receipts-server (Rust)
-            // ═══════════════════════════════════════════════════════════════════
             featureScope!!.launch {
-                // 第1层: 主线程发送 XML 卡片消息（含追踪像素 URL）— 不依赖注册结果
+                val registrationError = registerMessage(
+                    backend.requestEndpoint,
+                    selfWxId,
+                    actualText,
+                    createTime,
+                )
+                if (registrationError != null) {
+                    withContext(Dispatchers.Main.immediate) {
+                        if (!ReadReceipts.isActive) return@withContext
+                        runtimeError = registrationError
+                        showToast(
+                            chatFooter.context,
+                            chatFooter.context.localizedChatString(
+                                R.string.read_receipts_error_prefix,
+                                registrationError.message(chatFooter.context),
+                            ),
+                        )
+                    }
+                    return@launch
+                }
+
                 withContext(Dispatchers.Main.immediate) {
                     coroutineContext.ensureActive()
                     if (!ReadReceipts.isActive) return@withContext
@@ -1919,20 +1894,6 @@ object ReadReceipts : ClickableFeature(),
                     showToast(
                         chatFooter.context,
                         chatFooter.context.localizedChatString(R.string.chat_read_receipts_sent),
-                    )
-                }
-                // 第2层: 异步注册消息明文到服务器（非阻塞，失败仅记日志不阻断）
-                val registrationError = registerMessage(
-                    backend.requestEndpoint,
-                    selfWxId,
-                    actualText,
-                    createTime,
-                )
-                if (registrationError != null) {
-                    WeLogger.w(
-                        TAG,
-                        "register failed (non-blocking, message already sent): " +
-                            registrationError.message(chatFooter.context),
                     )
                 }
             }
@@ -2006,7 +1967,7 @@ object ReadReceipts : ClickableFeature(),
 
     override fun onMessageViewAttached(view: View, message: MessageInfo) {
         val record = findRecord(message) ?: return
-        val timeTV = findTimeView(view)!!
+        val timeTV = findTimeView(view) ?: return
         val generation = nextGeneration(timeTV)
         val active = ActiveBinding(
             message,

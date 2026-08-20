@@ -1,84 +1,57 @@
-# WeKit 修改版 — 已读追踪修复版
+# WeKit
 
-基于 [Ujhhgtg/WeKit](https://github.com/Ujhhgtg/WeKit) 最新 dev 分支，针对 [read-receipt-tracker](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker) 后端做了兼容性修复。
+适用于微信的 Xposed 模块
 
-适用于微信的 Xposed 模块。
+<img alt="fabric" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/fabric_vector.svg"> <img alt="forge" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/unsupported/forge_vector.svg">
 
-## 仓库结构
+<a href="https://ifdian.net/a/ujhhgtg"><img alt="buymeacoffee-plural" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/donate/buymeacoffee-plural_vector.svg"></a>
+<a href="https://ujhhgtgteams.gitbook.io/wekit-docs"><img alt="gitbook" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/gitbook_vector.svg"></a>
 
-```
-wekit-module/
-├── app/                          # [第1层] Android 应用模块 (Xposed 模块主体)
-│   ├── src/main/java/dev/ujhhgtg/wekit/
-│   │   ├── features/items/chat/
-│   │   │   ├── ReadReceipts.kt           # 已读追踪核心 (已修复: 非阻塞注册)
-│   │   │   ├── ReadReceiptsConfiguration.kt  # 配置管理
-│   │   │   └── ReadReceiptRecord.kt      # 记录模型 + 端点校验
-│   │   └── ...
-│   ├── proguard-rules.pro         # [第2层] 混淆规则 (fastjson2/okhttp/kotlin 保留)
-│   └── build.gradle.kts           # 构建配置 (含 script-deps DEX 生成)
-├── server/
-│   └── read-tracker-java/         # [第3层] Java 版已读服务器插件
-│       ├── main.java              # 服务器主逻辑 (HTTP + SQLite + 隧道)
-│       ├── read_tracker.bsh       # BeanShell 入口
-│       ├── config.prop            # 配置文件
-│       ├── info.prop              # 插件元信息
-│       └── lib/jsch.dex           # SSH 隧道依赖
-├── contrib/
-│   └── wekit-read-receipts-server/  # [第4层] Rust 版参考后端 (官方)
-├── wekit-native/                  # [第5层] Rust 原生库 (内置服务器等)
-├── xtask/                         # [第6层] 构建自动化 (cargo xtask)
-├── buildSrc/                      # Gradle 自定义任务
-│   └── GenerateScriptDepsDexTask.kt  # script-deps DEX 生成任务
-├── .github/workflows/build.yml    # [第7层] CI 构建 + 发布
-└── x                              # 构建入口 (cargo xtask 包装)
-```
+## 文档
 
-## 已读追踪架构分层
+请参阅 [文档](https://ujhhgtgteams.gitbook.io/wekit-docs) 以使用本模块。
 
-### 第1层: 消息发送层 (`ReadReceipts.kt` — `onEnable` hook)
-- 拦截微信发送消息，注入追踪像素 URL 到 XML 卡片
-- **修复点**: 先发送消息，再异步注册到服务器（原逻辑阻塞注册导致"注册失败"时消息无法发送）
+- [🚀 快速开始](https://ujhhgtgteams.gitbook.io/wekit-docs/getting-started)
+- [📥 安装指南](https://ujhhgtgteams.gitbook.io/wekit-docs/installation)
+- [⚙️ 配置指南](https://ujhhgtgteams.gitbook.io/wekit-docs/configuration)
+- [❓ 常见问题](https://ujhhgtgteams.gitbook.io/wekit-docs/faq)
+- [🛠 开发指南](https://ujhhgtgteams.gitbook.io/wekit-docs/development)
 
-### 第2层: HTTP 注册层 (`registerMessage`)
-- `POST {endpoint}/register`，body: `{wxId, content, createTime}`
-- 兼容 read-receipt-tracker (Python) 和 wekit-read-receipts-server (Rust)
-- 非阻塞，失败仅记日志不阻断消息
+## 翻译 / Translation
 
-### 第3层: 像素追踪层 (`/pixel` 端点)
-- 收件人打开消息时，微信自动加载 XML 中的图片 URL
-- 服务器记录访问者 IP、UA、地理位置
-- 1x1 透明 GIF/PNG，不影响消息显示
+[![Translation status](https://hosted.weblate.org/widget/wekit/wekit/svg-badge.svg)](https://hosted.weblate.org/projects/wekit/wekit/)
 
-### 第4层: 已读计数轮询层 (`fetchCount`)
-- `GET {endpoint}/count?wxId=&id=` → `{count}`
-- 在聊天界面定期轮询，更新"已读 X 人"显示
+欢迎通过 [Hosted Weblate](https://hosted.weblate.org/projects/wekit/wekit/) 参与简体中文和
+繁体中文翻译。贡献流程、术语和本地校验说明见[翻译贡献指南](docs/translations/README.md)。
 
-### 第5层: 后端服务层
-- **read-receipt-tracker** (Python/Flask + C++): 本仓库主后端
-- **read-tracker-java** (Java 插件): 可在手机端运行的轻量后端
-- **wekit-read-receipts-server** (Rust): 官方参考后端
+## 联系
 
-## 构建
+[Telegram 超级群组](https://t.me/+7j5dJ6g16B43OWVl)
 
-```bash
-# Standard 版 (libxposed 入口)
-./x build --flavor standard --release
+[爱发电](https://ifdian.net/a/ujhhgtg)
 
-# Legacy 版 (传统 de.robv 入口)
-./x build --flavor legacy --release
+## 致谢
 
-# 生成 script-deps DEX (Java 插件依赖)
-./gradlew generateScriptDepsDex
-```
+[WeKit 上游](https://github.com/cwuom/WeKit)
 
-## 修复内容
+[WAuxiliary](https://github.com/HdShare/WAuxiliary_Public)
 
-### 1. 已读追踪注册失败 (ReadReceipts.kt)
-- **问题**: 最新 CI 版本将注册改为同步阻塞，服务器不可达时消息无法发送
-- **修复**: 改为"先发送后异步注册"，注册失败仅记日志
-- **原理**: 消息 ID 在本地 SHA-256 计算，像素 URL 已嵌入消息，注册仅用于服务器记录明文
+[NewMiko](https://github.com/dartcv/NewMiko/blob/archives/)
 
-### 2. Java 插件混淆规则 (proguard-rules.pro)
-- **问题**: 之前因 fastjson2/okhttp 体积过大移除了 keep 规则，导致 R8 混淆后 Java 插件无法通过类名访问这些库
-- **修复**: 恢复 `okhttp3.**`、`okio.**`、`com.alibaba.fastjson2.**`、`kotlin.**` 的完整 keep 规则
+[QAuxiliary](https://github.com/cinit/QAuxiliary)
+
+[FingerprintPay](https://github.com/eritpchy/FingerprintPay)
+
+[WADN](https://github.com/Ujhhgtg/wauxv_deobf_new) [WAD](https://github.com/Ujhhgtg/wauxv_deobf)
+
+*^^^ 如果你需要一些我尚未从 WAuxiliary ~~抄袭~~提取的功能, 你可以自行从此处移植; 欢迎 PR!*
+
+[FunBox](https://github.com/Ujhhgtg/funbox_deobf)
+
+[I-Am-Pad](https://github.com/Houvven/I-Am-Pad)
+
+---
+
+<p align="center">
+  <img src="https://github.com/Coopydood/ultimate-macOS-KVM/assets/39441479/39d78d4b-8ce8-44f4-bba7-fefdbf2f80db" width="10%"> </img>
+</p>

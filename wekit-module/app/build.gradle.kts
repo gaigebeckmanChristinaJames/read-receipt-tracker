@@ -121,11 +121,6 @@ android {
 
         release {
             optimization.enable = true
-            // 保留脚本引擎(Java插件)依赖的 fastjson2 / okhttp / kotlin 等类不被混淆
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
             signingConfig = signingConfigs.getByName(if (foundKeystore) "release" else "debug")
         }
     }

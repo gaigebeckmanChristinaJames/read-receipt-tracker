@@ -135,6 +135,12 @@ Context getTopActivitySafe() {
 void loadConfig() {
     DB_FILE = PLUGIN_DIR + "/track_data/receipts.db";
     LOG_FILE = PLUGIN_DIR + "/log.txt";
+    // 修复：确保日志和数据目录存在，否则 FileWriter 会静默失败导致日志不输出
+    try {
+        new File(PLUGIN_DIR).mkdirs();
+        new File(PLUGIN_DIR + "/track_data").mkdirs();
+        new File(PLUGIN_DIR + "/lib").mkdirs();
+    } catch (Exception e) {}
     if (appContext == null) appContext = getTopActivitySafe();
     File f = new File(PLUGIN_DIR + "/config.prop");
     if (!f.exists()) { writeLog("config.prop不存在，使用默认配置"); return; }
@@ -467,7 +473,7 @@ boolean startCloudflaredTunnel() {
         reader.setDaemon(true);
         reader.start();
         long startWait = System.currentTimeMillis();
-        java.util.regex.Pattern urlPattern = java.util.regex.Pattern.compile("https://[a-z0-9][a-z0-9-]*-[a-z0-9-]*\\.trycloudflare\\.com");
+        java.util.regex.Pattern urlPattern = java.util.regex.Pattern.compile("https://[a-z0-9][a-z0-9-]*\\.trycloudflare\\.com");
         while (System.currentTimeMillis() - startWait < 90000 && tunnelRunning) {
             String out = allOutput.toString();
             java.util.regex.Matcher m = urlPattern.matcher(out);
