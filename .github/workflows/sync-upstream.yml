@@ -220,7 +220,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           # 克隆上游仓库完整历史以获取真实的 commit count 和 hash
-          git clone --depth 0 https://github.com/${UPSTREAM_REPO}.git /tmp/upstream-wekit
+          git clone https://github.com/${UPSTREAM_REPO}.git /tmp/upstream-wekit
           cd /tmp/upstream-wekit
           UPSTREAM_COMMIT_COUNT=$(git rev-list --count HEAD)
           UPSTREAM_GIT_HASH=$(git rev-parse --short=8 HEAD)
