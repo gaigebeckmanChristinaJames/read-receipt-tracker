@@ -1,0 +1,272 @@
+name: 自动检测上游WeKit更新并构建CI版
+
+on:
+  schedule:
+    - cron: '30 2 * * *'   # 每天UTC 2:30（北京时间10:30）检查一次上游更新
+  workflow_dispatch:          # 支持手动触发
+
+env:
+  UPSTREAM_REPO: Ujhhgtg/WeKit
+  UPSTREAM_BRANCH: master
+  LAST_COMMIT_FILE: .last_upstream_commit
+  JAVA_VERSION: '21'
+  NDK_VERSION: '30.0.14904198'
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: wekit-module
+    steps:
+      # ===== 1. 检出当前仓库 =====
+      - name: 检出当前仓库
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      # ===== 2. 查询上游最新commit =====
+      - name: 获取上游最新commit
+        id: upstream
+        working-directory: ${{ github.workspace }}
+        run: |
+          COMMIT_INFO=$(curl -s "https://api.github.com/repos/${UPSTREAM_REPO}/commits/${UPSTREAM_BRANCH}")
+          LATEST_SHA=$(echo "$COMMIT_INFO" | jq -r '.sha')
+          COMMIT_DATE=$(echo "$COMMIT_INFO" | jq -r '.commit.committer.date')
+          echo "latest_sha=$LATEST_SHA" >> $GITHUB_OUTPUT
+          echo "commit_date=$COMMIT_DATE" >> $GITHUB_OUTPUT
+          echo "上游最新commit: $LATEST_SHA"
+          echo "上游提交时间(UTC): $COMMIT_DATE"
+          if [ "$LATEST_SHA" = "null" ] || [ -z "$LATEST_SHA" ]; then
+            echo "::error::无法获取上游commit，API返回异常"
+            exit 1
+          fi
+
+      # ===== 3. 读取上次已构建的commit =====
+      - name: 读取本地构建记录
+        id: last
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ -f "$LAST_COMMIT_FILE" ]; then
+            LAST=$(cat "$LAST_COMMIT_FILE")
+          else
+            LAST="none"
+          fi
+          echo "last_sha=$LAST" >> $GITHUB_OUTPUT
+          echo "上次构建commit: $LAST"
+
+      # ===== 4. 判断是否有更新 =====
+      - name: 检查是否需要构建
+        id: check
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ "${{ steps.upstream.outputs.latest_sha }}" = "${{ steps.last.outputs.last_sha }}" ]; then
+            echo "need_build=false" >> $GITHUB_OUTPUT
+            echo "无更新，跳过本次构建"
+          else
+            echo "need_build=true" >> $GITHUB_OUTPUT
+            echo "检测到上游更新，开始构建"
+          fi
+
+      - name: 无更新则结束
+        if: steps.check.outputs.need_build == 'false'
+        working-directory: ${{ github.workspace }}
+        run: echo "上游无更新，工作流结束"
+
+      # ===== 5. 计算版本时间（根据上游commit提交时间，向上取整到最近半点） =====
+      - name: 计算版本时间
+        id: version_time
+        if: steps.check.outputs.need_build == 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          UTC_TIME="${{ steps.upstream.outputs.commit_date }}"
+          # 转为北京时间（UTC+8）
+          BEIJING_EPOCH=$(date -d "$UTC_TIME" +%s)
+          BEIJING_HOUR=$(TZ=Asia/Shanghai date -d @$BEIJING_EPOCH +%H)
+          BEIJING_MIN=$(TZ=Asia/Shanghai date -d @$BEIJING_EPOCH +%M)
+          # 向上取整到最近半点：<=30分取当前小时:30，>30分取下一小时:00
+          if [ "$BEIJING_MIN" -le 30 ]; then
+            VERSION_MIN="30"
+            VERSION_HOUR=$BEIJING_HOUR
+          else
+            VERSION_MIN="00"
+            VERSION_HOUR=$((10#$BEIJING_HOUR + 1))
+            if [ "$VERSION_HOUR" -ge 24 ]; then
+              VERSION_HOUR="00"
+            fi
+          fi
+          # 补零
+          VERSION_HOUR=$(printf "%02d" $VERSION_HOUR)
+          VERSION_TIME="${VERSION_HOUR}:${VERSION_MIN}"
+          echo "version_time=$VERSION_TIME" >> $GITHUB_OUTPUT
+          echo "上游提交北京时间: ${BEIJING_HOUR}:${BEIJING_MIN}"
+          echo "版本时间(向上取整): $VERSION_TIME"
+
+      # ===== 6. 去除所有改版/修改版标识，确保WeKit正式版外观 =====
+      - name: 去除改版标识，确保WeKit正式版外观
+        if: steps.check.outputs.need_build == 'true'
+        run: |
+          echo "=== 扫描并清理改版标识 ==="
+          STRINGS_FILE="app/src/main/res/values/strings.xml"
+
+          # 强制覆盖应用名和介绍
+          if [ -f "$STRINGS_FILE" ]; then
+            sed -i 's/<string name="app_name">.*<\/string>/<string name="app_name">WeKit<\/string>/' "$STRINGS_FILE"
+            sed -i 's/<string name="app_description">.*<\/string>/<string name="app_description">WeChat, now with superpowers\\nUjhhgtg@github<\/string>/' "$STRINGS_FILE"
+            echo "已重置 app_name 和 app_description"
+          fi
+
+          # 扫描所有资源文件
+          find app/src/main/res -name "*.xml" -type f 2>/dev/null | while read f; do
+            sed -i \
+              -e 's/WeKit修改版/WeKit/g' \
+              -e 's/WeKit 魔改版/WeKit/g' \
+              -e 's/WeKit改版/WeKit/g' \
+              -e 's/WeKit 改版/WeKit/g' \
+              -e 's/修改版//g' \
+              -e 's/魔改版//g' \
+              -e 's/改版//g' \
+              -e 's/定制版/正式版/g' \
+              -e 's/已读回执追踪版/WeKit/g' \
+              "$f"
+          done
+
+          # 扫描 Kotlin/Java 源码
+          find app/src/main/java -name "*.kt" -o -name "*.java" 2>/dev/null | while read f; do
+            sed -i \
+              -e 's/WeKit修改版/WeKit/g' \
+              -e 's/WeKit 魔改版/WeKit/g' \
+              -e 's/WeKit改版/WeKit/g' \
+              -e 's/WeKit 改版/WeKit/g' \
+              -e 's/已读回执追踪版/WeKit/g' \
+              "$f"
+          done
+
+          # AndroidManifest label
+          MANIFEST="app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            sed -i 's/android:label="[^"]*"/android:label="@string\/app_name"/' "$MANIFEST"
+          fi
+
+          echo "=== 最终标识确认 ==="
+          grep -E 'app_name|app_description' "$STRINGS_FILE" 2>/dev/null
+          echo "=== 清理完成 ==="
+
+      # ===== 6. 构建环境：系统依赖 =====
+      - name: 安装系统依赖
+        if: steps.check.outputs.need_build == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libc6-dev gcc-multilib
+
+      # ===== 7. 构建环境：JDK 21 =====
+      - name: 设置JDK 21
+        if: steps.check.outputs.need_build == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      # ===== 8. 构建环境：Rust =====
+      - name: 设置Rust工具链
+        if: steps.check.outputs.need_build == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi
+
+      # ===== 9. 构建环境：Android SDK + NDK =====
+      - name: 设置Android SDK
+        if: steps.check.outputs.need_build == 'true'
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-37.0 build-tools;37.0.0 ndk;${{ env.NDK_VERSION }}'
+
+      - name: Symlink android-37 platform
+        if: steps.check.outputs.need_build == 'true'
+        run: |
+          if [ -d "$ANDROID_SDK_ROOT/platforms/android-37.0" ] && [ ! -d "$ANDROID_SDK_ROOT/platforms/android-37" ]; then
+            ln -s "$ANDROID_SDK_ROOT/platforms/android-37.0" "$ANDROID_SDK_ROOT/platforms/android-37"
+          fi
+
+      # ===== 10. 缓存 =====
+      - name: 缓存Gradle
+        if: steps.check.outputs.need_build == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: 缓存Rust
+        if: steps.check.outputs.need_build == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      # ===== 11. 构建APK =====
+      - name: 构建APK
+        if: steps.check.outputs.need_build == 'true'
+        run: |
+          chmod +x x gradlew
+          ./x build
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.NDK_VERSION }}
+
+      # ===== 12. 收集APK =====
+      - name: 收集APK
+        if: steps.check.outputs.need_build == 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          mkdir -p dist
+          find wekit-module/app/build/outputs/apk -name "*.apk" -type f -exec cp {} dist/ \;
+          ls -lh dist/
+
+      # ===== 13. 删除旧CI发行版 =====
+      - name: 删除旧CI发行版
+        if: steps.check.outputs.need_build == 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          gh release delete CI --yes 2>/dev/null || echo "旧CI release不存在"
+          git push origin :refs/tags/CI 2>/dev/null || echo "旧CI tag不存在"
+
+      # ===== 14. 创建新CI发行版 =====
+      - name: 创建CI发行版
+        if: steps.check.outputs.need_build == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: CI
+          name: CI ${{ steps.version_time.outputs.version_time }}
+          body: |
+            本 Release 自动检测上游 WeKit 更新并构建，始终保持最新。
+
+            版本时间: ${{ steps.version_time.outputs.version_time }}（北京时间）
+            上游 Commit: `${{ steps.upstream.outputs.latest_sha }}`
+            上游仓库: https://github.com/Ujhhgtg/WeKit
+          files: |
+            dist/*.apk
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ===== 15. 更新构建记录并提交（用[skip ci]避免触发其他workflow） =====
+      - name: 更新构建记录
+        if: steps.check.outputs.need_build == 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "${{ steps.upstream.outputs.latest_sha }}" > "$LAST_COMMIT_FILE"
+          git config --global user.name "Auto-Build Bot"
+          git config --global user.email "bot@users.noreply.github.com"
+          git add "$LAST_COMMIT_FILE"
+          git commit -m "[skip ci] auto: sync upstream to ${{ steps.upstream.outputs.latest_sha }}" || echo "无变更可提交"
+          git push
