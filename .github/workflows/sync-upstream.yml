@@ -214,7 +214,26 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      # ===== 11. 构建APK =====
+      # ===== 11. 注入上游WeKit真实版本号（commit count + git hash） =====
+      - name: 注入上游真实版本号
+        if: steps.check.outputs.need_build == 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          # 克隆上游仓库完整历史以获取真实的 commit count 和 hash
+          git clone --depth 0 https://github.com/${UPSTREAM_REPO}.git /tmp/upstream-wekit
+          cd /tmp/upstream-wekit
+          UPSTREAM_COMMIT_COUNT=$(git rev-list --count HEAD)
+          UPSTREAM_GIT_HASH=$(git rev-parse --short=8 HEAD)
+          echo "上游 versionCode: $UPSTREAM_COMMIT_COUNT"
+          echo "上游 versionName: git+$UPSTREAM_GIT_HASH"
+          cd ${{ github.workspace }}/wekit-module
+          # 替换 build.gradle.kts 中的版本号为上游真实值
+          sed -i "s/versionCode = commitCount/versionCode = $UPSTREAM_COMMIT_COUNT/" app/build.gradle.kts
+          sed -i 's/versionName = "git+$gitHash"/versionName = "git+'$UPSTREAM_GIT_HASH'"/' app/build.gradle.kts
+          # 确认替换结果
+          grep -E "versionCode|versionName" app/build.gradle.kts | head -5
+
+      # ===== 12. 构建APK =====
       - name: 构建APK
         if: steps.check.outputs.need_build == 'true'
         run: |
@@ -223,7 +242,7 @@ jobs:
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.NDK_VERSION }}
 
-      # ===== 12. 收集APK =====
+      # ===== 13. 收集APK =====
       - name: 收集APK
         if: steps.check.outputs.need_build == 'true'
         working-directory: ${{ github.workspace }}
