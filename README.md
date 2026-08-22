@@ -86,15 +86,15 @@
 <a id="quick-start"></a>
 ## 🚀 快速开始
 
-### 方式一：WeKit 修改版 APK（最简单，推荐）
+### 方式一：WeKit 正式版 APK（最简单，推荐）
 
-1. 下载 [最新版 WeKit 修改版 APK](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)（standard / legacy 两种入口）
+1. 下载 [最新版 WeKit 正式版 APK](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)（standard / legacy 两种入口）
 2. 在 LSPosed 中启用模块并作用于微信
 3. 重启微信，在 WeKit 设置中启用已读追踪
 4. 发送消息时自动生成追踪链接
 
 
-> 📌 **本仓库提供的是 WeKit 修改版**，基于上游最新 dev 分支，已修复「已读追踪注册失败」和「Java 插件混淆规则」问题，开箱即用。
+> 📌 **本仓库提供的是 WeKit 正式版**，基于上游最新 dev 分支，已修复「已读追踪注册失败」和「Java 插件混淆规则」问题，开箱即用。
 ### 方式二：Java 插件版
 
 1. 下载 [Java 服务端插件 + 客户端插件](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
@@ -136,7 +136,7 @@ python run.py
 <a id="clients"></a>
 ## 📱 客户端方案
 
-### 🟢 WeKit 无服务器版（修改版 APK，推荐）
+### 🟢 WeKit 无服务器版（正式版 APK，推荐）
 
 <details>
 <summary><b>📖 点击展开详情</b></summary>
@@ -147,7 +147,7 @@ python run.py
 
 <div align="center">
 
-[![📦 下载 WeKit 修改版 APK](https://img.shields.io/badge/📦%20下载-WeKit%20APK-2ea44f?style=for-the-badge)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+[![📦 下载 WeKit 正式版 APK](https://img.shields.io/badge/📦%20下载-WeKit%20APK-2ea44f?style=for-the-badge)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
 
 </div>
 
@@ -487,7 +487,7 @@ read-receipt-tracker/
 
 <br>
 
-这是 WeKit 的 DEX 缓存问题。本项目提供的修改版 APK 已修复此问题，直接下载 [最新版](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) 安装即可。
+这是 WeKit 的 DEX 缓存问题。本项目提供的正式版 APK 已修复此问题，直接下载 [最新版](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) 安装即可。
 
 </details>
 
@@ -506,7 +506,7 @@ Java 客户端插件的已读统计需要在**浏览器控制台**中查看。�
 <br>
 
 不一定。有三种选择：
-1. **WeKit 修改版 APK**：内置服务端，完全不需要服务器
+1. **WeKit 正式版 APK**：内置服务端，完全不需要服务器
 2. **Java 插件版**：内置 cloudflared 隧道，自动获取公网地址
 3. **自建服务器**：Linux/Windows/Termux/Docker 均可
 
