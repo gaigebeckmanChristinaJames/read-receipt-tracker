@@ -255,7 +255,7 @@ jobs:
             上游仓库: https://github.com/Ujhhgtg/WeKit
           files: |
             dist/*.apk
-          prerelease: true
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
