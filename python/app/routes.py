@@ -63,22 +63,29 @@ def _wants_json():
 
 
 def _admin_pwd():
-    return current_app.config.get("ADMIN_PASSWORD") or current_app.config.get("API_KEY", "")
+    """登录密码：必须有 API_KEY 才启用鉴权，ADMIN_PASSWORD 是可选覆盖"""
+    ak = current_app.config.get("API_KEY", "")
+    if not ak:
+        return ""  # 没有 API_KEY → 不启用鉴权，即使配了 ADMIN_PASSWORD 也无效
+    return current_app.config.get("ADMIN_PASSWORD") or ak
 
 
 def require_admin(f):
-    """后台鉴权：会话 Cookie 或 API Key 二选一；未配置密钥时保持开放（兼容旧行为）"""
+    """后台鉴权：会话 Cookie 或 API Key 二选一"""
     @wraps(f)
     def d(*a, **kw):
+        # 1. 已登录会话直接放行
         if session.get("authed"):
             return f(*a, **kw)
+        # 2. 未配置 API_KEY：保持开放（ADMIN_PASSWORD 单独存在不启用鉴权）
         ak = current_app.config.get("API_KEY", "")
-        if ak:
-            rk = request.headers.get("X-API-Key") or request.args.get("api_key", "")
-            if rk and hmac.compare_digest(rk, ak):
-                return f(*a, **kw)
-        else:
-            return f(*a, **kw)  # 未配置密钥：保持旧的开放行为
+        if not ak:
+            return f(*a, **kw)
+        # 3. 检查 API Key（Header 或 Query）
+        rk = request.headers.get("X-API-Key") or request.args.get("api_key", "")
+        if rk and hmac.compare_digest(rk, ak):
+            return f(*a, **kw)
+        # 4. 未通过鉴权
         if _wants_json():
             return jsonify({"error": "Unauthorized"}), 401
         return redirect(url_for("login", next=request.path))
