@@ -4,7 +4,7 @@ version = "2.1.0"
 description = "轻量级消息已读追踪服务 · 像素埋点 · 管理后台 · 多端部署"
 requires-python = ">=3.9"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "Custom Source-Available License v1.0 (see LICENSE)"}
 authors = [
     {name = "Heather Howard", email = "gaigebeckmanChristinaJames@users.noreply.github.com"},
 ]
@@ -12,7 +12,6 @@ keywords = ["read-receipt", "email-tracking", "pixel-tracking", "flask"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
