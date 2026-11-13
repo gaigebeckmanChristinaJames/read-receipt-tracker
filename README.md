@@ -71,17 +71,18 @@ curl -s http://localhost:5000/health
 </details>
 
 <details>
-<summary><b>五种部署</b></summary>
+<summary><b>部署形态（四类）</b></summary>
 
 <br>
 
-| 方式 | 说明 | 入口 |
+| 形态 | 说明 | 入口 |
 |:---|:---|:---|
-| Docker Compose | 推荐，数据落 `./data` | `docker compose up -d` |
-| Linux + systemd | 适合 VPS，常驻进程 | `scripts/setup-linux.sh` |
-| Windows | 直接跑 `python run.py` | 见「部署与运维」 |
-| Termux | 安卓手机本地跑 | `scripts/ultimate-setup.sh` |
-| Render 免费版 | 零成本公网，会休眠 | 见「部署与运维」 |
+| Docker / 容器托管 | 推荐；Render 等平台也是跑这个镜像 | `docker compose up -d` |
+| Linux 主机 | VPS、NAS、树莓派，用 systemd 常驻 | `scripts/setup-linux.sh` |
+| Windows | 直接起 Python 进程 | `python run.py` |
+| Android / Termux | 旧手机当服务器 | `scripts/ultimate-setup.sh` |
+
+具体到某一家的步骤（含只做演示的 Render 免费实例）见「部署与运维」。
 
 </details>
 
