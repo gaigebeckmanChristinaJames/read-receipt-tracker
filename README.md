@@ -86,15 +86,15 @@
 <a id="quick-start"></a>
 ## 🚀 快速开始
 
-### 方式一：WeKit 模块（到上游仓库下载，最简单，推荐）
+### 方式一：WeKit 模块（第三方项目，到作者仓库下载）
 
-1. 打开 [WeKit 上游仓库](https://github.com/Ujhhgtg/WeKit) → [Releases](https://github.com/Ujhhgtg/WeKit/releases) 下载最新 APK（standard / legacy 两种入口）
+1. 打开 WeKit 作者仓库 [Ujhhgtg/WeKit](https://github.com/Ujhhgtg/WeKit) → [Releases](https://github.com/Ujhhgtg/WeKit/releases) 下载最新 APK（standard / legacy 两种入口）
 2. 在 LSPosed 中启用模块并作用于微信
 3. 重启微信，在 WeKit 设置中启用已读追踪
 4. 发送消息时自动生成追踪链接
 
 
-> 📌 **本仓库不再构建/分发 WeKit APK**，请直接到上游仓库下载；这里只提供已读追踪的服务端、APP 与 Java 插件。
+> 📌 **WeKit 是别人（Ujhhgtg）开发的第三方微信模块，不是本项目的组件。** 本仓库不构建、不分发、也不"官方"发布 WeKit 的任何版本；这里只提供已读追踪的服务端、独立 APP 与 Java 插件。模块本身请到作者仓库下载。
 ### 方式二：Java 插件版
 
 1. 下载 [Java 服务端插件 + 客户端插件](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
@@ -124,7 +124,7 @@ python run.py
 
 | 产物 | 说明 | 下载 |
 |:---:|:---|:---:|
-| 📱 **WeKit** | 微信 Xposed 增强模块（上游项目，本仓库不再构建） | [**前往仓库**](https://github.com/Ujhhgtg/WeKit) |
+| 📱 **WeKit** | 第三方微信 Xposed 模块（作者 Ujhhgtg，与本项目独立） | [**前往作者仓库**](https://github.com/Ujhhgtg/WeKit) |
 | 📱 **已读服务器 APP** | 独立 Android 应用，无需 Root/Xposed，内置服务器+隧道 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
 | 🖥️ **Java 服务端插件** | 内置 HTTP + cloudflared 隧道 + Web 控制台 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
 | 🔌 **Java 客户端插件** | `#消息` 发送追踪，`/已读` 查询人数 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
@@ -136,41 +136,42 @@ python run.py
 <a id="clients"></a>
 ## 📱 客户端方案
 
-### 🟢 WeKit 无服务器版（正式版 APK，推荐）
+### 🟢 WeKit（第三方模块，作者 Ujhhgtg）
 
 <details>
 <summary><b>📖 点击展开详情</b></summary>
 
 <br>
 
-基于 [WeKit](https://github.com/Ujhhgtg/WeKit) 的微信 Xposed 模块，已修复 DEX 缓存更新问题，**内置已读追踪服务端**，无需额外部署服务器，开箱即用。
+WeKit 是**别人开发的第三方微信 Xposed 模块**，与本项目没有从属关系：本仓库既不构建也不分发它的 APK，只提供与它对接的已读追踪服务端。
 
 <div align="center">
 
-[![📦 前往 WeKit 仓库](https://img.shields.io/badge/📦%20前往-WeKit%20仓库-2ea44f?style=for-the-badge)](https://github.com/Ujhhgtg/WeKit)
+[![📦 前往 WeKit 作者仓库](https://img.shields.io/badge/📦%20前往-WeKit%20作者仓库-2ea44f?style=for-the-badge)](https://github.com/Ujhhgtg/WeKit)
 
 </div>
 
 | 项目 | 说明 |
 |:---|:---|
-| **上游仓库** | https://github.com/Ujhhgtg/WeKit |
-| **特点** | 模块内直接启用已读追踪，消息注册、已读统计、访客信息一体化 |
+| **作者仓库** | https://github.com/Ujhhgtg/WeKit |
+| **维护者** | Ujhhgtg（非本项目作者） |
+| **特点** | 模块内可启用已读追踪，消息注册、已读统计、访客信息一体化 |
 | **环境要求** | Android 9.0+ / Root + LSPosed（或 Zygisk）/ 微信 8.0.65 - 8.0.76 |
-| **源码** | 上游仓库 [Ujhhgtg/WeKit](https://github.com/Ujhhgtg/WeKit) |
+| **下载** | 作者仓库 Releases 页 |
 
 </details>
 
-### 🔵 WeKit 有服务器版（原版）
+### 🔵 WeKit + 自建服务器
 
 <details>
 <summary><b>📖 点击展开详情</b></summary>
 
 <br>
 
-使用原版 [WeKit](https://github.com/Ujhhgtg/WeKit)，配合本项目提供的自建服务器使用。适合已有服务器或想在 Termux/Java 插件中运行服务端的用户。
+用 WeKit（第三方模块）发送追踪消息，配合本项目提供的自建服务器接收已读数据。适合已有服务器或想在 Termux / Java 插件中运行服务端的用户。
 
 - **特点**：原版 WeKit 不变，服务端独立部署，可选择 Linux / Windows / Termux / Java 插件等多种方式
-- **下载**：[WeKit 原版 Release](https://github.com/Ujhhgtg/WeKit/releases)
+- **模块下载**：[WeKit 作者 Releases](https://github.com/Ujhhgtg/WeKit/releases)（第三方项目）
 
 </details>
 
@@ -538,7 +539,7 @@ read-receipt-tracker/
 
 <br>
 
-这是 WeKit 的 DEX 缓存问题。请到上游仓库 [Ujhhgtg/WeKit](https://github.com/Ujhhgtg/WeKit) 下载最新版覆盖安装。
+这是 WeKit 模块自身的问题，与本项目无关。请到作者仓库 [Ujhhgtg/WeKit](https://github.com/Ujhhgtg/WeKit) 下载最新版覆盖安装，或到该作者的 Issue 区反馈。
 
 </details>
 
@@ -557,7 +558,7 @@ Java 客户端插件的已读统计需要在**浏览器控制台**中查看。�
 <br>
 
 不一定。有三种选择：
-1. **WeKit 正式版 APK**：内置服务端，完全不需要服务器
+1. **WeKit（第三方模块）**：可配合本项目服务器使用，模块本身请到作者仓库下载
 2. **Java 插件版**：内置 cloudflared 隧道，自动获取公网地址
 3. **自建服务器**：Linux/Windows/Termux/Docker 均可
 
