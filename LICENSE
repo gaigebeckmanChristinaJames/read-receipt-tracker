@@ -1,21 +1,85 @@
-MIT License
+read-receipt-tracker 自定义源码许可协议 v1.0
+Custom Source-Available License v1.0 (NOT an OSI open-source license)
 
-Copyright (c) 2026 Heather Howard
+Copyright (c) 2026 Heather Howard (gaigebeckmanChristinaJames)
+Project: https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+本协议适用于本仓库的源代码、文档、脚本、构建产物及其修改版本
+（以下统称"本项目"）。中文为正式文本，下方英文为参照译文。
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+==========================================================================
+一、允许（无需申请）
+==========================================================================
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+1. 自用许可：任何人可以免费下载、安装、运行、编译本项目，用于个人
+   自用、学习、研究、内部测试，包括自行修改后仅供自己使用。
+2. 查看与学习：可以阅读、分析本项目的代码与实现思路。
+
+以上行为不需要署名，也不需要取得作者同意。
+
+==========================================================================
+二、署名要求（强制）
+==========================================================================
+
+1. 如果你在本项目中使用了本项目的代码、脚本、构建流程，或者参考了
+   本项目的功能设计、接口设计、实现思路，用于你自己的项目（无论是否
+   公开），必须在下列任意一处注明来源：
+   - 项目的 README / 关于页面；
+   - 或使用到的源文件头部注释。
+   推荐写法：
+   「部分代码或实现参考自 read-receipt-tracker
+     https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker 」
+2. 不得删除或改写本项目文件中原有的版权声明与许可声明。
+3. 不得使用作者名称、项目名称或仓库链接为你的衍生作品做背书，也不得
+   暗示作者对你的项目提供担保或认可。
+
+==========================================================================
+三、需事先取得作者书面同意
+==========================================================================
+
+以下行为必须先联系作者并获得明确同意（通过 GitHub Issue 或仓库主页
+公布的联系方式）：
+
+1. 再分发：把本项目或其修改版本以任何形式公开分发，包括但不限于上传
+   到应用商店、发布 Release / 安装包 / 镜像、打包进其他分发包。
+2. 公开给多人使用：将本项目（含修改版）部署为对外服务、供第三方或
+   不特定多数人访问使用。
+3. 商业使用：以本项目或其衍生作品直接或间接获利（含售卖、订阅、
+   广告变现、随商业产品捆绑）。
+4. 以本项目名义发布"官方版""特别版""增强版"等容易造成来源混淆的版本。
+
+未取得同意的上述行为视为违反本协议。个人自用不受此条限制。
+
+==========================================================================
+四、免责
+==========================================================================
+
+本项目按"现状"提供，不附带任何明示或默示担保。因使用本项目产生的
+任何直接或间接损失，作者不承担责任。使用者应自行确保其使用行为符合
+当地法律法规及第三方平台条款。
+
+==========================================================================
+五、协议终止
+==========================================================================
+
+违反本协议任一条款，本协议授予你的全部权利立即终止，你应停止使用并
+删除本项目的全部副本。作者保留在后续版本中调整本协议条款的权利；
+已获得的授权不因后续条款变更而失效。
+
+--------------------------------------------------------------------------
+English reference (non-binding)
+--------------------------------------------------------------------------
+You may download, run, compile and modify this project for personal use,
+study and internal testing, free of charge and without permission.
+
+If you use any code, scripts, build pipeline of this project, or reference
+its feature or interface design in your own project, you MUST credit the
+origin (README/about page or source file header) with the project name and
+the repository URL above. Copyright and license notices must be preserved.
+
+You MUST obtain the author's prior written permission before: redistributing
+this project or a modified version (app stores, releases, packages,
+containers), operating it as a public multi-user service, any commercial
+use, or publishing versions branded as official/special/enhanced.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
