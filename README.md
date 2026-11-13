@@ -15,7 +15,7 @@
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)]()
 [![C++](https://img.shields.io/badge/C++-17-00599C?logo=cplusplus&logoColor=white)]()
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)]()
-[![License](https://img.shields.io/badge/License-MIT-green.svg)]()
+[![License](https://img.shields.io/badge/License-Custom%20(Source--Available)-orange.svg)](#-license)
 
 <br>
 
@@ -553,4 +553,9 @@ IP 定位使用三级接口自动备份（ip-api.com → ipwho.is → ipinfo.io�
 <a id="license"></a>
 ## 📄 License
 
-MIT © [gaigebeckmanChristinaJames](https://github.com/gaigebeckmanChristinaJames)
+**自定义源码许可 v1.0（Source-Available，非 OSI 开源协议）** © [gaigebeckmanChristinaJames](https://github.com/gaigebeckmanChristinaJames)
+
+- **自用免费**：可以下载、运行、编译、自行修改后自己使用，无需授权。
+- **必须署名**：使用了本项目的代码/脚本，或参考了它的功能与接口设计，须在 README 或源文件头注明来源与仓库链接。
+- **需事先同意**：再分发（应用商店 / Release / 安装包 / 镜像）、部署为对外多人服务、商业使用，必须先联系作者取得书面同意。
+- 完整条款见 [LICENSE](LICENSE)。
