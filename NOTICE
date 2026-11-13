@@ -1,0 +1,23 @@
+read-receipt-tracker
+Copyright (c) 2026 Heather Howard (gaigebeckmanChristinaJames)
+https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker
+
+Licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full text.
+
+--------------------------------------------------------------------------
+署名要求（Attribution）
+--------------------------------------------------------------------------
+
+如果你使用、修改、分发本项目的代码、脚本或构建流程，或参考了它的
+功能设计、接口设计与实现思路，请在下列任意一处保留署名：
+
+1. README / 关于页面写明：
+   「部分代码或实现参考自 read-receipt-tracker
+     https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker 」
+2. 或在使用到的源文件头部保留原始版权声明与本仓库链接。
+
+依据 Apache-2.0 第 4 条，分发时还应：
+- 附带 LICENSE 与 NOTICE；
+- 对被修改过的文件作出显著说明；
+- 不得使用本项目名称或作者名义为衍生品背书。
