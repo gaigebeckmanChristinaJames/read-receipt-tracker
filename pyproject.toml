@@ -4,13 +4,14 @@ version = "2.1.0"
 description = "轻量级消息已读追踪服务 · 像素埋点 · 管理后台 · 多端部署"
 requires-python = ">=3.9"
 readme = "README.md"
-license = {text = "Custom Source-Available License v1.0 (see LICENSE)"}
+license = {text = "Apache-2.0"}
 authors = [
     {name = "Heather Howard", email = "gaigebeckmanChristinaJames@users.noreply.github.com"},
 ]
 keywords = ["read-receipt", "email-tracking", "pixel-tracking", "flask"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
