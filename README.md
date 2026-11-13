@@ -7,9 +7,7 @@
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](Dockerfile)
 [![CI](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml/badge.svg)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml)
 
-![首页截图](docs/images/landing.png)
-
-<TODO: 截图：管理后台仪表盘，展示统计卡与消息列表>
+> 📷 **截图位（待补）**：`docs/images/landing.png` —— 管理后台仪表盘，展示统计卡与消息列表。图片文件补齐前这里不嵌图，避免 404。
 
 ---
 
@@ -186,6 +184,8 @@ X-API-Key: <API_KEY>
 <a id="ops"></a>
 ## 部署与运维
 
+> **适用范围**：本项目适用于任何能跑 Python 或 Docker 的机器——VPS、NAS、树莓派、旧安卓手机（Termux）、家用电脑都行。README 里出现的线上地址只用**一台 Render 免费实例**做演示，不是"官方服务器"，也不代表只能用 Render；你自己的数据始终在你自己那台机器上。
+
 | 变量 | 默认 | 说明 |
 |:---|:---|:---|
 | `DATABASE_PATH` | `receipts.db` | SQLite 文件路径 |
@@ -266,13 +266,22 @@ track.example.com {
 </details>
 
 <details>
-<summary><b>Render 免费版要点</b></summary>
+<summary><b>Render 免费版：纯演示用的最小部署</b></summary>
 
 <br>
 
-- 运行时选 Docker（仓库根目录自带 `Dockerfile`）
-- 环境变量至少设 `API_KEY`、`ENABLE_GEO=0`、`DATABASE_PATH=/tmp/receipts.db`
-- 免费实例无持久盘，重新部署即清库；15 分钟无请求会休眠，冷启动 30–60 秒
+下面这套步骤就是 README 演示站的做法，只为了让你在 10 分钟内看到一个能打开的地址；正式长期使用建议换 VPS / NAS / 旧手机。
+
+1. 浏览器打开 `https://render.com`，用 GitHub 账号注册并登录
+2. 右上角 `+ New` → `Web Service`
+3. 选择 GitHub 上的 `read-receipt-tracker` 仓库（需要先 fork 或授权访问）
+4. 语言/运行时选 **Docker**（仓库根目录自带 `Dockerfile`，无需填构建命令）
+5. 实例类型选 **Free**
+6. 环境变量至少设三项：`API_KEY=<随机密码>`、`ENABLE_GEO=0`、`DATABASE_PATH=/tmp/receipts.db`
+7. 点 `Deploy Web Service`，等构建完成（首次 3–8 分钟）
+8. 复制页面顶部的 `https://xxxx.onrender.com` 地址，先在浏览器打开，预期看到登录页
+9. 把这个地址填进客户端/模块的「服务器地址」，发一条测试消息，再打开一次验证已读 +1
+10. 免费实例 15 分钟无请求会休眠（冷启动 30–60 秒），且**无持久盘**，重新部署即清库——这是它只能当演示的原因
 
 </details>
 
