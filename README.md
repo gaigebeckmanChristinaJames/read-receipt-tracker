@@ -7,8 +7,6 @@
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](Dockerfile)
 [![CI](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml/badge.svg)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml)
 
-> 📷 **截图位（待补）**：`docs/images/landing.png` —— 管理后台仪表盘，展示统计卡与消息列表。图片文件补齐前这里不嵌图，避免 404。
-
 ---
 
 <a id="what"></a>
@@ -406,4 +404,3 @@ track.example.com {
 - `<VERSION>` / `<DATE>`：稳定版 tag 与发布日期
 - `<SHA256>`：各构建产物的校验值
 - `<SIGNING_CERT_SHA256>`：APK 签名证书指纹
-- 三张截图：`docs/images/landing.png`、`docs/images/admin.png`、`docs/images/app.png`
