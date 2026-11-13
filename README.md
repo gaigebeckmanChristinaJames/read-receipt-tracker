@@ -7,8 +7,6 @@
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](Dockerfile)
 [![CI](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml/badge.svg)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/actions/workflows/build.yml)
 
-> 📷 **截图位（待补）**：`docs/images/landing.png` —— 管理后台仪表盘，展示统计卡与消息列表。图片文件补齐前这里不嵌图，避免 404。
-
 ---
 
 <a id="what"></a>
@@ -71,17 +69,18 @@ curl -s http://localhost:5000/health
 </details>
 
 <details>
-<summary><b>五种部署</b></summary>
+<summary><b>部署形态（四类）</b></summary>
 
 <br>
 
-| 方式 | 说明 | 入口 |
+| 形态 | 说明 | 入口 |
 |:---|:---|:---|
-| Docker Compose | 推荐，数据落 `./data` | `docker compose up -d` |
-| Linux + systemd | 适合 VPS，常驻进程 | `scripts/setup-linux.sh` |
-| Windows | 直接跑 `python run.py` | 见「部署与运维」 |
-| Termux | 安卓手机本地跑 | `scripts/ultimate-setup.sh` |
-| Render 免费版 | 零成本公网，会休眠 | 见「部署与运维」 |
+| Docker / 容器托管 | 推荐；Render 等平台也是跑这个镜像 | `docker compose up -d` |
+| Linux 主机 | VPS、NAS、树莓派，用 systemd 常驻 | `scripts/setup-linux.sh` |
+| Windows | 直接起 Python 进程 | `python run.py` |
+| Android / Termux | 旧手机当服务器 | `scripts/ultimate-setup.sh` |
+
+具体到某一家的步骤（含只做演示的 Render 免费实例）见「部署与运维」。
 
 </details>
 
@@ -405,4 +404,3 @@ track.example.com {
 - `<VERSION>` / `<DATE>`：稳定版 tag 与发布日期
 - `<SHA256>`：各构建产物的校验值
 - `<SIGNING_CERT_SHA256>`：APK 签名证书指纹
-- 三张截图：`docs/images/landing.png`、`docs/images/admin.png`、`docs/images/app.png`
