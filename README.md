@@ -12,6 +12,15 @@
 <a id="what"></a>
 ## 这是什么
 
+基于 **HTTP 追踪像素（tracking pixel）** 的轻量已读回执（read receipt）服务：注册消息时生成幂等 ID 与像素 URL，接收端加载该 URL 即落一条已读事件，再由后台做统计、审计与导出。
+
+- **幂等注册**：`msg_id = SHA-256(wxId + content + createTime)`，同一输入重复注册只产生一条消息记录
+- **无状态像素端点**：命中 `/pixel` 即写一条 read 事件，响应体固定为 1×1 透明 GIF，可嵌入消息、邮件或网页
+- **事件去重**：`UNIQUE(msg_id, ip_address)`，同一条消息同一出口 IP 只计一次
+- **地理编码降级链**：ip-api.com → ipwho.is → ipinfo.io，失败静默降级；`ENABLE_GEO=0` 时整条链路短路，零外部请求
+- **接入治理**：每 IP 每分钟限流（默认 60 次）+ 后台会话/`X-API-Key` 双鉴权
+- **存储与并发**：SQLite（WAL + 线程锁 + 原子提交），高频写入下读不阻塞写
+
 注册一条消息 → 拿到一个像素链接 → 对方打开时记一次已读。
 
 | 步骤 | 做什么 |
@@ -174,7 +183,9 @@ X-API-Key: <API_KEY>
 | `POST /api/delete/<mid>` | 删除单条及其已读记录 |
 | `POST /api/delete-all` | 清空全部 |
 
-鉴权二选一：登录后的会话 Cookie，或请求头 `X-API-Key: <API_KEY>`（也支持 `?api_key=`）。未配置 `API_KEY` 时后台是**开放**的，公网部署务必设置。
+鉴权二选一：`/login` 建立的服务端会话 Cookie（`HttpOnly` + `SameSite=Lax`，默认 7 天），或请求头 `X-API-Key: <API_KEY>`（也支持 `?api_key=`）。未配置 `API_KEY` 时后台是**开放**的，公网部署务必设置。
+
+服务端对像素与计数端点**不做应用层鉴权**（否则无法被图片标签直接加载），防滥用依赖限流与部署侧访问控制；`read` 事件的 IP 取 `X-Forwarded-For` 首个地址，缺省回退 `X-Real-IP` / `remote_addr`。
 
 </details>
 
@@ -261,6 +272,7 @@ track.example.com {
 - 备份：停容器后复制 `data/receipts.db`（有 WAL 时连同 `-wal`、`-shm`），或 `sqlite3 data/receipts.db ".backup data/backup.db"`
 - 清理：后台「删除单条 / 清空全部」，或 `POST /api/delete-all`
 - 体积：单条已读约 200–400 字节（IP、UA、归属地、时间），1 万条约 2–4 MB；长期运行建议按季度归档
+- 一致性：备份前停写入或用 `.backup`，避免直接对热库 `cp` 得到撕裂快照；WAL 模式下需连同 `-wal`/`-shm` 一起归档
 
 </details>
 
@@ -383,9 +395,14 @@ track.example.com {
 <a id="term"></a>
 ### 术语
 
-- **像素埋点 / 追踪链接**：一个返回 1×1 透明图的 URL，被加载即视为"已读"。
-- **已读回执**：记录谁在什么时候打开了这条消息，本项目以一次像素加载为单位。
-- **模块**：运行在微信进程中的 Xposed 插件（如 WeKit），负责把追踪链接插入消息。
+- **追踪像素 / 埋点 URL**：返回 1×1 透明 GIF 的端点，被加载一次即视为一次曝光/已读。
+- **已读回执（read receipt）**：以"像素被加载"为口径的阅读事件，区别于 IM 的原生已读态。
+- **幂等注册**：同一 `wxId` + 内容 + 时间戳得到同一 `msg_id`，重复调用不产生重复消息。
+- **事件去重**：以 `msg_id + IP` 为唯一键折叠重复访问，换取"人头数"近似值。
+- **地理编码（geocoding）**：由 IP 反查国家/省/市/运营商/经纬度，多供应商按优先级降级。
+- **出口 IP / NAT**：同一公网 IP 后可能有多台设备，因此人头数天然是近似值。
+- **WAL**：SQLite 预写日志模式，读操作不被写事务阻塞，适合"高频写入 + 后台查询"。
+- **模块 / 宿主**：运行在微信进程内的 Xposed 插件（如 WeKit），负责在消息中插入埋点 URL。
 
 ---
 
