@@ -207,6 +207,58 @@ python run.py
 <a id="server"></a>
 ## 🖥️ 服务器部署
 
+### 先选形态：公开服务器 vs 私人服务器
+
+| 对比项 | 🌐 公开服务器（别人提供/共享） | 🔒 私人服务器（自己部署，**推荐**） |
+|:---|:---|:---|
+| 数据归属 | 已读记录、IP、UA 存在别人机器上 | 全部数据只在你自己的机器/账号里 |
+| 隐私 | 服务方能看全部埋点数据 | 只有你能看 |
+| 稳定性 | 由对方决定，可能随时停服/限流 | 自己控制，想停就停 |
+| 速度 | 共用带宽，高峰期拥堵 | 独享，响应稳定 |
+| 权限 | 管理后台密钥可能共享 | 自己设 `API_KEY`，别人进不来 |
+| 成本 | 免费但要看人脸色 | 零成本也能跑（Render 免费版 / 旧手机 Termux / 本地 Docker） |
+| 适合谁 | 只想临时试一下 | 长期自用、在意隐私 |
+
+> **结论：能自建就自建。** 这套服务是"已读追踪"，本质上收集的是你和联系人的消息阅读行为 + IP + 设备信息，只有放在自己手里才谈得上隐私。推荐顺序：**私人服务器（VPS / Render 免费版）＞ 手机本地（Termux / APP 版）＞ 公开共享服务器**。
+
+#### ☁️ 零成本私人服务器：Render 免费版
+
+<details>
+<summary><b>📖 点击展开部署步骤（16 步）</b></summary>
+
+<br>
+
+**准备**：一个 GitHub 账号（Render 直接用 GitHub 登录，不需要谷歌账号）；仓库源码；其余没了——不需要梯子之外的额外东西。
+
+1. 浏览器打开 <https://render.com>，右上角 **Get started**，选 **GitHub** 登录授权。
+2. 先把仓库 **Fork** 到你自己的账号：<https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker> → 右上角 **Fork** → 确认。
+3. Render 右上角 **+ New** → **Web Service**。
+4. 选 **Build and deploy from a Git repository** → **Next**。
+5. 在列表里选你刚 Fork 的 `read-receipt-tracker`（首次需点 **Connect account** 授权仓库访问）。
+6. **Name** 填个自己认得出的，例如 `my-read-tracker`（它决定你的访问域名）。
+7. **Language / Runtime** 选 **Docker**（仓库根目录自带 `Dockerfile`，不用手写构建命令）。
+8. **Instance Type** 选 **Free**（$0）。
+9. **Region** 选离你近的，例如 Singapore。
+10. 展开 **Environment Variables**，至少加这三条：
+    - `API_KEY` = 一长串随机字符（管理后台登录用，别人猜到就等于拿到你的数据）
+    - `ENABLE_GEO` = `0`（Lite 模式，少一次外部请求、更快更干净）
+    - `DATABASE_PATH` = `/tmp/receipts.db`（免费实例没有持久盘，指到 `/tmp` 才不会启动报错）
+11. 点 **Deploy Web Service**，等构建 + 部署，一般 3–6 分钟。
+12. 地址形如 `https://my-read-tracker.onrender.com`，先打开 `/health` 确认返回正常。
+13. 把这个地址填进 WE（WeKit）客户端的服务器地址，点测试连接。
+14. 给自己发一条已读回执消息，去管理后台（`/admin`，用 `API_KEY` 登录）看有没有记录。
+15. 记录能查到就算跑通，剩下的交给日常使用。
+
+**免费版必须知道的三个坑**
+
+| 坑 | 表现 | 应对 |
+|:---|:---|:---|
+| 休眠 | 15 分钟没请求就睡，冷启动 30–60 秒 | 首次连接超时是正常的，重试一次；WE 端把超时调大 |
+| 数据不持久 | 重新部署/重启后 SQLite 清空，已读记录全丢 | 只做试用；长期用请上付费 Disk，或改 VPS / Termux 本地部署 |
+| 免费额度 | 每月 750 小时实例时长，单实例够用但别开多个 | 只留一个服务 |
+
+</details>
+
 ### 🐧 Linux 服务器
 
 <details>
