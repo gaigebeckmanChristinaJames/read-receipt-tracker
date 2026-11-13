@@ -86,15 +86,15 @@
 <a id="quick-start"></a>
 ## 🚀 快速开始
 
-### 方式一：WeKit 正式版 APK（最简单，推荐）
+### 方式一：WeKit 模块（到上游仓库下载，最简单，推荐）
 
-1. 下载 [最新版 WeKit 正式版 APK](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)（standard / legacy 两种入口）
+1. 打开 [WeKit 上游仓库](https://github.com/Ujhhgtg/WeKit) → [Releases](https://github.com/Ujhhgtg/WeKit/releases) 下载最新 APK（standard / legacy 两种入口）
 2. 在 LSPosed 中启用模块并作用于微信
 3. 重启微信，在 WeKit 设置中启用已读追踪
 4. 发送消息时自动生成追踪链接
 
 
-> 📌 **本仓库提供的是 WeKit 正式版**，基于上游最新 dev 分支，已修复「已读追踪注册失败」和「Java 插件混淆规则」问题，开箱即用。
+> 📌 **本仓库不再构建/分发 WeKit APK**，请直接到上游仓库下载；这里只提供已读追踪的服务端、APP 与 Java 插件。
 ### 方式二：Java 插件版
 
 1. 下载 [Java 服务端插件 + 客户端插件](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
@@ -124,7 +124,7 @@ python run.py
 
 | 产物 | 说明 | 下载 |
 |:---:|:---|:---:|
-| 📱 **WeKit APK** | 微信 Xposed 模块（已修复 DEX 缓存更新问题，内置已读追踪） | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
+| 📱 **WeKit** | 微信 Xposed 增强模块（上游项目，本仓库不再构建） | [**前往仓库**](https://github.com/Ujhhgtg/WeKit) |
 | 📱 **已读服务器 APP** | 独立 Android 应用，无需 Root/Xposed，内置服务器+隧道 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
 | 🖥️ **Java 服务端插件** | 内置 HTTP + cloudflared 隧道 + Web 控制台 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
 | 🔌 **Java 客户端插件** | `#消息` 发送追踪，`/已读` 查询人数 | [**下载**](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) |
@@ -147,7 +147,7 @@ python run.py
 
 <div align="center">
 
-[![📦 下载 WeKit 正式版 APK](https://img.shields.io/badge/📦%20下载-WeKit%20APK-2ea44f?style=for-the-badge)](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest)
+[![📦 前往 WeKit 仓库](https://img.shields.io/badge/📦%20前往-WeKit%20仓库-2ea44f?style=for-the-badge)](https://github.com/Ujhhgtg/WeKit)
 
 </div>
 
@@ -156,7 +156,7 @@ python run.py
 | **上游仓库** | https://github.com/Ujhhgtg/WeKit |
 | **特点** | 模块内直接启用已读追踪，消息注册、已读统计、访客信息一体化 |
 | **环境要求** | Android 9.0+ / Root + LSPosed（或 Zygisk）/ 微信 8.0.65 - 8.0.76 |
-| **源码** | [`wekit-module/`](wekit-module/) |
+| **源码** | 上游仓库 [Ujhhgtg/WeKit](https://github.com/Ujhhgtg/WeKit) |
 
 </details>
 
@@ -497,7 +497,6 @@ read-receipt-tracker/
 ├── plugins/
 │   ├── java-read-tracker/     # Java 服务端插件
 │   └── read-tracker-client/   # Java 客户端插件
-├── wekit-module/              # WeKit 模块源码 (CI 构建 APK)
 ├── docs/                      # 文档
 ├── .github/workflows/         # CI 自动构建 & 发布
 ├── ROADMAP.md                 # 开发路线图
@@ -539,7 +538,7 @@ read-receipt-tracker/
 
 <br>
 
-这是 WeKit 的 DEX 缓存问题。本项目提供的正式版 APK 已修复此问题，直接下载 [最新版](https://github.com/gaigebeckmanChristinaJames/read-receipt-tracker/releases/latest) 安装即可。
+这是 WeKit 的 DEX 缓存问题。请到上游仓库 [Ujhhgtg/WeKit](https://github.com/Ujhhgtg/WeKit) 下载最新版覆盖安装。
 
 </details>
 
